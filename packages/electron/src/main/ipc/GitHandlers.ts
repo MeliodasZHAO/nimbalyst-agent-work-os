@@ -66,26 +66,24 @@ export function registerGitHandlers(): void {
       return { branch: '', ahead: 0, behind: 0, hasUncommitted: false };
     }
 
-    // Use lock to prevent racing with git:commit and other write operations.
-    // simple-git's git.status() refreshes the index (creates index.lock),
-    // which races with concurrent git add/commit/reset operations.
-    return gitOperationLock.withLock(workspacePath, 'git:status', async () => {
-      try {
-        const git: SimpleGit = simpleGit(workspacePath);
-        const status = await git.status();
-        const branch = status.current || 'HEAD';
+    // core.optionalLocks=false tells git to skip the index refresh that would
+    // create .git/index.lock, so this read can run concurrently with writes
+    // (commit/rebase/etc.) without queueing behind them on gitOperationLock.
+    try {
+      const git: SimpleGit = simpleGit(workspacePath, { config: ['core.optionalLocks=false'] });
+      const status = await git.status();
+      const branch = status.current || 'HEAD';
 
-        return {
-          branch,
-          ahead: status.ahead || 0,
-          behind: status.behind || 0,
-          hasUncommitted: !status.isClean(),
-        };
-      } catch (error) {
-        log.error('Failed to get git status:', error);
-        throw error;
-      }
-    });
+      return {
+        branch,
+        ahead: status.ahead || 0,
+        behind: status.behind || 0,
+        hasUncommitted: !status.isClean(),
+      };
+    } catch (error) {
+      log.error('Failed to get git status:', error);
+      throw error;
+    }
   });
 
   /**
@@ -557,55 +555,56 @@ export function registerGitHandlers(): void {
         return { staged: [], unstaged: [], untracked: [], conflicted: [] };
       }
 
-      return gitOperationLock.withLock(workspacePath, 'git:working-changes', async () => {
-        try {
-          const git: SimpleGit = simpleGit(workspacePath);
-          const status = await git.status();
+      // core.optionalLocks=false skips the index refresh that would create
+      // .git/index.lock, allowing this read to run concurrently with writes
+      // without queueing on gitOperationLock.
+      try {
+        const git: SimpleGit = simpleGit(workspacePath, { config: ['core.optionalLocks=false'] });
+        const status = await git.status();
 
-          // Build staged files list from the various status arrays.
-          // status.staged = files with index changes (modified in index vs HEAD)
-          // status.created = new files added to index (not in HEAD)
-          const staged: Array<{ path: string; status: string }> = [];
-          for (const f of status.staged) {
-            const isDeleted = status.deleted.includes(f);
-            staged.push({ path: f, status: isDeleted ? 'D' : 'M' });
-          }
-          for (const f of status.created) {
-            staged.push({ path: f, status: 'A' });
-          }
-
-          // Build unstaged files list.
-          // status.modified = files with working-tree changes (vs index).
-          // A file CAN appear in both staged and modified -- this means it has
-          // staged changes AND additional unstaged edits on top. We must show
-          // it in both lists so the user sees the full picture.
-          const unstaged: Array<{ path: string; status: string }> = [];
-          for (const f of status.modified) {
-            unstaged.push({ path: f, status: 'M' });
-          }
-          for (const f of status.deleted) {
-            // Only add to unstaged if it's not already there from modified,
-            // and it represents an unstaged deletion (not a staged one).
-            // status.deleted can contain both staged and unstaged deletions.
-            // If a file is in status.staged with 'D', that's a staged deletion.
-            // If it's in status.deleted but NOT in status.staged, it's unstaged.
-            if (!status.staged.includes(f)) {
-              unstaged.push({ path: f, status: 'D' });
-            }
-          }
-
-          // Untracked files
-          const untracked = status.not_added.map(f => ({ path: f }));
-
-          // Conflicted files
-          const conflicted = status.conflicted.map(f => ({ path: f }));
-
-          return { staged, unstaged, untracked, conflicted };
-        } catch (error) {
-          log.error('[git:working-changes] Failed:', error);
-          throw error;
+        // Build staged files list from the various status arrays.
+        // status.staged = files with index changes (modified in index vs HEAD)
+        // status.created = new files added to index (not in HEAD)
+        const staged: Array<{ path: string; status: string }> = [];
+        for (const f of status.staged) {
+          const isDeleted = status.deleted.includes(f);
+          staged.push({ path: f, status: isDeleted ? 'D' : 'M' });
         }
-      });
+        for (const f of status.created) {
+          staged.push({ path: f, status: 'A' });
+        }
+
+        // Build unstaged files list.
+        // status.modified = files with working-tree changes (vs index).
+        // A file CAN appear in both staged and modified -- this means it has
+        // staged changes AND additional unstaged edits on top. We must show
+        // it in both lists so the user sees the full picture.
+        const unstaged: Array<{ path: string; status: string }> = [];
+        for (const f of status.modified) {
+          unstaged.push({ path: f, status: 'M' });
+        }
+        for (const f of status.deleted) {
+          // Only add to unstaged if it's not already there from modified,
+          // and it represents an unstaged deletion (not a staged one).
+          // status.deleted can contain both staged and unstaged deletions.
+          // If a file is in status.staged with 'D', that's a staged deletion.
+          // If it's in status.deleted but NOT in status.staged, it's unstaged.
+          if (!status.staged.includes(f)) {
+            unstaged.push({ path: f, status: 'D' });
+          }
+        }
+
+        // Untracked files
+        const untracked = status.not_added.map(f => ({ path: f }));
+
+        // Conflicted files
+        const conflicted = status.conflicted.map(f => ({ path: f }));
+
+        return { staged, unstaged, untracked, conflicted };
+      } catch (error) {
+        log.error('[git:working-changes] Failed:', error);
+        throw error;
+      }
     }
   );
 
