@@ -59,6 +59,20 @@ interface CreateChildSessionArgs {
   worktreeId?: string;
 }
 
+interface SpawnSiblingArgs {
+  title?: string;
+  prompt: string;
+  useWorktree?: boolean;
+  model?: string;
+  /**
+   * If false (the default for /launch-new-session), the parent will not receive
+   * `[Child Session Update]` notifications when the spawned session completes,
+   * errors, or waits for input. Use this for fire-and-forget hand-offs where the
+   * parent is just kicking off work to escape a long context.
+   */
+  notifyOnComplete?: boolean;
+}
+
 export class MetaAgentService {
   private static instance: MetaAgentService | null = null;
   private starting: Promise<void> | null = null;
@@ -123,6 +137,8 @@ export class MetaAgentService {
           this.listWorktreesJson(workspaceId),
         createSession: (metaSessionId, workspaceId, args) =>
           this.createChildSession(metaSessionId, workspaceId, args),
+        spawnSibling: (callerSessionId, workspaceId, args) =>
+          this.spawnSibling(callerSessionId, workspaceId, args),
         getSessionStatus: (_metaSessionId, workspaceId, targetSessionId) =>
           this.getSessionStatusJson(targetSessionId, workspaceId),
         getSessionResult: (_metaSessionId, workspaceId, targetSessionId) =>
@@ -205,6 +221,26 @@ export class MetaAgentService {
     workspaceId: string,
     args: CreateChildSessionArgs
   ): Promise<string> {
+    const result = await this.createChildSessionInternal(metaSessionId, workspaceId, args);
+    return JSON.stringify(result, null, 2);
+  }
+
+  private async createChildSessionInternal(
+    metaSessionId: string,
+    workspaceId: string,
+    args: CreateChildSessionArgs & { parentSessionIdOverride?: string | null }
+  ): Promise<{
+    sessionId: string;
+    title: string;
+    provider: string;
+    model: string;
+    worktreeId: string | null;
+    worktreePath: string | null;
+    worktreeMode: 'existing' | 'new' | 'none';
+    createdBySessionId: string;
+    queuedInitialPrompt: boolean;
+    parentSessionId: string | null;
+  }> {
     if (!this.aiService) {
       throw new Error('AI service not initialized');
     }
@@ -281,6 +317,7 @@ export class MetaAgentService {
       worktreeId: worktreeId ?? undefined,
       agentRole: 'standard',
       createdBySessionId: metaSessionId,
+      parentSessionId: args.parentSessionIdOverride ?? null,
     });
 
     const initialPrompt = args.prompt?.trim();
@@ -310,7 +347,7 @@ export class MetaAgentService {
       await this.aiService.triggerQueuedPromptProcessingForSession(sessionId, worktreePath || workspaceId);
     }
 
-    return JSON.stringify({
+    return {
       sessionId,
       title,
       provider,
@@ -319,8 +356,93 @@ export class MetaAgentService {
       worktreePath,
       worktreeMode: args.worktreeId ? 'existing' : args.useWorktree ? 'new' : 'none',
       createdBySessionId: metaSessionId,
-      queuedInitialPrompt: !!args.prompt?.trim(),
+      queuedInitialPrompt: !!initialPrompt,
+      parentSessionId: args.parentSessionIdOverride ?? null,
+    };
+  }
+
+  private async spawnSibling(
+    parentSessionId: string,
+    workspaceId: string,
+    args: SpawnSiblingArgs
+  ): Promise<string> {
+    if (!args?.prompt?.trim()) {
+      throw new Error('prompt is required');
+    }
+
+    const parent = await AISessionsRepository.get(parentSessionId);
+    if (!parent || parent.workspacePath !== workspaceId) {
+      throw new Error(`Parent session ${parentSessionId} not found in this workspace`);
+    }
+
+    // Resolve which row should serve as the workstream container.
+    // Cases:
+    //  - parent already has a workstream container (parent.parentSessionId set) -> use that
+    //  - parent itself is already a workstream root -> use parent.id
+    //  - otherwise -> create a synthetic workstream container and reparent the original
+    const { workstreamId, promotedParent } = await this.resolveOrCreateWorkstream(parent, workspaceId);
+
+    const childResult = await this.createChildSessionInternal(parentSessionId, workspaceId, {
+      title: args.title,
+      prompt: args.prompt,
+      useWorktree: !!args.useWorktree,
+      model: args.model,
+      parentSessionIdOverride: workstreamId,
+    });
+
+    // Default is fire-and-forget: kicking off work in a fresh session is the
+    // common /launch-new-session use case (escape a long parent context).
+    const notifyOnComplete = args.notifyOnComplete === true;
+    if (!notifyOnComplete) {
+      await AISessionsRepository.updateMetadata(childResult.sessionId, {
+        metadata: { notifyParent: false },
+      });
+    }
+
+    return JSON.stringify({
+      ...childResult,
+      workstreamId,
+      promotedParent,
+      notifyOnComplete,
     }, null, 2);
+  }
+
+  private async resolveOrCreateWorkstream(
+    parent: { id: string; title?: string; provider: string; model?: string | null; sessionType?: string; parentSessionId?: string | null },
+    workspaceId: string
+  ): Promise<{ workstreamId: string; promotedParent: boolean }> {
+    if (parent.parentSessionId) {
+      return { workstreamId: parent.parentSessionId, promotedParent: false };
+    }
+
+    if (parent.sessionType === 'workstream') {
+      return { workstreamId: parent.id, promotedParent: false };
+    }
+
+    const workstreamId = randomUUID();
+    const workstreamTitle = (parent.title && parent.title.trim()) ? parent.title : 'Workstream';
+
+    await AISessionsRepository.create({
+      id: workstreamId,
+      provider: parent.provider,
+      model: parent.model ?? undefined,
+      title: workstreamTitle,
+      workspaceId,
+      sessionType: 'workstream',
+    });
+
+    // Tag the workstream container in metadata so existing renderer code that
+    // relies on metadata.isWorkstreamRoot continues to work.
+    await AISessionsRepository.updateMetadata(workstreamId, {
+      metadata: { isWorkstreamRoot: true },
+    });
+
+    // Reparent the original session under the new workstream container.
+    await AISessionsRepository.updateMetadata(parent.id, {
+      parentSessionId: workstreamId,
+    });
+
+    return { workstreamId, promotedParent: true };
   }
 
   private async listWorktreesJson(workspaceId: string): Promise<string> {
@@ -520,6 +642,14 @@ export class MetaAgentService {
 
       const session = await AISessionsRepository.get(sessionId);
       if (!session || session.agentRole === 'meta-agent' || !session.createdBySessionId || !session.workspacePath) {
+        return;
+      }
+
+      // Honor fire-and-forget: spawn_sibling sets metadata.notifyParent=false on
+      // the child for /launch-new-session-style hand-offs where the parent does
+      // not want to receive [Child Session Update] follow-up prompts.
+      const childMetadata = (session.metadata as Record<string, unknown> | undefined) ?? undefined;
+      if (childMetadata && childMetadata.notifyParent === false) {
         return;
       }
 

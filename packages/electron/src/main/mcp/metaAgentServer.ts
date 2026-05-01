@@ -20,6 +20,14 @@ type CreateSessionArgs = {
   worktreeId?: string;
 };
 
+type SpawnSiblingArgs = {
+  title?: string;
+  prompt: string;
+  useWorktree?: boolean;
+  model?: string;
+  notifyOnComplete?: boolean;
+};
+
 type RespondToPromptArgs = {
   sessionId: string;
   promptId: string;
@@ -39,6 +47,11 @@ interface MetaAgentToolFns {
     metaSessionId: string,
     workspaceId: string,
     args: CreateSessionArgs
+  ) => Promise<string>;
+  spawnSibling: (
+    callerSessionId: string,
+    workspaceId: string,
+    args: SpawnSiblingArgs
   ) => Promise<string>;
   getSessionStatus: (
     metaSessionId: string,
@@ -272,6 +285,40 @@ function createMetaAgentMcpServer(
           },
         },
         {
+          name: "spawn_sibling",
+          description:
+            "Spawn a sibling session that runs in parallel under the same workstream as the calling session. If the caller is not yet part of a workstream, a workstream container is created and the caller is reparented under it so both sessions share files-edited, tabs, and get_workstream_overview. Fire-and-forget by default — the calling session is not notified when the spawned session completes; pass notifyOnComplete=true to opt in. Use this for the /launch-new-session flow.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              prompt: {
+                type: "string",
+                description:
+                  "REQUIRED. Self-contained handoff brief for the new session. Should describe the task, relevant file paths, decisions already made, and a pointer back to the current session id (the new session can call get_session_summary to read more).",
+              },
+              title: {
+                type: "string",
+                description: "Optional short title for the new session.",
+              },
+              useWorktree: {
+                type: "boolean",
+                description:
+                  "Default false. Set true only when the user explicitly asks for the new session to run in an isolated worktree.",
+              },
+              model: {
+                type: "string",
+                description: "Optional explicit model identifier. Defaults to the caller's provider/model defaults.",
+              },
+              notifyOnComplete: {
+                type: "boolean",
+                description:
+                  "Default false. When false (the default), the calling session receives no follow-up prompt when the spawned session completes/errors/waits — fire and forget. Set true only when the caller specifically wants to be told the result and continue working with it.",
+              },
+            },
+            required: ["prompt"],
+          },
+        },
+        {
           name: "get_session_status",
           description:
             "Get the current status of a child session including last activity time and whether it is waiting for input.",
@@ -394,6 +441,16 @@ function createMetaAgentMcpServer(
               {
                 type: "text",
                 text: await toolFns.createSession(aiSessionId, workspaceId, args ?? {}),
+              },
+            ],
+            isError: false,
+          };
+        case "spawn_sibling":
+          return {
+            content: [
+              {
+                type: "text",
+                text: await toolFns.spawnSibling(aiSessionId, workspaceId, args as SpawnSiblingArgs),
               },
             ],
             isError: false,

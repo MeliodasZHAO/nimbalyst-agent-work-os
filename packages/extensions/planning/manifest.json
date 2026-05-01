@@ -27,6 +27,10 @@
         {
           "name": "track",
           "description": "Track bugs, tasks, ideas, and other items"
+        },
+        {
+          "name": "launch-new-session",
+          "description": "Spin off a sibling AI session to keep working in parallel"
         }
       ]
     }

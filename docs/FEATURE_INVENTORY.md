@@ -57,6 +57,7 @@ A concise reference of all features in the product. Keep this up to date as feat
 - Workstream session tabs (switch between child sessions)
 - Workstream header with active session highlight
 - Uncommitted files count per session
+- Agent-to-agent sibling spawning (`/launch-new-session` slash command + `spawn_sibling` MCP tool) — auto-promotes the caller into a workstream so the new sibling shares files-edited, tabs, and `get_workstream_overview`
 
 ## Session Kanban Board
 
@@ -270,6 +271,7 @@ A concise reference of all features in the product. Keep this up to date as feat
 
 - Session context (summaries, workstream overview, recent sessions, edited files, scheduled wakeups)
 - Session naming (name, tags, phase)
+- Meta-agent (`create_session`, `spawn_sibling`, `send_prompt`, `respond_to_prompt`, `get_session_status`, `get_session_result`, `list_spawned_sessions`, `list_worktrees`) — lets a session spawn and orchestrate child or sibling sessions
 - Developer tools (extension lifecycle, database query, log access, renderer eval, environment info)
 - Super Loop progress reporting
 - Display tools (charts, images inline in transcript)
