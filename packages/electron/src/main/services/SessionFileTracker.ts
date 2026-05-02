@@ -307,6 +307,15 @@ export class SessionFileTracker {
     toolUseId?: string,
     window?: BrowserWindow | null
   ): Promise<void> {
+    // Normalize to absolute so we never persist a mix of absolute and
+    // workspace-relative paths for the same file. The Edit/Write tools commonly
+    // pass relative paths while watcher- and ApplyPatch-driven tracking pass
+    // absolute paths; an inconsistent mix produces duplicate rows in the
+    // FilesEditedSidebar tree.
+    if (!path.isAbsolute(filePath)) {
+      filePath = path.resolve(workspaceId, filePath);
+    }
+
     try {
       // Dedup: skip if this file+session was already tracked as edited recently.
       // This prevents duplicate session_files entries when tool events

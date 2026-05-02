@@ -38,6 +38,21 @@ let currentWorkspacePath: string | null = null;
 const sessionWorkspaceRegistry = new Map<string, string>();
 
 /**
+ * Older session_files rows (before the SessionFileTracker normalization fix)
+ * persisted some Edit/Write paths as workspace-relative strings while Bash
+ * watcher and ApplyPatch paths were absolute. When the same file appears in
+ * both forms, the workstream tree renders it twice. Resolve relative paths
+ * against the session workspace so dedup-by-filePath collapses them.
+ */
+function toAbsoluteFilePath(filePath: string, workspacePath: string): string {
+  if (!filePath) return filePath;
+  if (filePath.startsWith('/') || /^[A-Za-z]:[\\/]/.test(filePath)) {
+    return filePath;
+  }
+  return `${workspacePath.replace(/[\\/]+$/, '')}/${filePath}`;
+}
+
+/**
  * Registry of worktree ID → worktree path.
  * Used to fetch worktree changed files on git:status-changed.
  */
@@ -97,7 +112,7 @@ export async function loadInitialSessionFileState(sessionId: string, workspacePa
 
     if (fileResult.success && fileResult.files) {
       let edits: FileEditWithSession[] = fileResult.files.map((f: any) => ({
-        filePath: f.filePath,
+        filePath: toAbsoluteFilePath(f.filePath, workspacePath),
         linkType: 'edited' as const,
         operation: f.metadata?.operation,
         linesAdded: f.metadata?.linesAdded,
@@ -188,8 +203,9 @@ export function initFileStateListeners(workspacePath: string): () => void {
         );
 
         if (result.success && result.files) {
+          const sessionWorkspacePath = sessionWorkspaceRegistry.get(sessionId) ?? currentWorkspacePath ?? '';
           let edits: FileEditWithSession[] = result.files.map((f: any) => ({
-            filePath: f.filePath,
+            filePath: toAbsoluteFilePath(f.filePath, sessionWorkspacePath),
             linkType: 'edited' as const,
             operation: f.metadata?.operation,
             linesAdded: f.metadata?.linesAdded,
@@ -364,10 +380,13 @@ async function enrichEditsWithToolCallMatches(
       matchByFileId.set(match.sessionFileId, match);
     }
 
-    // Build filePath -> sessionFileId mapping from the raw files we already have
+    // Build filePath -> sessionFileId mapping from the raw files we already have.
+    // Normalize raw paths the same way edits were normalized so absolute and
+    // workspace-relative DB rows still match the (now absolute) edit.filePath.
+    const sessionWorkspacePath = sessionWorkspaceRegistry.get(sessionId) ?? currentWorkspacePath ?? '';
     const filePathToId = new Map<string, string>();
     for (const f of rawFiles) {
-      filePathToId.set(f.filePath, f.id);
+      filePathToId.set(toAbsoluteFilePath(f.filePath, sessionWorkspacePath), f.id);
     }
 
     // Enrich edits with match data
