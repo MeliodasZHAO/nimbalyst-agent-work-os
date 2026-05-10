@@ -425,10 +425,19 @@ export class MetaAgentService {
       promotedParent = resolved.promotedParent;
     }
 
+    // Inherit the caller's worktree by default. spawn_session means "continue
+    // work in the same checkout I'm in"; without this, a child created from a
+    // worktree-resident parent silently lands in the project root and any edits
+    // it makes go to the wrong tree. Skip inheritance only when the caller
+    // explicitly asked for a brand-new worktree (useWorktree=true).
+    const inheritedWorktreeId =
+      !args.useWorktree && parent.worktreeId ? parent.worktreeId : undefined;
+
     const childResult = await this.createChildSessionInternal(parentSessionId, workspaceId, {
       title: args.title,
       prompt: args.prompt,
       useWorktree: !!args.useWorktree,
+      worktreeId: inheritedWorktreeId,
       model: args.model,
       parentSessionIdOverride: workstreamId,
     });
