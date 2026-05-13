@@ -152,6 +152,7 @@ interface ElectronAPI {
   showInFinder: (filePath: string) => Promise<{ success: boolean; error?: string }>;
   moveFile: (sourcePath: string, targetPath: string) => Promise<{ success: boolean; newPath?: string; error?: string }>;
   copyFile: (sourcePath: string, targetPath: string) => Promise<{ success: boolean; newPath?: string; error?: string }>;
+  getPathForFile: (file: File) => string;
   copyToClipboard: (text: string) => Promise<{ success: boolean }>;
   readClipboard: () => Promise<{ success: boolean; text?: string }>;
 

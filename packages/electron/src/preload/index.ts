@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import {ClaudeForWindowsInstallation} from "../main/services/CLIManager.ts";
 
 // Nimbalyst is an IDE-like application with many concurrent IPC listeners:
@@ -319,6 +319,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showInFinder: (filePath: string) => ipcRenderer.invoke('show-in-finder', filePath),
   moveFile: (sourcePath: string, targetPath: string) => ipcRenderer.invoke('move-file', sourcePath, targetPath),
   copyFile: (sourcePath: string, targetPath: string) => ipcRenderer.invoke('copy-file', sourcePath, targetPath),
+  // Electron 32 removed File.path; renderers must call webUtils.getPathForFile()
+  // (only available in preload). Returns '' if Electron cannot resolve a path
+  // for the File (e.g. synthetic blobs).
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
   copyToClipboard: (text: string) => ipcRenderer.invoke('copy-to-clipboard', text),
   readClipboard: () => ipcRenderer.invoke('read-from-clipboard'),
 

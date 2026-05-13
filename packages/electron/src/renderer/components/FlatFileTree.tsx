@@ -592,21 +592,41 @@ export function FlatFileTree({
       expandHoverTimerRef.current = null;
     }
 
-    // Handle external files from Finder/desktop
-    // Electron File objects have a .path property with the absolute file system path
-    const externalFiles = Array.from(e.dataTransfer.files) as Array<File & { path: string }>;
+    // Handle external files from Finder/desktop. Electron 32 removed the
+    // non-standard File.path; renderers must resolve the absolute path via
+    // webUtils.getPathForFile, exposed through the preload bridge.
+    const externalFiles = Array.from(e.dataTransfer.files);
     if (externalFiles.length > 0 && node.type === 'directory') {
+      const externalFailures: Array<{ name: string; error?: string }> = [];
+      let externalSuccess = 0;
       try {
         for (const file of externalFiles) {
-          if (!file.path) continue;
-          const result = await window.electronAPI.copyFile(file.path, node.path);
-          if (!result.success) {
-            console.error('Failed to copy external file:', file.path, result.error);
+          const sourcePath = window.electronAPI.getPathForFile(file);
+          if (!sourcePath) {
+            externalFailures.push({ name: file.name, error: 'No filesystem path' });
+            continue;
+          }
+          const result = await window.electronAPI.copyFile(sourcePath, node.path);
+          if (result.success) {
+            externalSuccess++;
+          } else {
+            console.error('Failed to copy external file:', sourcePath, result.error);
+            externalFailures.push({ name: file.name, error: result.error });
           }
         }
-        onRefreshFileTree?.();
-      } catch (error) {
-        console.error('Error copying external files:', error);
+        if (externalSuccess > 0) {
+          onRefreshFileTree?.();
+        }
+        if (externalFailures.length > 0) {
+          const failureSummary = externalFailures
+            .map((f) => `- ${f.name}: ${f.error || 'unknown error'}`)
+            .join('\n');
+          dialogRef.current?.open(DIALOG_IDS.ERROR, {
+            title: externalFailures.length === externalFiles.length ? 'Copy failed' : 'Some files could not be copied',
+            message: `${externalFailures.length} of ${externalFiles.length} item${externalFiles.length === 1 ? '' : 's'} could not be copied into ${node.name}.`,
+            details: failureSummary,
+          });
+        }
       } finally {
         setDragState(null);
       }
