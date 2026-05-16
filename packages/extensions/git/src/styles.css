@@ -223,6 +223,10 @@
   padding: 4px 10px;
   font-size: 11px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
 }
 
 .git-log-status-bar.success {
@@ -233,6 +237,37 @@
 .git-log-status-bar.error {
   background: color-mix(in srgb, var(--nim-error, #ef4444) 15%, transparent);
   color: var(--nim-error, #ef4444);
+}
+
+.git-log-status-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-log-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.git-log-status-action-btn {
+  background: color-mix(in srgb, var(--nim-error, #ef4444) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--nim-error, #ef4444) 40%, transparent);
+  color: var(--nim-error, #ef4444);
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.git-log-status-action-btn:hover {
+  background: color-mix(in srgb, var(--nim-error, #ef4444) 35%, transparent);
 }
 
 /* Body: list + optional detail panel side by side */

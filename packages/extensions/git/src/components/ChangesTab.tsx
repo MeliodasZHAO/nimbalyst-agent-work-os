@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import { DiffPeekPopover } from './DiffPeekPopover';
 import { useDiffCache } from '../hooks/useDiffCache';
 import { SessionsForFilePane } from './SessionsForFilePane';
+import { GitStatusBar } from './GitStatusBar';
 
 // Access the generic Electron IPC invoke
 const ipc = (window as unknown as {
@@ -829,24 +830,12 @@ export function ChangesTab({
         <span className="git-changes-keyhint-sep">·</span>
         <span><kbd>Esc</kbd> close</span>
       </div>
-      {statusMessage && (
-        <div
-          className={`git-log-status-bar ${statusMessage.isError ? 'error' : 'success'}`}
-          onClick={() => !statusMessage.isError && setStatusMessage(null)}
-        >
-          {statusMessage.text}
-          {statusMessage.isError && (
-            <>
-              <button className="git-log-status-details-btn" onClick={onShowOutput}>
-                Show Details
-              </button>
-              <button className="git-changes-dismiss-btn" onClick={() => setStatusMessage(null)}>
-                &#10005;
-              </button>
-            </>
-          )}
-        </div>
-      )}
+      <GitStatusBar
+        message={statusMessage && !statusMessage.isError ? statusMessage.text : null}
+        error={statusMessage?.isError ? statusMessage.text : null}
+        onDismissError={() => setStatusMessage(null)}
+        onShowDetails={onShowOutput}
+      />
 
       {filteredTotal === 0 && (
         <div className="git-changes-empty">

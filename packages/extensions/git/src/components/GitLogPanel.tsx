@@ -10,6 +10,7 @@ import { CommitDetailContent, type CommitDetail } from './CommitDetailContent';
 import { BranchPicker } from './BranchPicker';
 import { ChangesTab } from './ChangesTab';
 import { OutputTab } from './OutputTab';
+import { GitStatusBar } from './GitStatusBar';
 import { useOperationLog, getSuggestionForError } from '../hooks/useOperationLog';
 import { usePanelState, readSelectedHash } from '../hooks/usePanelState';
 
@@ -106,6 +107,7 @@ export function GitLogPanel({ host }: PanelHostProps) {
   const [pullMenuOpen, setPullMenuOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionErrorCommand, setActionErrorCommand] = useState<string | undefined>(undefined);
   const [isResizing, setIsResizing] = useState(false);
   const [panelHeight, setPanelHeight] = useState(300);
   const resizeStartY = useRef<number>(0);
@@ -217,19 +219,26 @@ export function GitLogPanel({ host }: PanelHostProps) {
     window.addEventListener('mouseup', onUp);
   }, [detailWidth, host.storage]);
 
-  const showMessage = useCallback((msg: string, isError = false) => {
+  const showMessage = useCallback((msg: string, isError = false, command?: string) => {
     if (isError) {
       setActionError(msg);
+      setActionErrorCommand(command);
       setActionMessage(null);
       // Errors persist until dismissed - do NOT auto-clear
     } else {
       setActionMessage(msg);
       setActionError(null);
+      setActionErrorCommand(undefined);
       // Success messages auto-clear after 4s
       setTimeout(() => {
         setActionMessage(null);
       }, 4000);
     }
+  }, []);
+
+  const dismissError = useCallback(() => {
+    setActionError(null);
+    setActionErrorCommand(undefined);
   }, []);
 
   const loadBranches = useCallback(async () => {
@@ -352,10 +361,10 @@ export function GitLogPanel({ host }: PanelHostProps) {
         loadStatus();
         loadCommits();
       } else {
-        showMessage(result.error || 'Push failed', true);
+        showMessage(result.error || 'Push failed', true, 'git push origin');
       }
     } catch (err) {
-      showMessage(err instanceof Error ? err.message : 'Push failed', true);
+      showMessage(err instanceof Error ? err.message : 'Push failed', true, 'git push origin');
     } finally {
       setActionLoading(null);
     }
@@ -363,9 +372,9 @@ export function GitLogPanel({ host }: PanelHostProps) {
 
   const handlePull = useCallback(async () => {
     setActionLoading('pull');
+    const strategyLabel = pullStrategy === 'rebase' ? ' --rebase' : pullStrategy === 'ff-only' ? ' --ff-only' : '';
     try {
       const opts = pullStrategy === 'rebase' ? { rebase: true } : pullStrategy === 'ff-only' ? { ffOnly: true } : {};
-      const strategyLabel = pullStrategy === 'rebase' ? ' --rebase' : pullStrategy === 'ff-only' ? ' --ff-only' : '';
       const result = await withLog(
         `git pull${strategyLabel} origin`,
         () => ipc.invoke('git:pull', workspacePath, opts) as Promise<PullResult>,
@@ -381,10 +390,10 @@ export function GitLogPanel({ host }: PanelHostProps) {
         loadStatus();
         loadCommits();
       } else {
-        showMessage(result.error || 'Pull failed', true);
+        showMessage(result.error || 'Pull failed', true, `git pull${strategyLabel} origin`);
       }
     } catch (err) {
-      showMessage(err instanceof Error ? err.message : 'Pull failed', true);
+      showMessage(err instanceof Error ? err.message : 'Pull failed', true, `git pull${strategyLabel} origin`);
     } finally {
       setActionLoading(null);
     }
@@ -413,10 +422,10 @@ export function GitLogPanel({ host }: PanelHostProps) {
         showMessage('Fetched successfully');
         loadStatus();
       } else {
-        showMessage(result.error || 'Fetch failed', true);
+        showMessage(result.error || 'Fetch failed', true, 'git fetch origin');
       }
     } catch (err) {
-      showMessage(err instanceof Error ? err.message : 'Fetch failed', true);
+      showMessage(err instanceof Error ? err.message : 'Fetch failed', true, 'git fetch origin');
     } finally {
       setActionLoading(null);
     }
@@ -704,28 +713,13 @@ export function GitLogPanel({ host }: PanelHostProps) {
       </div>
 
       {/* Status message (visible on all tabs) */}
-      {(actionMessage || actionError) && (
-        <div className={`git-log-status-bar ${actionError ? 'error' : 'success'}`}>
-          {actionMessage || actionError}
-          {actionError && (
-            <>
-              <button
-                className="git-log-status-details-btn"
-                onClick={() => setActiveTab('output')}
-              >
-                Show Details
-              </button>
-              <button
-                className="git-changes-dismiss-btn"
-                onClick={() => setActionError(null)}
-                title="Dismiss"
-              >
-                &#10005;
-              </button>
-            </>
-          )}
-        </div>
-      )}
+      <GitStatusBar
+        message={actionMessage}
+        error={actionError}
+        errorCommand={actionErrorCommand}
+        onDismissError={dismissError}
+        onShowDetails={() => setActiveTab('output')}
+      />
 
       {/* Context menu (log tab only) */}
       {contextMenu && (
