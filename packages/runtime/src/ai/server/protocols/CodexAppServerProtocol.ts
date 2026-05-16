@@ -525,7 +525,7 @@ export class CodexAppServerProtocol implements AgentProtocol {
       if (attachment.type === 'document') {
         elements.push({ type: 'text', text: await buildDocumentAttachmentPromptText(attachment) });
       } else if (attachment.type === 'image') {
-        elements.push({ type: 'local_image', path: attachment.filepath });
+        elements.push({ type: 'localImage', path: attachment.filepath });
       }
     }
     return elements;

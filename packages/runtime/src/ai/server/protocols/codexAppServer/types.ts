@@ -128,7 +128,7 @@ export type ThreadResumeResponse = ThreadStartResponse;
 
 export type UserInputElement =
   | { type: 'text'; text: string }
-  | { type: 'local_image'; path: string }
+  | { type: 'localImage'; path: string }
   | { type: 'image'; path: string };
 
 export interface TurnStartParams {
