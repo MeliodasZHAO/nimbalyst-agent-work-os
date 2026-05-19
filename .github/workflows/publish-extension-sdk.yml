@@ -14,6 +14,14 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# Coalesce duplicate runs for the same tag (we have seen GitHub deliver the
+# push event twice on a single tag push, which races at `npm publish` and
+# produces a spurious "cannot publish over previously published version"
+# failure on the loser).
+concurrency:
+  group: publish-extension-sdk-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   id-token: write
