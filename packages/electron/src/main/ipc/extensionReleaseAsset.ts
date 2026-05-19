@@ -26,9 +26,13 @@ export interface SelectReleaseAssetOptions {
  *  - We accept `.nimext` and `.zip` assets. The `.zip` case is validated
  *    identically to `.nimext` later -- it must contain a top-level
  *    `manifest.json`.
- *  - With a subdir (monorepo URL): the asset name must start with the subdir
- *    (case-insensitive). `.nimext` is preferred over `.zip`. No name match
- *    returns null so the caller falls through to clone-source.
+ *  - With a subdir (monorepo URL): the asset name must start with the LAST
+ *    path segment of the subdir (case-insensitive). Asset filenames are
+ *    flat -- they have no `/` -- so matching against the full subdir
+ *    string never works for nested paths like
+ *    `packages/extensions/mockuplm`. We match on `mockuplm` instead, which
+ *    is the natural CI convention. `.nimext` is preferred over `.zip`. No
+ *    name match returns null so the caller falls through to clone-source.
  *  - Without a subdir: prefer `.nimext` over `.zip`. When multiple match,
  *    prefer an asset whose filename contains the repo name; otherwise pick
  *    the first asset of that type in registration order.
@@ -41,7 +45,8 @@ export function selectReleaseAsset(
   const zip = assets.filter(a => a.name.toLowerCase().endsWith('.zip'));
 
   if (subdir) {
-    const prefix = subdir.toLowerCase();
+    const lastSegment = subdir.split('/').filter(Boolean).pop() ?? subdir;
+    const prefix = lastSegment.toLowerCase();
     return (
       nimext.find(a => a.name.toLowerCase().startsWith(prefix)) ??
       zip.find(a => a.name.toLowerCase().startsWith(prefix)) ??

@@ -101,5 +101,34 @@ describe('selectReleaseAsset', () => {
       const got = selectReleaseAsset([target], { repoName: 'monorepo', subdir: 'crystal-dark' });
       expect(got).toBe(target);
     });
+
+    it('matches against the last path segment for nested subdirs', () => {
+      // GitHub release asset names are flat (no slashes), so for a URL like
+      // .../tree/main/packages/extensions/mockuplm we must match against
+      // "mockuplm", not the full "packages/extensions/mockuplm".
+      const target = asset('mockuplm-0.4.0.nimext');
+      const got = selectReleaseAsset(
+        [asset('rose-pine-0.1.0.nimext'), target],
+        { repoName: 'monorepo', subdir: 'packages/extensions/mockuplm' },
+      );
+      expect(got).toBe(target);
+    });
+
+    it('handles a trailing slash on the subdir', () => {
+      const target = asset('mockuplm-0.4.0.nimext');
+      const got = selectReleaseAsset(
+        [target],
+        { repoName: 'monorepo', subdir: 'packages/extensions/mockuplm/' },
+      );
+      expect(got).toBe(target);
+    });
+
+    it('returns null when no asset starts with the last segment of a nested subdir', () => {
+      const got = selectReleaseAsset(
+        [asset('rose-pine-0.1.0.nimext'), asset('crystal-dark.zip')],
+        { repoName: 'monorepo', subdir: 'packages/extensions/mockuplm' },
+      );
+      expect(got).toBeNull();
+    });
   });
 });
