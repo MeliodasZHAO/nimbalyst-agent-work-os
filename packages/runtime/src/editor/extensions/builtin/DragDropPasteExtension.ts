@@ -24,6 +24,7 @@ import {
 
 import type { UploadedEditorAsset } from '../../EditorConfig';
 import { INSERT_IMAGE_COMMAND } from '../../plugins/ImagesPlugin';
+import { uploadEditorImageAsset } from './imageAssetUpload';
 
 const ACCEPTABLE_IMAGE_TYPES = [
   'image/',
@@ -33,33 +34,11 @@ const ACCEPTABLE_IMAGE_TYPES = [
   'image/webp',
 ];
 
-async function processImageFile(file: File): Promise<string> {
-  if (typeof window !== 'undefined' && (window as any).electronAPI) {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Array.from(new Uint8Array(arrayBuffer));
-      const documentPath = (window as any).__currentDocumentPath || undefined;
-      const { relativePath } = await (window as any).electronAPI.invoke(
-        'document-service:store-asset',
-        { buffer, mimeType: file.type, documentPath },
-      );
-      return relativePath;
-    } catch (error) {
-      console.error('Failed to store asset, falling back to base64:', error);
-    }
-  }
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-      } else {
-        reject(new Error('Failed to read file'));
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+async function processImageFile(
+  file: File,
+  uploadAsset?: (file: File) => Promise<UploadedEditorAsset>,
+): Promise<string> {
+  return uploadEditorImageAsset(file, uploadAsset, { allowDataUrlFallback: true });
 }
 
 function insertUploadedAsset(
@@ -103,7 +82,7 @@ export const DragDropPasteExtension = defineExtension({
               continue;
             }
             if (isMimeType(file, ACCEPTABLE_IMAGE_TYPES)) {
-              const src = await processImageFile(file);
+              const src = await processImageFile(file, config.uploadAsset);
               editor.dispatchCommand(INSERT_IMAGE_COMMAND, {
                 altText: file.name,
                 src,

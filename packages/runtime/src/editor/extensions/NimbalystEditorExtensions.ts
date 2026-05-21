@@ -144,6 +144,7 @@ export function buildNimbalystRootExtension(
     configExtension(MarkdownPasteExtension, {
       transformers: options.markdownTransformers ?? [],
       minConfidenceScore: 15,
+      uploadAsset: options.onUploadAsset,
     }),
     configExtension(MarkdownCopyExtension, {
       transformers: options.markdownTransformers ?? [],
