@@ -120,12 +120,18 @@ export class McpConfigService {
       };
     }
 
-    // Include session naming MCP server if it's started
+    // Include session naming MCP server if it's started.
+    // alwaysLoad keeps update_session_meta in the prompt instead of deferring
+    // it behind ToolSearch. Without this, ~56% of sessions burn their first
+    // turn on `ToolSearch select:...update_session_meta` before they can name
+    // the session. The server has exactly one small tool, so the always-on
+    // prompt cost is negligible.
     if (this.deps.sessionNamingServerPort !== null && sessionId) {
       config['nimbalyst-session-naming'] = {
         type: 'sse',
         transport: 'sse',
         url: `http://127.0.0.1:${this.deps.sessionNamingServerPort}/mcp?sessionId=${encodeURIComponent(sessionId)}`,
+        alwaysLoad: true,
         ...(authHeaders ? { headers: { ...authHeaders } } : {}),
       };
     }

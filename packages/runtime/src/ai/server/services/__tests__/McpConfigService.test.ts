@@ -187,7 +187,8 @@ describe('McpConfigService', () => {
       expect(config['nimbalyst-session-naming']).toEqual({
         type: 'sse',
         transport: 'sse',
-        url: 'http://127.0.0.1:3001/mcp?sessionId=session123'
+        url: 'http://127.0.0.1:3001/mcp?sessionId=session123',
+        alwaysLoad: true,
       });
     });
 
