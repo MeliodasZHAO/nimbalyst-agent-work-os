@@ -49,26 +49,12 @@ import { logger } from '../utils/logger';
 import { isAuthenticated } from './StytchAuthService';
 import { findTeamForWorkspace, getOrgScopedJwt } from './TeamService';
 import { getOrgKey, getOrgKeyFingerprint, fetchAndUnwrapOrgKey } from './OrgKeyService';
-import { getSessionSyncConfig } from '../utils/store';
+import { getCollabSyncWsUrl } from '../utils/collabSyncUrl';
 import { getDatabase } from '../database/initialize';
 import { TrackerPGLiteStore } from './tracker/TrackerPGLiteStore';
 import { windows, windowStates } from '../window/windowState';
 import { getEffectiveTrackerSyncPolicy, shouldSyncTrackerPolicy } from './TrackerPolicyService';
 import { rowToTrackerItem } from '../mcp/tools/trackerToolHandlers';
-
-// ============================================================================
-// Sync server URL
-// ============================================================================
-
-const PRODUCTION_SYNC_URL = 'wss://sync.nimbalyst.com';
-const DEVELOPMENT_SYNC_URL = 'ws://localhost:8790';
-
-function getSyncWsUrl(): string {
-  const config = getSessionSyncConfig();
-  const isDev = process.env.NODE_ENV !== 'production';
-  const env = isDev ? config?.environment : undefined;
-  return env === 'development' ? DEVELOPMENT_SYNC_URL : PRODUCTION_SYNC_URL;
-}
 
 // ============================================================================
 // Engine registry (per workspace)
@@ -288,7 +274,7 @@ async function doInitializeTrackerSync(workspacePath: string): Promise<void> {
   const persistence = new TrackerPGLiteStore(db, workspacePath);
 
   const config: TrackerSyncEngineConfig = {
-    serverUrl: getSyncWsUrl(),
+    serverUrl: getCollabSyncWsUrl(),
     orgId: team.orgId,
     teamProjectId: team.teamProjectId,
     userId: '',  // informational only; the JWT carries the authoritative sub

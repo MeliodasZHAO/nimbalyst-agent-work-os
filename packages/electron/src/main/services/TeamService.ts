@@ -24,7 +24,7 @@ import { createHash } from 'crypto';
 import { safeHandle } from '../utils/ipcRegistry';
 import { logger } from '../utils/logger';
 import { getNormalizedGitRemote } from '../utils/gitUtils';
-import { getSessionSyncConfig } from '../utils/store';
+import { getCollabSyncHttpUrl } from '../utils/collabSyncUrl';
 import {
   getAccounts,
   getSessionJwt,
@@ -68,20 +68,11 @@ import { ensureTrackerSyncForWorkspace } from './TrackerSyncManager';
 // Server URL Helper
 // ============================================================================
 
-const PRODUCTION_COLLAB_URL = 'https://sync.nimbalyst.com';
-const DEVELOPMENT_COLLAB_URL = 'http://localhost:8790';
-
-/**
- * Derive the collab server HTTP URL from environment.
- * Unlike SyncManager, this does NOT require sync to be enabled --
- * team operations should work as long as the user is authenticated.
- */
-function getCollabServerUrl(): string {
-  const config = getSessionSyncConfig();
-  const isDev = process.env.NODE_ENV !== 'production';
-  const env = isDev ? config?.environment : undefined;
-  return env === 'development' ? DEVELOPMENT_COLLAB_URL : PRODUCTION_COLLAB_URL;
-}
+// Team operations resolve to the same host the renderer's DocumentSync /
+// TrackerSync use; the canonical helper is `getCollabSyncHttpUrl` in
+// utils/collabSyncUrl.ts. Re-exported under the original name so this
+// module's many callers (and any external imports) don't churn.
+const getCollabServerUrl = getCollabSyncHttpUrl;
 
 // ============================================================================
 // Types
@@ -264,6 +255,16 @@ export async function getOrgScopedJwt(orgId: string, accountOrgId?: string): Pro
 // ============================================================================
 
 /**
+ * Per-request deadline for `fetchTeamApi`. `net.fetch` has no default
+ * timeout, so without this an unresponsive worker (e.g. the Stytch B2B
+ * JWKS outage on 2026-05-20) can hang IPC handlers indefinitely. NIM-638
+ * was a stuck tracker editor caused by `team:list-members` waiting on
+ * such a hung request forever. 15s is generous for these calls -- a
+ * healthy worker responds in under a second.
+ */
+const TEAM_API_TIMEOUT_MS = 15_000;
+
+/**
  * Make an authenticated REST call to the collabv3 team API.
  * Uses the personal org JWT for team-listing endpoints.
  * Uses org-scoped JWT when orgId is provided (for member operations).
@@ -282,11 +283,23 @@ async function fetchTeamApi(path: string, method: string, body?: unknown, orgId?
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
     }
-    return net.fetch(`${httpUrl}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TEAM_API_TIMEOUT_MS);
+    try {
+      return await net.fetch(`${httpUrl}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if ((err as { name?: string })?.name === 'AbortError') {
+        throw new Error(`Team API timeout after ${TEAM_API_TIMEOUT_MS}ms: ${method} ${path}`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
   };
 
   // Use org-scoped JWT if orgId provided, otherwise personal JWT

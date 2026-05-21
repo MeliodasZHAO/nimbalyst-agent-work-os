@@ -30,18 +30,9 @@ import {
 import { EditorNodes, getEditorTransformers, $convertFromEnhancedMarkdownString } from '@nimbalyst/runtime/editor';
 import { $getRoot } from 'lexical';
 import { logger } from '../utils/logger';
+import { getCollabSyncWsUrl } from '../utils/collabSyncUrl';
 import { findTeamForWorkspace, getOrgScopedJwt } from './TeamService';
 import { getOrgKey, getOrgKeyFingerprint, fetchAndUnwrapOrgKey } from './OrgKeyService';
-
-const PRODUCTION_SYNC_URL = 'wss://sync.nimbalyst.com';
-const DEVELOPMENT_SYNC_URL = 'ws://localhost:8790';
-
-function getSyncWsUrl(): string {
-  // Mirrors TrackerSyncManager.getSyncWsUrl(); kept local to avoid a
-  // circular import.
-  const isDev = process.env.NODE_ENV !== 'production';
-  return isDev ? DEVELOPMENT_SYNC_URL : PRODUCTION_SYNC_URL;
-}
 
 const IDLE_TTL_MS = 30_000;
 const MAX_WARM_ENTRIES = 25;
@@ -95,7 +86,7 @@ async function resolveConfig(
   const documentId = `tracker-content/${itemId}`;
 
   return {
-    serverUrl: getSyncWsUrl(),
+    serverUrl: getCollabSyncWsUrl(),
     getJwt: () => getOrgScopedJwt(team.orgId),
     orgId: team.orgId,
     documentKey: key,

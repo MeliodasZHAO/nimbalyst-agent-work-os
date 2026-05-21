@@ -88,6 +88,18 @@ interface TrackerContentCollabResult {
    * provider's sync listener actually gets registered.
    */
   providerEpoch: number;
+  /**
+   * The body markdown read from `tracker_body_cache` for the current
+   * `body_version`. Exposed so the caller can drive a defensive
+   * cold-paint fallback when `initialEditorState` was wired but
+   * Lexical's binding declined to bootstrap (e.g. `_xmlText._length`
+   * counted as non-zero because the binding wrote a root element
+   * before sync delivered actual content). The caller may apply this
+   * markdown via `editor.update()` after the WS reaches `connected`
+   * and the editor is still visually empty. `null` means either no
+   * cache row exists OR the fetch has not yet resolved.
+   */
+  bodyCacheMarkdown: string | null;
 }
 
 function randomCursorColor(): string {
@@ -326,6 +338,7 @@ export function useTrackerContentCollab({
       syncProvider: null, reviewState: null,
       acceptRemoteChanges: () => {}, rejectRemoteChanges: () => {},
       providerEpoch: 0,
+      bodyCacheMarkdown: null,
     };
   }
 
@@ -338,5 +351,6 @@ export function useTrackerContentCollab({
     acceptRemoteChanges,
     rejectRemoteChanges,
     providerEpoch,
+    bodyCacheMarkdown,
   };
 }

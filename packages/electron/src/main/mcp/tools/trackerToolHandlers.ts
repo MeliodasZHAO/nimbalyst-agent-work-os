@@ -14,6 +14,7 @@ import {
   shouldSyncTrackerPolicy,
 } from '../../services/TrackerPolicyService';
 import { isTrackerSyncActive, syncTrackerItem } from '../../services/TrackerSyncManager';
+import { applyHeadlessBodyMarkdown } from '../../services/MainBodyDocService';
 import { getWorkspaceState } from '../../utils/store';
 import { getVisibleTrackerLinkedSessions, shouldPersistTrackerLinkedSessions } from '../../../shared/trackerSessionLinks';
 
@@ -310,6 +311,16 @@ export function rowToTrackerItem(row: any): any {
     linkedCommits: data.linkedCommits || undefined,
     documentId: data.documentId || undefined,
     syncStatus: row.sync_status || 'local',
+    // Body Y.Doc version pointer. Without this, syncTrackerItem ships
+    // bodyVersion=0 through trackerItemToPayload, and applyRemoteItem's
+    // `body_version = EXCLUDED.body_version` clobbers any local bump back
+    // to 0. That breaks the join in getTrackerBodyCacheLatest (which
+    // matches `c.body_version = t.body_version`) and the renderer's cold
+    // paint comes back empty -- so the editor stays on "Loading content..."
+    // BIGINT arrives as string|number depending on driver path; normalize.
+    bodyVersion: row.body_version !== undefined && row.body_version !== null
+      ? Number(row.body_version)
+      : undefined,
   };
   // Pass through all extra JSONB data fields (activity, comments, kanbanSortOrder, etc.)
   // as customFields so they survive the TrackerItem -> TrackerRecord conversion.
@@ -1499,6 +1510,58 @@ export async function handleTrackerCreate(
       }
     }
 
+    // Route the description through the canonical body path so it shows up
+    // in the editor when the item is opened. The initial INSERT above sets
+    // `content` for backward compatibility, but for shared trackers the
+    // metadata-sync ack (`applyRemoteItem`) clobbers it to NULL because the
+    // wire payload carries no body field. Without this block, `body_version`
+    // stays at 0, `tracker_body_cache` is never populated, and the live
+    // DocumentRoom Y.Doc is never seeded -- so the collaborative editor
+    // mounts empty. This mirrors `ElectronDocumentService.updateTrackerItemContent`
+    // inline so we do not depend on `documentServices` having an entry for
+    // this workspace (which is empty after a main-process hot-reload until
+    // the first window finishes wiring up).
+    if (descriptionText) {
+      try {
+        const bodyContentJson = JSON.stringify(descriptionText);
+        const bumpResult = await db.query<{ body_version: string | number | null }>(
+          `UPDATE tracker_items
+              SET content = $1,
+                  body_version = COALESCE(body_version, 0) + 1,
+                  updated = NOW()
+            WHERE id = $2
+            RETURNING body_version`,
+          [bodyContentJson, id]
+        );
+        const newBodyVersion = Number(bumpResult.rows[0]?.body_version ?? 0);
+        if (newBodyVersion > 0) {
+          await db.query(
+            `INSERT INTO tracker_body_cache (item_id, body_version, content, cached_at)
+             VALUES ($1, $2, $3, NOW())
+             ON CONFLICT (item_id, body_version) DO NOTHING`,
+            [id, newBodyVersion, bodyContentJson]
+          );
+        }
+
+        // Re-sync metadata so peers learn the bodyVersion bump (cold readers
+        // invalidate their cache and refetch from `tracker_body_cache`).
+        if (shouldSyncTrackerPolicy(syncPolicy) && isTrackerSyncActive(workspacePath)) {
+          createdRow = await resolveTrackerRowByReference(db, id, workspacePath);
+          createdItem = createdRow ? rowToTrackerItem(createdRow) : createdItem;
+          if (createdItem) {
+            await syncTrackerItem(createdItem);
+          }
+        }
+
+        // Seed the live DocumentRoom Y.Doc so the collaborative editor mounts
+        // with content instead of waiting on a never-bootstrapped room. No-op
+        // for local trackers (resolveConfig returns null without a team).
+        await applyHeadlessBodyMarkdown(workspacePath, id, descriptionText);
+      } catch (bodyError) {
+        console.error('[MCP Server] tracker_create body write failed:', bodyError);
+      }
+    }
+
     // Link the current session only when explicitly requested.
     // Why: auto-linking on every create polluted sessions with unrelated tracker
     // items (the agent often creates a tracker item as a side effect, not as the
@@ -1786,6 +1849,20 @@ export async function handleTrackerUpdate(
            ON CONFLICT (item_id, body_version) DO NOTHING`,
           [row.id, newBodyVersion, contentJson]
         );
+      }
+
+      // Also seed the live DocumentRoom Y.Doc for `fullDocument` types
+      // (incident, plan, decision, ...): the editor panel reads from the
+      // collab body, not from `tracker_items.content`, so a PGLite-only
+      // write leaves the panel blank for every peer until someone opens
+      // the editor and bootstraps it. Mirrors handleTrackerCreate. No-op
+      // for local trackers (resolveConfig returns null without a team).
+      if (workspacePath) {
+        try {
+          await applyHeadlessBodyMarkdown(workspacePath, row.id, normalizedContent);
+        } catch (bodyError) {
+          console.error('[MCP Server] tracker_update body Y.Doc seed failed:', bodyError);
+        }
       }
     }
 

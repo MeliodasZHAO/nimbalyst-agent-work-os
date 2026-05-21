@@ -28,7 +28,6 @@ import { shouldExcludeDir } from '../utils/fileFilters';
 import { getRegisteredExtensions } from '../extensions/RegisteredFileTypes';
 import { isPathInWorkspace, getRelativeWorkspacePath } from '../utils/workspaceDetection';
 import { syncTrackerItem, unsyncTrackerItem, isTrackerSyncActive } from './TrackerSyncManager';
-import { applyHeadlessBodyMarkdown } from './MainBodyDocService';
 import {
   getEffectiveTrackerSyncPolicy,
   getInitialTrackerSyncStatus,
@@ -1224,13 +1223,26 @@ export class ElectronDocumentService implements DocumentService {
         } catch (syncErr) {
           console.error('[DocumentService] updateTrackerItemContent sync failed:', syncErr);
         }
-        // Limitation 1 fix (Option A): also land the body change against
-        // the live DocumentRoom Y.Doc so warm renderer peers receive the
-        // edit via CRDT merge instead of clobbering it on their next
-        // autosave.
-        if (typeof content === 'string') {
-          void applyHeadlessBodyMarkdown(item.workspace, itemId, content);
-        }
+        // Intentionally NOT calling `applyHeadlessBodyMarkdown` here.
+        //
+        // The renderer save path that hits this IPC already wrote the
+        // body to the live DocumentRoom Y.Doc through its own
+        // `CollabLexicalProvider` -- the autosave fires AFTER the local
+        // Y.Doc edit has propagated. Re-applying the same markdown via
+        // the main-process headless peer is not just redundant: the
+        // headless write does `root.clear()` + re-parse, generating
+        // brand-new XmlElement IDs that the renderer's `@lexical/yjs`
+        // binding sees as remote structural changes. That fires
+        // `onDirtyChange` on the editor, which triggers another save,
+        // which fires another headless write, and so on -- the loop
+        // that just clobbered NIM-633's body cache 100+ times in 90
+        // seconds with "asd" while we were debugging.
+        //
+        // MCP-driven body writes (handleTrackerCreate /
+        // handleTrackerUpdate in trackerToolHandlers) still call
+        // `applyHeadlessBodyMarkdown` themselves -- they are the path
+        // that needs it because there is no live renderer peer to
+        // write the Y.Doc.
       }
     }
   }

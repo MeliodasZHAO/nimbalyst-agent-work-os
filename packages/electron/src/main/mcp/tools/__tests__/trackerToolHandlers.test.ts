@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockQuery, mockUpsertWorkspaceTrackerSchema, mockDeleteWorkspaceTrackerSchema, mockGetAllTrackerSchemas, mockIsBuiltinTrackerSchema, mockGlobalRegistry } = vi.hoisted(() => ({
+const { mockQuery, mockUpsertWorkspaceTrackerSchema, mockDeleteWorkspaceTrackerSchema, mockGetAllTrackerSchemas, mockIsBuiltinTrackerSchema, mockGlobalRegistry, mockApplyHeadlessBodyMarkdown } = vi.hoisted(() => ({
   mockQuery: vi.fn(),
   mockUpsertWorkspaceTrackerSchema: vi.fn(),
   mockDeleteWorkspaceTrackerSchema: vi.fn(),
@@ -10,6 +10,7 @@ const { mockQuery, mockUpsertWorkspaceTrackerSchema, mockDeleteWorkspaceTrackerS
     get: vi.fn(() => undefined),
     validate: vi.fn(() => ({ valid: true, errors: [] as Array<{ field: string; message: string }> })),
   },
+  mockApplyHeadlessBodyMarkdown: vi.fn(async () => undefined),
 }));
 
 vi.mock('../../../database/initialize', () => ({
@@ -56,6 +57,14 @@ vi.mock('@nimbalyst/runtime/plugins/TrackerPlugin/models/TrackerDataModel', () =
 
 vi.mock('electron', () => ({
   BrowserWindow: { getAllWindows: () => [] },
+}));
+
+// NIM-640 regression guard: `handleTrackerUpdate` must seed the live
+// DocumentRoom Y.Doc when description changes, otherwise the body lands
+// only in PGLite + cache and shared `fullDocument` trackers (incident,
+// plan, decision) render blank for every peer.
+vi.mock('../../../services/MainBodyDocService', () => ({
+  applyHeadlessBodyMarkdown: mockApplyHeadlessBodyMarkdown,
 }));
 
 import {
@@ -592,4 +601,28 @@ describe('handleTrackerUpdate description / collab body', () => {
   // path bumps body_version + writes tracker_body_cache so cold peers learn
   // the body changed via the metadata layer; the live body Y.Doc in
   // DocumentRoom is still the source of truth for warm readers.
+
+  // NIM-640: `tracker_update` was forgetting to seed the live DocumentRoom
+  // Y.Doc the way `tracker_create` does, so shared `fullDocument` trackers
+  // (incident, plan, decision) had their body land only in PGLite + cache.
+  // Peers (including the editor panel) rendered blank until somebody opened
+  // the editor and the renderer bootstrap pushed the local seed up. This
+  // test pins the contract: when description is updated and a workspace is
+  // attached, applyHeadlessBodyMarkdown is called with the matching
+  // arguments.
+  it('seeds the live Y.Doc via applyHeadlessBodyMarkdown when description changes (NIM-640)', async () => {
+    setupUpdateQueueWithDescription();
+
+    await handleTrackerUpdate(
+      { id: 'NIM-1', description: 'NIM-640 description content' },
+      '/tmp/ws',
+    );
+
+    expect(mockApplyHeadlessBodyMarkdown).toHaveBeenCalledTimes(1);
+    expect(mockApplyHeadlessBodyMarkdown).toHaveBeenCalledWith(
+      '/tmp/ws',
+      'bug_target',
+      'NIM-640 description content',
+    );
+  });
 });

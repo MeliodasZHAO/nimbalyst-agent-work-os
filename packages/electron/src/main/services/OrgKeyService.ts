@@ -20,28 +20,14 @@ import * as path from 'path';
 import { createHash } from 'crypto';
 import { ECDHKeyManager, type SerializedECDHKeyPair, type KeyEnvelope } from '@nimbalyst/runtime/sync';
 import { logger } from '../utils/logger';
-import { getSessionSyncConfig } from '../utils/store';
+import { getCollabSyncHttpUrl } from '../utils/collabSyncUrl';
 import { getSessionJwt, isAuthenticated } from './StytchAuthService';
 import { getOrgScopedJwt } from './TeamService';
 import { safeHandle } from '../utils/ipcRegistry';
 
-// ============================================================================
-// Server URL Helper
-// ============================================================================
-
-const PRODUCTION_COLLAB_URL = 'https://sync.nimbalyst.com';
-const DEVELOPMENT_COLLAB_URL = 'http://localhost:8790';
-
-/**
- * Derive the collab server HTTP URL from environment.
- * Does NOT require sync to be enabled -- only needs environment context.
- */
-function getCollabServerUrl(): string {
-  const config = getSessionSyncConfig();
-  const isDev = process.env.NODE_ENV !== 'production';
-  const env = isDev ? config?.environment : undefined;
-  return env === 'development' ? DEVELOPMENT_COLLAB_URL : PRODUCTION_COLLAB_URL;
-}
+// Re-export under the original local name so the many call sites in this
+// module don't churn. Canonical helper lives in utils/collabSyncUrl.ts.
+const getCollabServerUrl = getCollabSyncHttpUrl;
 
 // ============================================================================
 // Storage Constants
