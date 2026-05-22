@@ -2545,6 +2545,20 @@ export function createCollabV3Sync(config: SyncConfig): SyncProvider {
         return; // Already connected
       }
 
+      // Short-circuit when the JWT/userId mismatch latch is set. The server
+      // would reject any session WebSocket against this room, and an active
+      // agent streams ~10 messages/sec -- without this guard every message
+      // hit `ensureFreshJwt()`, threw AUTH_MISMATCH, and flooded main.log
+      // (1686/4986 lines during a single mobile-build session on 2026-05-21).
+      // The latch clears on reconnectIndex() / disconnectAll(), so legitimate
+      // signals (network change, settings update, auth refresh) still
+      // unblock subsequent connects.
+      if (indexAuthBlocked) {
+        const err = new Error('CollabV3 session connection blocked: JWT/userId mismatch');
+        (err as any).code = 'AUTH_MISMATCH';
+        throw err;
+      }
+
       // Enforce hard limit on concurrent connections - try to evict idle connection first
       if (sessions.size >= MAX_SESSION_CONNECTIONS) {
         // Find the oldest idle connection that exceeds the idle timeout
@@ -2578,8 +2592,21 @@ export function createCollabV3Sync(config: SyncConfig): SyncProvider {
       // const stack = new Error().stack?.split('\n').slice(2, 6).join('\n') || '';
       // console.log(`[CollabV3] connect() - CREATING NEW WebSocket for session ${sessionId} (${sessions.size + 1}/${MAX_SESSION_CONNECTIONS})\n${stack}`);
 
-      // Get fresh JWT before connecting
-      const { jwt } = await ensureFreshJwt();
+      // Get fresh JWT before connecting. If ensureFreshJwt throws
+      // AUTH_MISMATCH, set the latch so subsequent connect() calls
+      // short-circuit (defense in depth alongside the check above; this
+      // covers the case where the per-session connect() is the first
+      // sync call in the process and connectToIndex() hasn't latched
+      // yet).
+      let jwt: string;
+      try {
+        ({ jwt } = await ensureFreshJwt());
+      } catch (err) {
+        if (isAuthMismatchError(err)) {
+          indexAuthBlocked = true;
+        }
+        throw err;
+      }
 
       const roomId = getRoomId(sessionId);
       const url = getWebSocketUrl(roomId);
@@ -2684,6 +2711,10 @@ export function createCollabV3Sync(config: SyncConfig): SyncProvider {
     isConnected(sessionId: string): boolean {
       const session = sessions.get(sessionId);
       return session?.status.connected ?? false;
+    },
+
+    isAuthMismatched(): boolean {
+      return indexAuthBlocked;
     },
 
     getStatus(sessionId: string): SyncStatus {

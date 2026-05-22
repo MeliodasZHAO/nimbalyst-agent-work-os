@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug-report anonymizer now scrubs workspace paths and Windows path-form variants, not just the home dir. (#396)
 - Imported Claude Code sessions now show the model actually used instead of always Sonnet. (#394)
 - CollabV3 sync no longer hammers the server with rejected WebSocket connections when the JWT subject does not match the configured user ID; the client refuses such connections locally, backs off pre-open failures exponentially up to 5 minutes, and only retries on an explicit reconnect signal.
+- Agent message sync no longer triggers a fresh CollabV3 connect attempt for every message when the JWT/userId mismatch latch is set; the per-session `connect()` short-circuits via the latch and `MessageSyncHandler` rate-limits the "Failed to connect session" warning to once per minute per session, eliminating the renderer hang seen during heavy tool-call streams.
 - Shared docs now defer markdown bootstrap until server sync to avoid duplicated content, and share-to-team preserves full custom-editor suffixes like `mockup.html` when routing collaborative docs.
 - Shared-document tabs now respect Find and Close Tab menu commands, and dev-mode HMR no longer stacks stale shared-doc reconnect listeners after reloads.
+- Mobile git commit proposal cancellation now sends a durable prompt response and remaps Codex transcript IDs to the canonical proposal ID so blocked sessions actually cancel.
 - iOS session index sync now preserves workstream, worktree, pin, and naming metadata so sessions do not reappear as duplicate or free-floating rows.
 - Transcript, model-picker, session-history, and shared editor dropdown menus now use floating-ui portals so they stay visible instead of clipping inside panels.
 - Agent transcript no longer repaints on every streamed token or keystroke, so text selection inside running sessions stays usable.
