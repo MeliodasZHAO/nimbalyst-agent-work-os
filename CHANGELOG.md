@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Claude Opus 4.8 is now selectable in the Claude provider (1M context, dateless ID `claude-opus-4-8`) and is the default Claude model for new installs. (#473)
+- Claude Code variants `opus-4-7` and `opus-4-7-1m` pinned to Opus 4.7 so it stays selectable after the canonical `opus` alias was bumped to 4.8. (#473)
 <!-- New features go here -->
 - Alpha SQLite storage backend behind an opt-in Settings → Database migration. Dry-run reports row counts and integrity against your live PGLite without touching it; the real migration preserves PGLite at `pglite-db.migrated-<ts>/` for rollback. WriteCoordinator batches writes through a single lane and chunks slow ops on a background lane; FTS5 mirrors back agent-message and transcript-event search; Database Browser gains a Performance tab.
 - Worktree git panel now has a Manual/Smart commit toggle and "Commit with AI" button, matching the non-worktree experience.
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 <!-- Changes to existing functionality go here -->
+- Default Claude model bumped from `claude-opus-4-7` to `claude-opus-4-8`. Existing sessions keep their configured model; only new sessions and "reset to default" pick up 4.8. (#473)
 - Bumping a tip or walkthrough version now re-shows it even if the prior version was completed or dismissed.
 - The alpha SQLite backend now migrates session, transcript, tracker, and document stores more completely, with worker-backed execution and expanded validation/adoption flows to keep large migrations and database browsing responsive.
 
