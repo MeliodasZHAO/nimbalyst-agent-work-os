@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 <!-- Bug fixes go here -->
+- pdf-viewer extension build no longer bundles the host runtime (and the Anthropic SDK's Node built-ins), which broke the release build.
 
 ### Removed
 <!-- Removed features go here -->
