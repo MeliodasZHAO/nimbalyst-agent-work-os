@@ -30,10 +30,10 @@ export function BetaFeaturesPanel() {
     <div className="provider-panel flex flex-col">
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">
-          Beta Features
+          Beta 功能
         </h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Try out new features before they are generally available. Beta features may not be fully complete or polished, and may be removed in the future.
+          在正式发布前抢先体验新功能。Beta 功能可能不够完善，并且将来可能会被移除。
         </p>
       </div>
 
@@ -54,8 +54,8 @@ export function BetaFeaturesPanel() {
                   enabled,
                 });
               }}
-              name="Enable All Beta Features"
-              description="Automatically enable all current and future beta features."
+              name="启用全部 Beta 功能"
+              description="自动启用所有当前和未来的 Beta 功能。"
             />
           </div>
 
@@ -96,7 +96,7 @@ export function BetaFeaturesPanel() {
           ))}
         </div>
         <p className="mt-3 p-2 text-[13px] text-[var(--nim-text-muted)] bg-nim-secondary rounded border border-nim">
-          Some beta features may require restarting Nimbalyst to take effect.
+          部分 Beta 功能可能需要重启 Nimbalyst 才能生效。
         </p>
       </div>
     </div>

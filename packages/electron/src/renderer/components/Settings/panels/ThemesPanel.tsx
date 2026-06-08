@@ -198,7 +198,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
             data-testid="dismiss-theme-fallback"
             onClick={handleDismissFallback}
             className="p-1 text-nim-muted hover:text-nim hover:bg-nim-hover rounded transition-colors"
-            title="Dismiss"
+            title="关闭"
           >
             <MaterialSymbol icon="close" size={16} />
           </button>
@@ -382,14 +382,14 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
         {/* Empty state when no installed themes (user or extension) */}
         {userThemes.length === 0 && extensionThemes.length === 0 && (
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-nim mb-3">Installed Themes</h3>
+            <h3 className="text-sm font-medium text-nim mb-3">已安装主题</h3>
             <div className="flex flex-col items-center justify-center p-8 bg-nim-secondary border border-nim border-dashed rounded-md">
               <MaterialSymbol icon="palette" size={32} className="text-nim-muted mb-2" />
               <p className="text-sm text-nim-muted text-center">
-                No user or extension themes installed yet
+                尚未安装用户或扩展主题
               </p>
               <p className="text-xs text-nim-faint text-center mt-1">
-                Install themes from files, the marketplace, or via theme extensions
+                从文件、市场或主题扩展安装主题
               </p>
             </div>
           </div>
@@ -402,7 +402,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
           <div className="flex items-start justify-between mb-3">
             <div>
               <h3 className="text-sm font-medium text-nim">{selectedTheme.name}</h3>
-              <p className="text-xs text-nim-muted mt-0.5">{selectedTheme.description || 'No description'}</p>
+              <p className="text-xs text-nim-muted mt-0.5">{selectedTheme.description || '暂无描述'}</p>
             </div>
             <button
               onClick={() => setSelectedThemeId(null)}
@@ -415,22 +415,22 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
           {/* Theme metadata */}
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-nim-muted">Version:</span>
+              <span className="text-nim-muted">版本:</span>
               <span className="text-nim">{selectedTheme.version}</span>
             </div>
             {selectedTheme.author && (
               <div className="flex items-center justify-between">
-                <span className="text-nim-muted">Author:</span>
+                <span className="text-nim-muted">作者:</span>
                 <span className="text-nim">{selectedTheme.author}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-nim-muted">Type:</span>
-              <span className="text-nim">{selectedTheme.isDark ? 'Dark' : 'Light'}</span>
+              <span className="text-nim-muted">类型:</span>
+              <span className="text-nim">{selectedTheme.isDark ? '深色' : '浅色'}</span>
             </div>
             {selectedTheme.tags && selectedTheme.tags.length > 0 && (
               <div className="flex items-start justify-between">
-                <span className="text-nim-muted">Tags:</span>
+                <span className="text-nim-muted">标签:</span>
                 <div className="flex flex-wrap gap-1 justify-end">
                   {selectedTheme.tags.map(tag => (
                     <span key={tag} className="px-1.5 py-0.5 bg-nim-tertiary text-nim-muted rounded text-xs">
@@ -442,7 +442,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
             )}
             {(['solarized-dark', 'solarized-light', 'monokai'].includes(selectedTheme.id)) && (
               <div className="flex items-start justify-between pt-2 border-t border-nim mt-2">
-                <span className="text-nim-muted">License:</span>
+                <span className="text-nim-muted">许可证:</span>
                 <span className="text-nim text-right max-w-[60%]">
                   {selectedTheme.id.startsWith('solarized')
                     ? 'MIT License © 2011 Ethan Schoonover'
@@ -454,7 +454,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
 
           {/* Color preview */}
           <div className="mt-4">
-            <div className="text-xs font-medium text-nim mb-2">Colors</div>
+            <div className="text-xs font-medium text-nim mb-2">颜色</div>
             <div className="grid grid-cols-4 gap-2">
               {Object.entries(selectedTheme.colors).slice(0, 8).map(([key, value]) => (
                 <div key={key} className="flex flex-col items-center gap-1">
@@ -469,7 +469,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
             </div>
             {Object.keys(selectedTheme.colors).length > 8 && (
               <div className="text-xs text-nim-muted text-center mt-2">
-                +{Object.keys(selectedTheme.colors).length - 8} more colors
+                +{Object.keys(selectedTheme.colors).length - 8} 更多颜色
               </div>
             )}
           </div>

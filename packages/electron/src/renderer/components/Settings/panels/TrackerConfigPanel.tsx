@@ -90,17 +90,17 @@ function DeleteTrackerTypeButton({
     if (!workspacePath) return;
     if (count > 0) {
       window.alert(
-        `Cannot delete "${model.displayNamePlural}": ${count} item${count === 1 ? '' : 's'} of this type still exist. Delete those items first.`
+        `无法删除 "${model.displayNamePlural}"：还有 ${count} 个此类型的项目。请先删除这些项目。`
       );
       return;
     }
-    if (!window.confirm(`Delete tracker type "${model.displayNamePlural}"? This cannot be undone.`)) {
+    if (!window.confirm(`删除看板类型 "${model.displayNamePlural}"？此操作无法撤销。`)) {
       return;
     }
     const fileDeleted = await deleteCustomTrackerYAML(workspacePath, model.type);
     if (!fileDeleted) {
       window.alert(
-        `Could not find the source YAML file for "${model.displayNamePlural}" in .nimbalyst/trackers/. The tracker type was not deleted.`
+        `在 .nimbalyst/trackers/ 中找不到 "${model.displayNamePlural}" 的源 YAML 文件。看板类型未被删除。`
       );
       return;
     }
@@ -124,9 +124,9 @@ function SyncModeToggle({ mode, onChange }: {
   onChange: (mode: TrackerSyncMode) => void;
 }) {
   const options: { value: TrackerSyncMode; label: string }[] = [
-    { value: 'local', label: 'Local' },
-    { value: 'shared', label: 'Shared' },
-    { value: 'hybrid', label: 'Hybrid' },
+    { value: 'local', label: '本地' },
+    { value: 'shared', label: '共享' },
+    { value: 'hybrid', label: '混合' },
   ];
 
   return (
@@ -163,20 +163,20 @@ function SyncBadge({ mode }: { mode: TrackerSyncMode }) {
     return (
       <span className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-[10px] text-[10px] font-semibold bg-[rgba(96,165,250,0.15)] text-[var(--nim-primary)]">
         <MaterialSymbol icon="share" size={8} />
-        Shared
+        共享
       </span>
     );
   }
   if (mode === 'hybrid') {
     return (
       <span className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-[10px] text-[10px] font-semibold bg-[rgba(167,139,250,0.15)] text-[#a78bfa]">
-        Hybrid
+        混合
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-[10px] text-[10px] font-semibold bg-[rgba(180,180,180,0.1)] text-[var(--nim-text-faint)]">
-      Local
+      本地
     </span>
   );
 }
@@ -207,9 +207,9 @@ function TrackerStorageInfoBanner() {
 
 function getSyncMetaText(mode: TrackerSyncMode): string {
   switch (mode) {
-    case 'shared': return 'Visible to all team members';
-    case 'local': return 'Only visible to you';
-    case 'hybrid': return 'Per-item sharing choice';
+    case 'shared': return '对所有团队成员可见';
+    case 'local': return '仅你自己可见';
+    case 'hybrid': return '每个项目可单独选择共享或本地';
   }
 }
 
@@ -231,7 +231,7 @@ function IssueKeyPrefixInput({ value, onChange }: {
   const handleBlur = useCallback(() => {
     const upper = draft.toUpperCase();
     if (!ISSUE_KEY_PREFIX_REGEX.test(upper)) {
-      setError('Must be 2-5 uppercase letters');
+      setError('必须为 2-5 个大写字母');
       return;
     }
     setError('');
@@ -249,10 +249,10 @@ function IssueKeyPrefixInput({ value, onChange }: {
   return (
     <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
       <h4 className="provider-panel-section-title text-[15px] font-semibold mb-2 text-[var(--nim-text)]">
-        Issue Key Prefix
+        Issue 编号前缀
       </h4>
       <p className="text-[13px] leading-relaxed text-[var(--nim-text-muted)] mb-3">
-        New tracker items will use this prefix (e.g., <code className="text-[11px] text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 py-[1px] rounded">{draft || 'NIM'}-42</code>).
+        新建看板项目将使用此前缀（例如 <code className="text-[11px] text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 py-[1px] rounded">{draft || 'NIM'}-42</code>）。
       </p>
       <div className="flex items-center gap-2">
         <input
@@ -274,7 +274,7 @@ function IssueKeyPrefixInput({ value, onChange }: {
         <p className="text-[11px] text-[var(--nim-error)] mt-1.5">{error}</p>
       )}
       <p className="text-[11px] text-[var(--nim-text-faint)] mt-2">
-        Changing the prefix only affects new items. Existing items keep their current keys.
+        修改前缀只影响新项目。已有项目保留其当前编号。
       </p>
     </div>
   );
@@ -294,22 +294,22 @@ function AdminView({ trackers, onSyncModeChange, workspacePath }: {
       {/* Team Sync Policy Section */}
       <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
         <h4 className="provider-panel-section-title text-[15px] font-semibold mb-2 text-[var(--nim-text)] flex items-center gap-2">
-          Team Sync Policy
+          团队同步策略
           <span className="px-[7px] py-[2px] rounded-[10px] text-[10px] font-semibold bg-[rgba(96,165,250,0.15)] text-[var(--nim-primary)]">
-            Admin
+            管理员
           </span>
         </h4>
         <p className="text-[13px] leading-relaxed text-[var(--nim-text-muted)] mb-3">
-          Control how each tracker type syncs with the team. Changes apply to all members.
+          控制每种看板类型如何与团队同步。更改将应用于所有成员。
         </p>
 
         {/* Info Banner */}
         <div className="flex items-start gap-2.5 p-3 bg-[rgba(96,165,250,0.08)] border border-[rgba(96,165,250,0.2)] rounded-lg mb-3">
           <MaterialSymbol icon="info" size={14} className="text-[var(--nim-primary)] shrink-0 mt-0.5" />
           <div className="text-[12px] text-[var(--nim-text-muted)] leading-relaxed">
-            <strong className="text-[var(--nim-primary)] font-semibold">Shared</strong> items sync to all team members in real time.{' '}
-            <strong className="text-[var(--nim-text-muted)] font-semibold">Local</strong> items stay on your machine only.{' '}
-            <strong className="text-[#a78bfa] font-semibold">Hybrid</strong> lets each item be shared or local individually.
+            <strong className="text-[var(--nim-primary)] font-semibold">共享</strong>项目实时同步给所有团队成员。{' '}
+            <strong className="text-[var(--nim-text-muted)] font-semibold">本地</strong>项目仅保存在你的设备上。{' '}
+            <strong className="text-[#a78bfa] font-semibold">混合</strong>模式下每个项目可单独选择共享或本地。
           </div>
         </div>
 
@@ -351,7 +351,7 @@ function AdminView({ trackers, onSyncModeChange, workspacePath }: {
         <div className="flex items-start gap-1.5 p-2.5 bg-[var(--nim-bg-secondary)] rounded-md text-[11px] text-[var(--nim-text-faint)] leading-relaxed">
           <MaterialSymbol icon="info" size={14} className="shrink-0 mt-0.5" />
           <span>
-            Inline trackers (<code className="text-[11px] text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 py-[1px] rounded">#bug[...]</code>) are always local, regardless of sync policy. Only tracked items created from the panel participate in sync.
+            行内看板标记（<code className="text-[11px] text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 py-[1px] rounded">#bug[...]</code>）始终为本地，不受同步策略影响。只有从面板创建的看板项目参与同步。
           </span>
         </div>
       </div>
@@ -361,7 +361,7 @@ function AdminView({ trackers, onSyncModeChange, workspacePath }: {
         <div className="flex items-center gap-2 p-3 bg-[rgba(167,139,250,0.08)] border border-[rgba(167,139,250,0.15)] rounded-lg">
           <MaterialSymbol icon="arrow_upward" size={16} className="text-[#a78bfa] shrink-0" />
           <div className="flex-1 text-[12px] text-[var(--nim-text-muted)] leading-snug">
-            <strong className="text-[#a78bfa]">Promote inline items</strong> to tracked items to share them with the team. Right-click any inline tracker and select "Promote to Tracked Item."
+            <strong className="text-[#a78bfa]">将行内项目提升</strong>为看板项目即可与团队共享。右键任意行内看板标记并选择"提升为看板项目"。
           </div>
         </div>
       </div>
@@ -382,11 +382,11 @@ function MemberView({ trackers, workspacePath }: { trackers: TrackerTypeConfig[]
       {/* Team Trackers (read-only) */}
       <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
         <h4 className="provider-panel-section-title text-[15px] font-semibold mb-2 text-[var(--nim-text)] flex items-center gap-2">
-          Team Trackers
-          <span className="text-[11px] font-normal text-[var(--nim-text-faint)]">Managed by admin</span>
+          团队看板
+          <span className="text-[11px] font-normal text-[var(--nim-text-faint)]">由管理员管理</span>
         </h4>
         <p className="text-[13px] leading-relaxed text-[var(--nim-text-muted)] mb-3">
-          These tracker types are configured by your team admin. Shared items sync in real time.
+          这些看板类型由团队管理员配置。共享项目实时同步。
         </p>
 
         <div className="bg-[var(--nim-bg-secondary)] rounded-lg overflow-hidden">
@@ -401,7 +401,7 @@ function MemberView({ trackers, workspacePath }: { trackers: TrackerTypeConfig[]
                   {tracker.model.displayNamePlural}
                 </div>
                 <div className="text-[11px] text-[var(--nim-text-faint)]">
-                  <TrackerTypeCount type={tracker.model.type} /> items synced with team
+                  <TrackerTypeCount type={tracker.model.type} /> 个项目已与团队同步
                 </div>
               </div>
               <div className="shrink-0">
@@ -416,11 +416,11 @@ function MemberView({ trackers, workspacePath }: { trackers: TrackerTypeConfig[]
       {localTrackers.length > 0 && (
         <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
           <h4 className="provider-panel-section-title text-[15px] font-semibold mb-2 text-[var(--nim-text)] flex items-center gap-2">
-            Your Local Trackers
-            <span className="text-[11px] font-normal text-[var(--nim-text-faint)]">Only on this machine</span>
+            你的本地看板
+            <span className="text-[11px] font-normal text-[var(--nim-text-faint)]">仅在本机</span>
           </h4>
           <p className="text-[13px] leading-relaxed text-[var(--nim-text-muted)] mb-3">
-            These tracker types are local to your workspace. They never sync and are not visible to your team.
+            这些看板类型仅存在于你的工作区。它们永远不会同步，团队无法看到。
           </p>
 
           <div className="bg-[var(--nim-bg-secondary)] rounded-lg overflow-hidden">
@@ -435,7 +435,7 @@ function MemberView({ trackers, workspacePath }: { trackers: TrackerTypeConfig[]
                     {tracker.model.displayNamePlural}
                   </div>
                   <div className="text-[11px] text-[var(--nim-text-faint)]">
-                    <TrackerTypeCount type={tracker.model.type} /> items, local only
+                    <TrackerTypeCount type={tracker.model.type} /> 个项目，仅本地
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center gap-1">
@@ -451,7 +451,7 @@ function MemberView({ trackers, workspacePath }: { trackers: TrackerTypeConfig[]
           <div className="mt-3">
             <button className="inline-flex items-center gap-1 px-2.5 py-1 bg-transparent border border-[var(--nim-border)] rounded text-[var(--nim-text-muted)] text-[11px] cursor-pointer hover:bg-[var(--nim-bg-hover)]">
               <MaterialSymbol icon="add" size={12} />
-              Add Custom Tracker
+              添加自定义看板
             </button>
           </div>
         </div>
@@ -462,7 +462,7 @@ function MemberView({ trackers, workspacePath }: { trackers: TrackerTypeConfig[]
         <div className="flex items-start gap-1.5 p-2.5 bg-[var(--nim-bg-secondary)] rounded-md text-[11px] text-[var(--nim-text-faint)] leading-relaxed">
           <MaterialSymbol icon="info" size={14} className="shrink-0 mt-0.5" />
           <span>
-            Inline trackers (<code className="text-[11px] text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 py-[1px] rounded">#bug[...]</code>) in your documents are always local. Promote them to tracked items to share with the team.
+            文档中的行内看板标记（<code className="text-[11px] text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 py-[1px] rounded">#bug[...]</code>）始终为本地。将其提升为看板项目即可与团队共享。
           </span>
         </div>
       </div>
@@ -619,13 +619,13 @@ export function TrackerConfigPanel({ workspacePath }: TrackerConfigPanelProps) {
       {/* Header */}
       <div className="provider-panel-header mb-5 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-1.5 text-[var(--nim-text)] flex items-center gap-2">
-          Trackers
+          看板
           <AlphaBadge size="sm" tooltip={SETTINGS_ALPHA_TOOLTIP} />
         </h3>
         <p className="provider-panel-description text-[13px] leading-relaxed text-[var(--nim-text-muted)]">
           {isAdmin
-            ? 'Configure which tracker types are shared with the team and manage local-only trackers.'
-            : 'View team-shared tracker types and manage your local trackers.'}
+            ? '配置哪些看板类型与团队共享，以及管理仅限本地的看板。'
+            : '查看团队共享的看板类型，管理你的本地看板。'}
         </p>
       </div>
 

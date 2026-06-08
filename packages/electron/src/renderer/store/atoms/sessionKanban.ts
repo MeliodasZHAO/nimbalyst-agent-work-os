@@ -43,11 +43,11 @@ export interface ChildRunStateSummary {
 // ============================================================
 
 export const SESSION_PHASE_COLUMNS: { value: SessionPhase; label: string; color: string }[] = [
-  { value: 'backlog', label: 'Backlog', color: '#6b7280' },
-  { value: 'planning', label: 'Planning', color: '#60a5fa' },
-  { value: 'implementing', label: 'Implementing', color: '#eab308' },
-  { value: 'validating', label: 'Validating', color: '#a78bfa' },
-  { value: 'complete', label: 'Complete', color: '#4ade80' },
+  { value: 'backlog', label: '待处理', color: '#6b7280' },
+  { value: 'planning', label: '规划中', color: '#60a5fa' },
+  { value: 'implementing', label: '实现中', color: '#eab308' },
+  { value: 'validating', label: '验证中', color: '#a78bfa' },
+  { value: 'complete', label: '已完成', color: '#4ade80' },
 ];
 
 const VALID_PHASES = new Set<string>(SESSION_PHASE_COLUMNS.map(c => c.value));

@@ -1267,20 +1267,9 @@ export default function App() {
     };
   }, []);
 
-  // React to "show Discord invitation" command. The IPC subscription lives
-  // in store/listeners/appCommandListeners.ts.
+  // Discord invitation popup disabled — not relevant for this fork
   const showDiscordInvitationVersion = useAtomValue(showDiscordInvitationRequestAtom);
   const showDiscordInvitationInitialRef = useRef(showDiscordInvitationVersion);
-  useEffect(() => {
-    if (showDiscordInvitationVersion === showDiscordInvitationInitialRef.current) return;
-    console.log('[App] Received show-discord-invitation event');
-    if (!dialogRef.current) return;
-    dialogRef.current.open(DIALOG_IDS.DISCORD_INVITATION, {
-      onDismiss: () => {
-        // No additional action needed - dialog will close automatically
-      }
-    });
-  }, [showDiscordInvitationVersion]);
 
   // NOTE: Windows Claude Code warning and onboarding IPC listeners moved to useOnboarding hook
   // NOTE: show-commands-toast IPC listener removed - commands now via extension-based plugins

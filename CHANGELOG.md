@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-<!-- New features go here -->
+- Agent Work OS interaction skills: `/agent-os`, `/agent-os-create`, `/agent-os-gate`, `/agent-os-launch`, `/agent-os-hotfix`, `/agent-os-tweak` for CC agent-side Work Packet management
+- i18n: Chinese translations for dialogs, settings panels, session history, keyboard shortcuts, and update toasts
+- README rewritten in Chinese with Agent Work OS feature overview
 
 ### Changed
 <!-- Changes to existing functionality go here -->

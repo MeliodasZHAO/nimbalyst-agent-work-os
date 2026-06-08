@@ -27,16 +27,16 @@ export const IndexBuildDialog: React.FC<IndexBuildDialogProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="index-build-dialog-title m-0 mb-3 text-lg font-semibold text-[var(--nim-text)]">
-          Build Search Index?
+          构建搜索索引？
         </h2>
         <p className="index-build-dialog-message m-0 mb-6 text-sm leading-relaxed text-[var(--nim-text-muted)] [&_strong]:text-[var(--nim-text)]">
-          Your session history contains <strong>{messageCount.toLocaleString()}</strong> messages.
-          Building a search index will make searches much faster, but may take a few minutes.
+          您的会话历史包含 <strong>{messageCount.toLocaleString()}</strong> 条消息。
+          构建搜索索引可以大幅加快搜索速度，但可能需要几分钟时间。
         </p>
         {isBuilding ? (
           <div className="index-build-dialog-progress flex items-center gap-3 p-3 rounded bg-[var(--nim-bg-secondary)] text-sm text-[var(--nim-text-muted)]">
             <div className="index-build-dialog-spinner w-5 h-5 rounded-full border-2 border-[var(--nim-border)] border-t-[var(--nim-primary)] animate-spin" />
-            <span>Building index... This may take a few minutes.</span>
+            <span>正在构建索引...可能需要几分钟。</span>
           </div>
         ) : (
           <div className="index-build-dialog-buttons flex gap-3 justify-end">
@@ -44,13 +44,13 @@ export const IndexBuildDialog: React.FC<IndexBuildDialogProps> = ({
               className="index-build-dialog-button-skip nim-btn-secondary"
               onClick={onSkip}
             >
-              Skip for now
+              暂时跳过
             </button>
             <button
               className="index-build-dialog-button-build nim-btn-primary"
               onClick={onBuild}
             >
-              Build Index
+              构建索引
             </button>
           </div>
         )}

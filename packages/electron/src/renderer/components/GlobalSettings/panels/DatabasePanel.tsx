@@ -343,30 +343,30 @@ export function DatabasePanel(): React.ReactElement {
   }, [migrationFailure, phase, preflight, progress]);
 
   const backendLabel = useMemo(() => {
-    if (!status) return 'Loading...';
-    return status.activeBackend === 'pglite' ? 'PGLite (current)' : 'SQLite (new)';
+    if (!status) return '加载中...';
+    return status.activeBackend === 'pglite' ? 'PGLite (当前)' : 'SQLite (新)';
   }, [status]);
 
   return (
     <div className="provider-panel flex flex-col">
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">
-          Database Storage
+          数据库存储
         </h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Local storage engine for sessions, trackers, and document history.
-          PGLite is the current default; a faster SQLite backend is in alpha.
+          会话、跟踪器和文档历史的本地存储引擎。
+          PGLite 是当前默认引擎；更快的 SQLite 后端正在 Alpha 测试中。
         </p>
       </div>
 
       {/* Current backend section ----------------------------------------- */}
       <div className="provider-panel-section mb-6">
         <h4 className="provider-panel-section-title text-base font-semibold mb-2 text-[var(--nim-text)]">
-          Active backend
+          当前后端
         </h4>
         {statusError ? (
           <div className="p-3 rounded-md bg-[rgba(220,38,38,0.1)] border border-[rgba(220,38,38,0.3)] text-sm text-[var(--nim-text)]">
-            Failed to read status: {statusError}
+            读取状态失败：{statusError}
           </div>
         ) : (
           <div className="setting-item py-2 flex items-center justify-between gap-4 nim-database-status">
@@ -376,12 +376,12 @@ export function DatabasePanel(): React.ReactElement {
               </span>
               <span className="setting-description text-xs leading-snug text-[var(--nim-text-muted)]">
                 {status?.pgliteDirExists && status?.sqliteDirExists
-                  ? 'Both pglite-db/ and sqlite-db/ exist on disk.'
+                  ? 'pglite-db/ 和 sqlite-db/ 均存在于磁盘上。'
                   : status?.pgliteDirExists
-                    ? 'pglite-db/ on disk; sqlite-db/ not yet created.'
+                    ? 'pglite-db/ 在磁盘上；sqlite-db/ 尚未创建。'
                     : status?.sqliteDirExists
-                      ? 'sqlite-db/ on disk; legacy pglite-db/ absent.'
-                      : 'No database directory present yet.'}
+                      ? 'sqlite-db/ 在磁盘上；旧版 pglite-db/ 不存在。'
+                      : '尚无数据库目录。'}
               </span>
             </div>
           </div>
@@ -391,12 +391,12 @@ export function DatabasePanel(): React.ReactElement {
       {/* Dry run section ------------------------------------------------- */}
       <div className="provider-panel-section mb-6">
         <h4 className="provider-panel-section-title text-base font-semibold mb-2 text-[var(--nim-text)]">
-          Test the SQLite migration (dry run)
+          测试 SQLite 迁移（试运行）
         </h4>
         <p className="provider-panel-hint text-sm text-[var(--nim-text-muted)] mb-3">
-          Copies your data into a throwaway SQLite database alongside the live one,
-          reports row counts and integrity, then deletes the temporary copy.
-          Your real PGLite database is never touched. Safe to run any time.
+          将你的数据复制到一个临时 SQLite 数据库（与生产数据库并行），
+          报告行数和完整性，然后删除临时副本。
+          你的真实 PGLite 数据库不会被触及。随时可以安全运行。
         </p>
 
         <button
@@ -406,7 +406,7 @@ export function DatabasePanel(): React.ReactElement {
           className="nim-database-dry-run-button setting-button inline-flex items-center gap-2 py-1.5 px-3 rounded-md text-sm font-medium bg-[var(--nim-primary)] text-white border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--nim-primary-hover)]"
         >
           <MaterialSymbol icon={dryRunRunning ? 'sync' : 'play_arrow'} size={16} />
-          {dryRunRunning ? 'Running dry run...' : 'Run dry-run migration'}
+          {dryRunRunning ? '正在试运行...' : '运行试迁移'}
         </button>
 
         {(dryRunRunning && (phase || progress)) && (
@@ -415,7 +415,7 @@ export function DatabasePanel(): React.ReactElement {
 
         {dryRunError && (
           <div className="mt-3 p-3 rounded-md bg-[rgba(220,38,38,0.1)] border border-[rgba(220,38,38,0.3)] text-sm text-[var(--nim-text)] nim-database-dry-run-error">
-            Dry run failed: {dryRunError}
+            试运行失败：{dryRunError}
           </div>
         )}
 
@@ -441,12 +441,12 @@ export function DatabasePanel(): React.ReactElement {
       {/* Migrate (gated) section ----------------------------------------- */}
       <div className="provider-panel-section mb-6">
         <h4 className="provider-panel-section-title text-base font-semibold mb-2 text-[var(--nim-text)]">
-          Migrate to SQLite
+          迁移到 SQLite
         </h4>
         <p className="provider-panel-hint text-sm text-[var(--nim-text-muted)] mb-3">
-          Moves all your data from PGLite to SQLite. The original PGLite directory
-          is preserved at <code className="px-1 py-0.5 rounded bg-[var(--nim-bg-tertiary)] text-xs">pglite-db.migrated-&lt;timestamp&gt;/</code> and
-          can be restored from this panel.
+          将所有数据从 PGLite 迁移到 SQLite。原始 PGLite 目录
+          会保留在 <code className="px-1 py-0.5 rounded bg-[var(--nim-bg-tertiary)] text-xs">pglite-db.migrated-&lt;timestamp&gt;/</code>，
+          可以从此面板恢复。
         </p>
 
         <button
@@ -456,7 +456,7 @@ export function DatabasePanel(): React.ReactElement {
           className="setting-button inline-flex items-center gap-2 py-1.5 px-3 rounded-md text-sm font-medium bg-[var(--nim-primary)] text-white border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--nim-primary-hover)]"
         >
           <MaterialSymbol icon="upgrade" size={16} />
-          Migrate to SQLite
+          迁移到 SQLite
         </button>
       </div>
 
@@ -464,11 +464,10 @@ export function DatabasePanel(): React.ReactElement {
       {status && status.migratedDirs.length > 0 && (
         <div className="provider-panel-section mb-6">
           <h4 className="provider-panel-section-title text-base font-semibold mb-2 text-[var(--nim-text)]">
-            Restore previous PGLite database
+            恢复之前的 PGLite 数据库
           </h4>
           <p className="provider-panel-hint text-sm text-[var(--nim-text-muted)] mb-3">
-            Preserved snapshots on disk: {status.migratedDirs.length}. The most
-            recent will be used.
+            磁盘上保留的快照数：{status.migratedDirs.length}。将使用最近的一个。
           </p>
           <button
             type="button"
@@ -476,7 +475,7 @@ export function DatabasePanel(): React.ReactElement {
             className="setting-button inline-flex items-center gap-2 py-1.5 px-3 rounded-md text-sm font-medium bg-[var(--nim-bg-secondary)] text-[var(--nim-text)] border border-[var(--nim-border)] cursor-pointer hover:bg-[var(--nim-hover)]"
           >
             <MaterialSymbol icon="restore" size={16} />
-            Restore from preserved PGLite
+            从保留的 PGLite 恢复
           </button>
         </div>
       )}
@@ -511,26 +510,26 @@ function DryRunResultCard({ result }: { result: DryRunResult }): React.ReactElem
   return (
     <div className="p-3 rounded-md bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)]">
       <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-        <Stat label="Rows copied" value={result.summary.totalRowsCopied.toLocaleString()} />
-        <Stat label="Tables" value={String(result.summary.tablesCopied.length)} />
-        <Stat label="Duration" value={formatDuration(result.summary.durationMs)} />
-        <Stat label="FK violations" value={String(result.summary.foreignKeyViolations)} ok={result.summary.foreignKeyViolations === 0} />
-        <Stat label="Integrity" value={result.summary.integrityCheck} ok={result.summary.integrityCheck === 'ok'} />
+        <Stat label="已复制行数" value={result.summary.totalRowsCopied.toLocaleString()} />
+        <Stat label="表" value={String(result.summary.tablesCopied.length)} />
+        <Stat label="耗时" value={formatDuration(result.summary.durationMs)} />
+        <Stat label="外键违规" value={String(result.summary.foreignKeyViolations)} ok={result.summary.foreignKeyViolations === 0} />
+        <Stat label="完整性" value={result.summary.integrityCheck} ok={result.summary.integrityCheck === 'ok'} />
         <Stat
-          label="On-disk"
+          label="磁盘占用"
           value={`${formatBytes(result.sqliteFileBytes)} vs ${formatBytes(result.pgliteDirBytes)} (${sizeChange >= 0 ? '+' : ''}${sizeChangePct}%)`}
         />
       </div>
 
       <details className="mt-2 nim-database-dry-run-per-table">
         <summary className="cursor-pointer text-xs text-[var(--nim-text-muted)] hover:text-[var(--nim-text)]">
-          Per-table breakdown ({result.summary.tablesCopied.length} tables)
+          各表明细 ({result.summary.tablesCopied.length} 个表)
         </summary>
         <table className="w-full mt-2 text-xs">
           <thead>
             <tr className="text-left text-[var(--nim-text-muted)] border-b border-[var(--nim-border)]">
-              <th className="py-1 pr-2">Table</th>
-              <th className="py-1 text-right">Rows copied</th>
+              <th className="py-1 pr-2">表名</th>
+              <th className="py-1 text-right">已复制行数</th>
             </tr>
           </thead>
           <tbody>
@@ -579,9 +578,9 @@ function MigrationModal(props: {
       <div className="w-full max-w-2xl rounded-xl border border-[var(--nim-border)] bg-[var(--nim-bg-primary)] p-6 shadow-2xl">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h4 className="text-lg font-semibold text-[var(--nim-text)]">Migrate to SQLite</h4>
+            <h4 className="text-lg font-semibold text-[var(--nim-text)]">迁移到 SQLite</h4>
             <p className="mt-1 text-sm text-[var(--nim-text-muted)]">
-              This runs in one uninterrupted flow and preserves the original PGLite directory for rollback.
+              此操作将一次性完成，并保留原始 PGLite 目录以供回滚。
             </p>
           </div>
           <button
@@ -590,29 +589,29 @@ function MigrationModal(props: {
             disabled={running}
             className="rounded-md px-2 py-1 text-sm text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-secondary)] disabled:opacity-40"
           >
-            Close
+            关闭
           </button>
         </div>
 
         {preflightError && (
           <div className="rounded-md border border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] p-3 text-sm text-[var(--nim-text)]">
-            Pre-flight failed: {preflightError}
+            预检失败：{preflightError}
           </div>
         )}
 
         {!running && !summary && !failure && preflight && (
           <div className="space-y-4">
             <div className="rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] p-4 text-sm">
-              <div className="mb-2 font-medium text-[var(--nim-text)]">Pre-flight</div>
+              <div className="mb-2 font-medium text-[var(--nim-text)]">预检</div>
               <div className="space-y-2 text-[var(--nim-text-muted)]">
-                <div>Disk space: {formatBytes(preflight.freeBytes)} free / {formatBytes(preflight.requiredBytes)} required {preflight.ok ? 'OK' : 'FAIL'}</div>
-                <div>PGLite size: {formatBytes(preflight.pgliteDirBytes)}</div>
+                <div>磁盘空间：{formatBytes(preflight.freeBytes)} 可用 / 需要 {formatBytes(preflight.requiredBytes)} {preflight.ok ? '通过' : '不足'}</div>
+                <div>PGLite 大小：{formatBytes(preflight.pgliteDirBytes)}</div>
                 {!preflight.ok && preflight.reason && <div className="text-[var(--nim-error)]">{preflight.reason}</div>}
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={onClose} className="rounded-md border border-[var(--nim-border)] px-3 py-2 text-sm text-[var(--nim-text)]">
-                Cancel
+                取消
               </button>
               <button
                 type="button"
@@ -620,7 +619,7 @@ function MigrationModal(props: {
                 disabled={!preflight.ok}
                 className="rounded-md bg-[var(--nim-primary)] px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
               >
-                Start migration
+                开始迁移
               </button>
             </div>
           </div>
@@ -630,10 +629,10 @@ function MigrationModal(props: {
           <div className="space-y-4">
             <div>
               <div className="text-sm font-medium text-[var(--nim-text)]">
-                {isCutover ? 'Switching to the new database' : isVerifying ? 'Verifying the migration' : 'Migrating your data'}
+                {isCutover ? '正在切换到新数据库' : isVerifying ? '正在验证迁移' : '正在迁移数据'}
               </div>
               <div className="mt-1 text-sm text-[var(--nim-text-muted)]">
-                {isCutover ? 'Preserving the previous PGLite directory and flipping the active backend.' : isVerifying ? `Phase: ${phase?.phase}` : `${currentTable}: ${progress?.tableRowsCopied ?? 0} / ${progress?.tableRowsExpected ?? 0}`}
+                {isCutover ? '正在保留之前的 PGLite 目录并切换活动后端。' : isVerifying ? `阶段：${phase?.phase}` : `${currentTable}：${progress?.tableRowsCopied ?? 0} / ${progress?.tableRowsExpected ?? 0}`}
               </div>
             </div>
             <div className="space-y-2">
@@ -641,11 +640,11 @@ function MigrationModal(props: {
                 <div className="h-full bg-[var(--nim-primary)]" style={{ width: `${progress?.percentOfTotal ?? 0}%` }} />
               </div>
               <div className="flex justify-between text-xs text-[var(--nim-text-muted)]">
-                <span>Tables {progress?.tablesCompleted ?? 0} / {progress?.tablesTotal ?? 0}</span>
+                <span>表 {progress?.tablesCompleted ?? 0} / {progress?.tablesTotal ?? 0}</span>
                 <span>{Math.round(progress?.percentOfTotal ?? 0)}%</span>
               </div>
               <div className="text-xs text-[var(--nim-text-muted)]">
-                Rows transferred: {(progress?.totalRowsCopied ?? 0).toLocaleString()} · Elapsed: {formatDuration(progress?.elapsedMs ?? 0)}
+                已转移行数：{(progress?.totalRowsCopied ?? 0).toLocaleString()} · 已耗时：{formatDuration(progress?.elapsedMs ?? 0)}
               </div>
             </div>
           </div>
@@ -654,17 +653,17 @@ function MigrationModal(props: {
         {summary && (
           <div className="space-y-4">
             <div className="rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] p-4">
-              <div className="text-sm font-medium text-[var(--nim-text)]">Migration complete</div>
+              <div className="text-sm font-medium text-[var(--nim-text)]">迁移完成</div>
               <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                <Stat label="Rows transferred" value={summary.totalRowsCopied.toLocaleString()} />
-                <Stat label="Tables migrated" value={String(summary.tablesCopied.length)} />
-                <Stat label="Duration" value={formatDuration(summary.durationMs)} />
-                <Stat label="Integrity" value={summary.integrityCheck} ok={summary.integrityCheck === 'ok'} />
+                <Stat label="已转移行数" value={summary.totalRowsCopied.toLocaleString()} />
+                <Stat label="已迁移表数" value={String(summary.tablesCopied.length)} />
+                <Stat label="耗时" value={formatDuration(summary.durationMs)} />
+                <Stat label="完整性" value={summary.integrityCheck} ok={summary.integrityCheck === 'ok'} />
               </div>
             </div>
             <div className="flex justify-end">
               <button type="button" onClick={onClose} className="rounded-md bg-[var(--nim-primary)] px-3 py-2 text-sm font-medium text-white">
-                Continue
+                继续
               </button>
             </div>
           </div>
@@ -673,16 +672,16 @@ function MigrationModal(props: {
         {failure && (
           <div className="space-y-4">
             <div className="rounded-md border border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] p-4 text-sm text-[var(--nim-text)]">
-              <div className="font-medium">Migration didn&apos;t complete</div>
-              <div className="mt-2">Phase: {failure.phase}</div>
+              <div className="font-medium">迁移未完成</div>
+              <div className="mt-2">阶段：{failure.phase}</div>
               <div className="mt-1">{failure.message}</div>
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={onCopyDiagnostic} className="rounded-md border border-[var(--nim-border)] px-3 py-2 text-sm text-[var(--nim-text)]">
-                Copy diagnostic info
+                复制诊断信息
               </button>
               <button type="button" onClick={onClose} className="rounded-md bg-[var(--nim-primary)] px-3 py-2 text-sm font-medium text-white">
-                Continue using PGLite
+                继续使用 PGLite
               </button>
             </div>
           </div>
@@ -693,14 +692,14 @@ function MigrationModal(props: {
 }
 
 const PHASE_LABELS: Record<string, string> = {
-  preparing: 'Preparing',
-  copying: 'Copying data',
-  'rebuilding-fts': 'Rebuilding full-text search index',
-  'verifying-counts': 'Verifying row counts',
-  'verifying-spot-check': 'Spot-checking copied rows',
-  'verifying-integrity': 'Verifying database integrity',
-  'verifying-foreign-keys': 'Verifying foreign keys',
-  finalizing: 'Finalizing',
+  preparing: '准备中',
+  copying: '复制数据中',
+  'rebuilding-fts': '重建全文搜索索引',
+  'verifying-counts': '验证行数',
+  'verifying-spot-check': '抽检已复制行',
+  'verifying-integrity': '验证数据库完整性',
+  'verifying-foreign-keys': '验证外键',
+  finalizing: '最终处理',
 };
 
 function DryRunProgress({
@@ -739,17 +738,17 @@ function DryRunProgress({
       </div>
       <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-[var(--nim-text-muted)]">
         <span>
-          Tables {tablesCompleted} / {tablesTotal}
+          表 {tablesCompleted} / {tablesTotal}
         </span>
         <span>
-          Rows {rowsCopied.toLocaleString()}
+          行数 {rowsCopied.toLocaleString()}
           {rowsExpected > 0 && ` / ${rowsExpected.toLocaleString()}`}
         </span>
-        <span>Elapsed {formatDuration(elapsed)}</span>
+        <span>已耗时 {formatDuration(elapsed)}</span>
       </div>
       {isCopying && tableRowsExpected > 0 && (
         <div className="text-[var(--nim-text-muted)]">
-          This table: {tableRowsCopied.toLocaleString()} / {tableRowsExpected.toLocaleString()}
+          当前表：{tableRowsCopied.toLocaleString()} / {tableRowsExpected.toLocaleString()}
         </div>
       )}
     </div>
@@ -782,14 +781,13 @@ function AdoptDryRunSection({
   return (
     <div className="mt-4 p-4 rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] nim-database-adopt-dry-run">
       <div className="text-sm font-medium text-[var(--nim-text)] mb-1">
-        Switch to your dry-run SQLite copy
+        切换到试运行的 SQLite 副本
       </div>
       <p className="text-xs text-[var(--nim-text-muted)] mb-3">
-        A successful dry-run from {ageBlurb} is saved on disk
-        ({available.totalRows.toLocaleString()} rows). Nimbalyst can promote
-        it to be your active database — it&apos;ll copy anything new since the
-        dry-run, then flip the backend flag. The current PGLite directory is
-        preserved for rollback.
+        {ageBlurb}的成功试运行已保存在磁盘上
+        ({available.totalRows.toLocaleString()} 行)。Nimbalyst 可以将其
+        提升为你的活动数据库 — 会复制试运行后的新数据，
+        然后切换后端标志。当前 PGLite 目录将保留以供回滚。
       </p>
       <button
         type="button"
@@ -798,7 +796,7 @@ function AdoptDryRunSection({
         className="setting-button inline-flex items-center gap-2 py-1.5 px-3 rounded-md text-sm font-medium bg-[var(--nim-primary)] text-white border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--nim-primary-hover)] nim-database-adopt-button"
       >
         <MaterialSymbol icon={running ? 'sync' : 'swap_horiz'} size={16} />
-        {running ? 'Switching...' : 'Switch to this SQLite copy'}
+        {running ? '切换中...' : '切换到此 SQLite 副本'}
       </button>
 
       {running && (phase || progress) && (
@@ -807,15 +805,15 @@ function AdoptDryRunSection({
 
       {error && (
         <div className="mt-3 p-3 rounded-md bg-[rgba(220,38,38,0.1)] border border-[rgba(220,38,38,0.3)] text-sm text-[var(--nim-text)]">
-          Switch failed: {error}
+          切换失败：{error}
         </div>
       )}
 
       {result && (
         <div className="mt-3 p-3 rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg-primary)] text-sm text-[var(--nim-text)]">
-          Switched to SQLite. Caught up {result.rowsAdded.toLocaleString()} new
-          row{result.rowsAdded === 1 ? '' : 's'} in {formatDuration(result.durationMs)}.
-          Please relaunch Nimbalyst for the change to take effect.
+          已切换到 SQLite。追加了 {result.rowsAdded.toLocaleString()} 条新
+          记录，耗时 {formatDuration(result.durationMs)}。
+          请重新启动 Nimbalyst 以使更改生效。
         </div>
       )}
     </div>

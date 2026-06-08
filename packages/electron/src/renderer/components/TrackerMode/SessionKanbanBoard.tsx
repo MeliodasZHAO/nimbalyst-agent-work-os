@@ -826,7 +826,7 @@ function SessionKanbanColumn({ phase, label, color, sessions, onSelect, onArchiv
       >
         {sessions.length === 0 ? (
           <div className="flex items-center justify-center py-6 text-nim-disabled text-[11px] italic">
-            No sessions
+            暂无会话
           </div>
         ) : (
           sessions.map(session => (
@@ -1223,7 +1223,7 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
 
       {/* Count */}
       <span className="text-[11px] text-nim-faint shrink-0">
-        {totalCount} session{totalCount !== 1 ? 's' : ''}
+        {totalCount} 个会话
       </span>
 
       {/* Show completed toggle */}
@@ -1237,7 +1237,7 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
         data-testid="kanban-toggle-complete"
       >
         <MaterialSymbol icon="visibility" size={13} />
-        Complete
+        已完成
       </button>
     </div>
   );
@@ -1285,7 +1285,7 @@ function ColumnHeaderContextMenu({ phase, sessionIds, position, onClose, onSelec
           onMouseLeave={onClose}
         >
           <div className="px-2.5 py-2 text-[0.8125rem] text-[var(--nim-text-faint)] italic">
-            No sessions in column
+            暂无会话 in column
           </div>
         </div>
       </FloatingPortal>
@@ -1994,7 +1994,7 @@ export const SessionKanbanBoard: React.FC<SessionKanbanBoardProps> = ({ onSessio
         <div className="flex-1 flex items-center justify-center text-nim-muted" data-testid="kanban-empty-state">
           <div className="text-center max-w-[300px]">
             <MaterialSymbol icon="view_kanban" size={48} className="opacity-30" />
-            <p className="mt-2 text-sm">No sessions on the board</p>
+            <p className="mt-2 text-sm">看板上暂无会话</p>
             <p className="mt-1 text-xs text-nim-faint">
               Sessions appear here when an AI agent sets a phase, or you can drag sessions from the history sidebar.
             </p>

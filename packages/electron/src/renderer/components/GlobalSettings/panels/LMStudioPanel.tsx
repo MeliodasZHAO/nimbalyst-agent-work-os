@@ -32,14 +32,14 @@ export function LMStudioPanel({
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">LM Studio</h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Connect to local LLMs running in LM Studio on your machine.
-          Start LM Studio and load a model before enabling.
+          连接本机 LM Studio 中运行的本地大语言模型。
+          启用前请先启动 LM Studio 并加载模型。
         </p>
       </div>
 
       <SettingsToggle
         variant="enable"
-        name="Enable LM Studio"
+        name="启用 LM Studio"
         checked={config.enabled}
         onChange={onToggle}
       />
@@ -47,7 +47,7 @@ export function LMStudioPanel({
       {config.enabled && (
         <>
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Server Configuration</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">服务器配置</h4>
             <div className="api-key-section mt-4">
               <div className="api-key-row flex gap-2 items-center">
                 <input
@@ -67,9 +67,9 @@ export function LMStudioPanel({
                   onClick={onTestConnection}
                   disabled={config.testStatus === 'testing'}
                 >
-                  {config.testStatus === 'testing' ? 'Testing...' :
-                   config.testStatus === 'success' ? '✓ Connected' :
-                   config.testStatus === 'error' ? '✗ Failed' : 'Test'}
+                  {config.testStatus === 'testing' ? '测试中...' :
+                   config.testStatus === 'success' ? '✓ 已连接' :
+                   config.testStatus === 'error' ? '✗ 失败' : '测试'}
                 </button>
               </div>
               {config.testMessage && config.testStatus === 'error' && (
@@ -79,27 +79,27 @@ export function LMStudioPanel({
           </div>
 
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Available Models</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">可用模型</h4>
             {loading && (
-              <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">Loading models from LM Studio...</div>
+              <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">正在从 LM Studio 加载模型...</div>
             )}
 
             {!loading && availableModels.length > 0 && (
               <div className="models-section">
                 <div className="models-header flex items-center justify-between mb-3">
-                  <span className="text-sm text-[var(--nim-text-muted)]">Detected models:</span>
+                  <span className="text-sm text-[var(--nim-text-muted)]">检测到的模型：</span>
                   <div className="models-actions flex gap-2">
                     <button
                       className="models-action-btn text-xs py-1 px-2 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text-muted)] hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] cursor-pointer transition-all"
                       onClick={() => onSelectAllModels(true)}
                     >
-                      Select All
+                      全选
                     </button>
                     <button
                       className="models-action-btn text-xs py-1 px-2 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text-muted)] hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] cursor-pointer transition-all"
                       onClick={() => onSelectAllModels(false)}
                     >
-                      Deselect All
+                      全不选
                     </button>
                   </div>
                 </div>
@@ -121,7 +121,7 @@ export function LMStudioPanel({
 
             {!loading && availableModels.length === 0 && (
               <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">
-                No models found. Make sure LM Studio is running with a loaded model.
+                未找到模型。请确保 LM Studio 正在运行且已加载模型。
               </div>
             )}
 
@@ -131,7 +131,7 @@ export function LMStudioPanel({
                 onClick={() => onTestConnection()}
                 disabled={loading}
               >
-                Refresh Models
+                刷新模型
               </button>
             </div>
           </div>
