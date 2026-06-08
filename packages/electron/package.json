@@ -25,6 +25,7 @@
     "lint:fix": "eslint src/ --fix",
     "postinstall": "electron-builder install-app-deps || true",
     "build:unpack": "npm run build && npm run build:extensions && npm run validate:extra-resources && electron-builder --dir",
+    "build:win:dir-local": "npm run build && npm run build:extensions && npm run validate:win-updater-config && npm run validate:extra-resources && cross-env ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ electron-builder --win dir --x64 -c.win.signAndEditExecutable=false",
     "build:dist": "npm run build && npm run build:extensions && npm run validate:extra-resources && electron-builder",
     "build:mac": "npm run build && npm run build:extensions && node -r dotenv/config build/configure-build.js && node build/build-with-env.js --mac",
     "build:mac:signed": "npm run build && npm run build:extensions && node -r dotenv/config build/configure-build.js && node build/build-with-env.js --mac",
@@ -47,7 +48,8 @@
     "test:e2e:basic": "playwright test claude-code-basic.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "marketing:screenshots": "playwright test --config=marketing/playwright.marketing.config.ts",
-    "marketing:screenshots:grep": "playwright test --config=marketing/playwright.marketing.config.ts --grep"
+    "marketing:screenshots:grep": "playwright test --config=marketing/playwright.marketing.config.ts --grep",
+    "agent-work-os:visual-check": "node scripts/agent-work-os-visual-check.mjs"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.161",
@@ -91,6 +93,7 @@
     "heic-decode": "^2.1.0",
     "highlight.js": "11.11.1",
     "html2canvas": "^1.4.1",
+    "i18next": "^26.3.1",
     "ignore": "^7.0.5",
     "jimp": "^1.6.0",
     "jotai": "^2.16.1",
@@ -111,6 +114,7 @@
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-i18next": "^17.0.8",
     "react-is": "^19.2.4",
     "react-virtuoso": "^4.18.1",
     "recharts": "^3.5.0",
@@ -127,8 +131,8 @@
     "@electron/notarize": "^2.3.2",
     "@eslint/js": "^9.37.0",
     "@playwright/test": "^1.55.1",
-    "@types/dotenv": "^6.1.1",
     "@types/better-sqlite3": "^7.6.12",
+    "@types/dotenv": "^6.1.1",
     "@types/node": "^20.19.11",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.2.0",
@@ -163,7 +167,7 @@
     "electronVersion": "41.0.4",
     "nodeGypRebuild": false,
     "buildDependenciesFromSource": false,
-    "npmRebuild": true,
+    "npmRebuild": false,
     "protocols": [
       {
         "name": "Nimbalyst URL",

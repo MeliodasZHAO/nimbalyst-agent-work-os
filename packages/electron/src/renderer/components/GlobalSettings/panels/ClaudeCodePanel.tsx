@@ -319,14 +319,14 @@ export function ClaudeCodePanel({
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">Claude Agent</h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Agent mode uses the Claude Code SDK with a few extensions for added functionality in Nimbalyst.
-          Has full MCP support with file system access, multi-file operations, and session persistence.
+          Agent 模式使用 Claude Code SDK，并在 Nimbalyst 中提供了一些扩展功能。
+          完整支持 MCP，包括文件系统访问、多文件操作和会话持久化。
         </p>
       </div>
 
       <SettingsToggle
         variant="enable"
-        name="Enable Claude Agent"
+        name="启用 Claude Agent"
         checked={config.enabled || false}
         onChange={(checked) => {
           // console.log('[ClaudeCodePanel] Toggle changed to:', checked);
@@ -337,8 +337,8 @@ export function ClaudeCodePanel({
       {/* Usage Indicator Toggle */}
       <SettingsToggle
         variant="enable"
-        name="Show Usage Indicator"
-        description="Display API usage limits in the navigation gutter"
+        name="显示用量指示器"
+        description="在导航栏中显示 API 使用量限制"
         checked={usageIndicatorEnabled}
         onChange={setUsageIndicatorEnabled}
         testId="claude-agent-usage-indicator-toggle"
@@ -347,11 +347,11 @@ export function ClaudeCodePanel({
       {/* Custom Claude Installation */}
       <div className="provider-enable flex flex-col gap-2 py-4 mb-4 border-b border-[var(--nim-border)]">
         <div>
-          <span className="provider-enable-label text-sm font-medium text-[var(--nim-text)]">Custom Claude Installation</span>
+          <span className="provider-enable-label text-sm font-medium text-[var(--nim-text)]">自定义 Claude 安装路径</span>
           <p className="text-xs text-[var(--nim-text-muted)] mt-1">
             {scope === 'project'
-              ? 'Override the Claude executable path for this project only. Leave empty to inherit the global setting.'
-              : 'Override the default Claude executable path. Use this to point to a custom Claude CLI wrapper (e.g., for corporate SSO authentication).'}
+              ? '仅为此项目覆盖 Claude 可执行文件路径。留空则继承全局设置。'
+              : '覆盖默认的 Claude 可执行文件路径。用于指向自定义的 Claude CLI 封装（例如企业 SSO 认证）。'}
           </p>
         </div>
         <div className="flex items-center gap-2 mt-1">
@@ -375,25 +375,25 @@ export function ClaudeCodePanel({
             onClick={handleBrowseCustomClaudeCodePath}
             className="py-1.5 px-3 rounded text-xs font-medium bg-[var(--nim-bg-tertiary)] border border-[var(--nim-border)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] transition-colors whitespace-nowrap"
           >
-            Browse
+            浏览
           </button>
         </div>
         <p className="text-[11px] text-[var(--nim-text-faint)] leading-relaxed">
           {scope === 'project'
             ? hasProjectPathOverride
-              ? 'Project-specific path active. Clear the field to remove the override and inherit the global value.'
+              ? '项目专属路径已生效。清空此字段以移除覆盖并继承全局值。'
               : globalCustomClaudeCodePath
-                ? `Inheriting global path: ${globalCustomClaudeCodePath}. Type a value to override for this project only.`
-                : 'No global path set. Type a value to use a custom executable for this project only.'
-            : 'Leave empty to use the built-in SDK. Changes take effect on the next agent session.'}
+                ? `正在继承全局路径: ${globalCustomClaudeCodePath}。输入值以仅为此项目覆盖。`
+                : '未设置全局路径。输入值以仅为此项目使用自定义可执行文件。'
+            : '留空则使用内置 SDK。更改将在下次代理会话时生效。'}
         </p>
       </div>
 
       {/* Plan Tracking Toggle */}
       <SettingsToggle
         variant="enable"
-        name="Plan Tracking"
-        description="Save plans to nimbalyst-local/plans/ with tracking frontmatter. When disabled, plans use Claude Code's default behavior."
+        name="计划追踪"
+        description="将计划保存到 nimbalyst-local/plans/ 并附带追踪元数据。禁用时，计划将使用 Claude Code 的默认行为。"
         checked={planTrackingEnabled}
         onChange={handleSetPlanTrackingEnabled}
       />
@@ -401,8 +401,8 @@ export function ClaudeCodePanel({
       {/* Agent Teams Toggle (Experimental) */}
       <SettingsToggle
         variant="enable"
-        name="Agent Teams (Experimental)"
-        description="Allow Claude to coordinate multiple agents working together as a team. Uses more tokens but enables parallel work."
+        name="Agent Teams (实验性)"
+        description="允许 Claude 协调多个代理作为团队协作。会消耗更多 Token，但可以并行工作。"
         checked={agentTeamsEnabled}
         onChange={handleToggleAgentTeams}
       />
@@ -410,7 +410,7 @@ export function ClaudeCodePanel({
       { isWindowsPlatform && isCheckingClaudeWindowsStatus && (
         <div className="installation-status p-4 rounded-lg bg-[rgba(245,158,11,0.05)] border border-[rgba(245,158,11,0.2)]">
           <div className="installation-status-row flex items-center gap-3 py-1">
-            <span className="installation-status-label text-sm font-medium text-[var(--nim-text-muted)]">Checking Claude Code Installation...</span>
+            <span className="installation-status-label text-sm font-medium text-[var(--nim-text-muted)]">正在检查 Claude Code 安装状态...</span>
           </div>
         </div>
       )}
@@ -418,27 +418,27 @@ export function ClaudeCodePanel({
         <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
           { isWindowsPlatform ? (
             <>
-              <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Claude Code for Windows Installation</h4>
+              <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Claude Code Windows 安装</h4>
               <p className="text-xs text-[var(--nim-text-muted)] mt-3 leading-relaxed">
-                Nimbalyst requires Claude Code for Windows to be installed to use the Claude Code provider.
+                Nimbalyst 需要安装 Claude Code for Windows 才能使用 Claude Code 提供者。
               </p>
               { Boolean(claudeCodeWindowsStatus?.claudeCodeVersion) ? (
                 <div className="installation-status mt-3 p-4 rounded-lg bg-[rgba(16,185,129,0.05)] border border-[rgba(16,185,129,0.2)]">
                   <div className="installation-status-row flex items-center gap-3 py-1">
-                    <span className="installation-status-label text-sm font-medium text-[var(--nim-text-muted)]">Claude Code Version:</span>
+                    <span className="installation-status-label text-sm font-medium text-[var(--nim-text-muted)]">Claude Code 版本:</span>
                     <span className="installation-status-value text-sm text-[var(--nim-text)]">{claudeCodeWindowsStatus?.claudeCodeVersion}</span>
                   </div>
                 </div>
               ): (
                 <div className="installation-status mt-3 p-4 rounded-lg bg-[rgba(239,68,68,0.05)] border border-[rgba(239,68,68,0.2)]">
                   <div className="text-xs text-[var(--nim-text-muted)] mt-3 leading-relaxed">
-                    <p className="mb-2">Install Claude Code for Windows by following the instructions below:</p>
+                    <p className="mb-2">请按照以下说明安装 Claude Code for Windows:</p>
                     <ol className="list-decimal list-inside space-y-1 mb-4">
-                      <li>Install <a href="https://git-scm.com/install/windows" className="text-[var(--nim-link)] hover:underline">Git for Windows</a>. This is a prerequisite for installing Claude Code</li>
-                      <li>Install <a href="https://code.claude.com/docs/en/overview#windows" className="text-[var(--nim-link)] hover:underline">Claude Code for Windows</a>.</li>
-                      <li>When finished, click the button below to recheck / verify the installation.</li>
+                      <li>安装 <a href="https://git-scm.com/install/windows" className="text-[var(--nim-link)] hover:underline">Git for Windows</a>。这是安装 Claude Code 的前提条件</li>
+                      <li>安装 <a href="https://code.claude.com/docs/en/overview#windows" className="text-[var(--nim-link)] hover:underline">Claude Code for Windows</a>。</li>
+                      <li>完成后，点击下方按钮重新检查/验证安装。</li>
                     </ol>
-                    <button className="nim-btn-primary" onClick={checkClaudeCodeWindowsInstallation}>Re-verify Claude Code Installation</button>
+                    <button className="nim-btn-primary" onClick={checkClaudeCodeWindowsInstallation}>重新验证 Claude Code 安装</button>
                   </div>
                 </div>
               )}
@@ -456,7 +456,7 @@ export function ClaudeCodePanel({
                   <span className="installation-status-value text-sm text-[var(--nim-text)]">Built-in (bundled with app)</span>
                 </div>
                 <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mt-3">
-                  Nimbalyst includes the Claude Agent SDK. No additional installation required.
+                  Nimbalyst 内置了 Claude Agent SDK。无需额外安装。
                 </p>
               </div>
             </>
@@ -467,11 +467,11 @@ export function ClaudeCodePanel({
       {config.enabled && isClaudeCodeWindowsReady() && (
         <>
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Authentication</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">身份验证</h4>
             <div className="api-key-section mt-4">
               {/* Authentication Method Selector */}
               <div className="auth-method-selector mb-4">
-                <label className="auth-method-label block text-[13px] font-semibold mb-2 text-[var(--nim-text)]">Authentication Method</label>
+                <label className="auth-method-label block text-[13px] font-semibold mb-2 text-[var(--nim-text)]">验证方式</label>
                 <div className="auth-method-buttons flex gap-2">
                   <button
                     className={`auth-method-button flex-1 py-2.5 px-4 rounded-md text-[13px] font-medium cursor-pointer transition-all border ${
@@ -484,7 +484,7 @@ export function ClaudeCodePanel({
                       onConfigChange({ authMethod: 'login' });
                     }}
                   >
-                    Claude Plan (Recommended)
+                    Claude Plan (推荐)
                   </button>
                   <button
                     className={`auth-method-button flex-1 py-2.5 px-4 rounded-md text-[13px] font-medium cursor-pointer transition-all border ${
@@ -512,7 +512,7 @@ export function ClaudeCodePanel({
                         <div className="flex items-center gap-3 flex-1">
                           <span className="status-box-icon text-xl leading-none shrink-0 text-[var(--nim-success)]">✓</span>
                           <div className="status-box-content flex flex-col gap-1 flex-1">
-                            <span className="status-box-title font-semibold text-sm text-[var(--nim-text)]">Authenticated with Claude Plan</span>
+                            <span className="status-box-title font-semibold text-sm text-[var(--nim-text)]">已通过 Claude Plan 验证</span>
                             {loginStatus.email && (
                               <span className="status-box-subtitle text-xs text-[var(--nim-text-muted)]">
                                 {loginStatus.email}
@@ -523,17 +523,17 @@ export function ClaudeCodePanel({
                         </div>
                         <div className="status-box-actions flex gap-2 shrink-0">
                           <button className="btn-small py-1.5 px-3 rounded text-xs font-medium cursor-pointer transition-all bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]" onClick={checkLoginStatus}>
-                            Refresh
+                            刷新
                           </button>
                           <button className="btn-small py-1.5 px-3 rounded text-xs font-medium cursor-pointer transition-all bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]" onClick={handleLogout}>
-                            Logout
+                            退出登录
                           </button>
                         </div>
                       </div>
 
                       {/* Switch Account Info */}
                       <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-4">
-                        Need to use a different Claude account? Logout above and login again.
+                        需要使用其他 Claude 账户？先退出登录，然后重新登录。
                       </p>
                     </>
                   ) : (
@@ -541,7 +541,7 @@ export function ClaudeCodePanel({
                       {/* Not Logged In State */}
                       <div className="mb-4 p-4 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded-lg">
                         <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-3">
-                          Authenticate with your Claude Pro or Team subscription. No API credits needed.
+                          使用你的 Claude Pro 或 Team 订阅进行验证。无需 API 额度。
                         </p>
                         <div className="flex gap-2">
                           <button
@@ -549,14 +549,14 @@ export function ClaudeCodePanel({
                             onClick={handleLogin}
                             disabled={isLoggingIn}
                           >
-                            {isLoggingIn ? 'Opening Login...' : 'Login with Claude Plan'}
+                            {isLoggingIn ? '正在打开登录...' : '使用 Claude Plan 登录'}
                           </button>
                           <button className="nim-btn-secondary" onClick={checkLoginStatus}>
-                            Refresh
+                            刷新
                           </button>
                         </div>
                         <p className="text-[11px] leading-relaxed text-[var(--nim-text-faint)] mt-2">
-                          Opens Terminal for OAuth authentication. You may have to type /login to complete the process.
+                          在终端中打开 OAuth 认证。你可能需要输入 /login 来完成流程。
                         </p>
                       </div>
                     </>
@@ -568,7 +568,7 @@ export function ClaudeCodePanel({
               {selectedAuthMethod === 'api-key' && (
                 <>
                   <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-3">
-                    Use an Anthropic API key. Pay-per-use with API credits from your Anthropic account.
+                    使用 Anthropic API Key。按使用量付费，从你的 Anthropic 账户扣除额度。
                   </p>
                   <div className="api-key-row flex gap-2 items-center">
                     <input
@@ -589,9 +589,9 @@ export function ClaudeCodePanel({
                         onClick={onTestConnection}
                         disabled={config.testStatus === 'testing'}
                       >
-                        {config.testStatus === 'testing' ? 'Testing...' :
-                         config.testStatus === 'success' ? '✓ Connected' :
-                         config.testStatus === 'error' ? '✗ Failed' : 'Test'}
+                        {config.testStatus === 'testing' ? '测试中...' :
+                         config.testStatus === 'success' ? '已连接' :
+                         config.testStatus === 'error' ? '失败' : '测试'}
                       </button>
                     ) : null}
                   </div>
@@ -604,14 +604,14 @@ export function ClaudeCodePanel({
           </div>
 
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Tool Permissions</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">工具权限</h4>
             <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-2">
-              Tool permissions are now managed per-project. When Claude Agent attempts to use a tool,
-              you'll be prompted to allow or deny the action.
+              工具权限现在按项目管理。当 Claude Agent 尝试使用工具时，
+              系统会提示你允许或拒绝该操作。
             </p>
             <p className="text-xs leading-relaxed text-[var(--nim-text-muted)]">
-              To view or modify allowed tools for a project, go to{' '}
-              <strong className="font-medium text-[var(--nim-text)]">Project Settings &gt; Permissions</strong>.
+              要查看或修改项目的允许工具，请前往{' '}
+              <strong className="font-medium text-[var(--nim-text)]">项目设置 &gt; 权限</strong>。
             </p>
           </div>
 
@@ -621,14 +621,14 @@ export function ClaudeCodePanel({
               changing global state. See issue #185. */}
           {scope === 'user' && (
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Environment Variables</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">环境变量</h4>
             <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-3">
-              Configure environment variables that will be set for all Claude Code sessions.
-              These are stored in <code className="text-xs bg-[var(--nim-bg-tertiary)] px-1 py-0.5 rounded">~/.claude/settings.json</code> and apply to every project.
+              配置所有 Claude Code 会话的环境变量。
+              这些变量存储在 <code className="text-xs bg-[var(--nim-bg-tertiary)] px-1 py-0.5 rounded">~/.claude/settings.json</code> 中，适用于所有项目。
             </p>
 
             {isLoadingEnv ? (
-              <div className="text-sm text-[var(--nim-text-muted)]">Loading...</div>
+              <div className="text-sm text-[var(--nim-text-muted)]">加载中...</div>
             ) : (
               <>
                 {/* Existing env vars list */}
@@ -661,7 +661,7 @@ export function ClaudeCodePanel({
                               }}
                               className="py-1.5 px-3 rounded text-xs font-medium bg-[var(--nim-primary)] text-white hover:bg-[var(--nim-primary-hover)] transition-colors"
                             >
-                              Save
+                              保存
                             </button>
                             <button
                               onClick={() => {
@@ -670,7 +670,7 @@ export function ClaudeCodePanel({
                               }}
                               className="py-1.5 px-3 rounded text-xs font-medium bg-[var(--nim-bg-tertiary)] border border-[var(--nim-border)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] transition-colors"
                             >
-                              Cancel
+                              取消
                             </button>
                           </>
                         ) : (
@@ -685,7 +685,7 @@ export function ClaudeCodePanel({
                               }}
                               className="py-1.5 px-3 rounded text-xs font-medium bg-[var(--nim-bg-tertiary)] border border-[var(--nim-border)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] transition-colors"
                             >
-                              Edit
+                              编辑
                             </button>
                             <button
                               onClick={() => {
@@ -695,7 +695,7 @@ export function ClaudeCodePanel({
                               }}
                               className="py-1.5 px-3 rounded text-xs font-medium bg-[var(--nim-bg-tertiary)] border border-[var(--nim-border)] text-[var(--nim-error)] hover:bg-[rgba(239,68,68,0.1)] transition-colors"
                             >
-                              Delete
+                              删除
                             </button>
                           </>
                         )}
@@ -733,7 +733,7 @@ export function ClaudeCodePanel({
                     disabled={!newEnvKey.trim()}
                     className="py-1.5 px-3 rounded text-xs font-medium bg-[var(--nim-primary)] text-white hover:bg-[var(--nim-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add
+                    添加
                   </button>
                 </div>
               </>

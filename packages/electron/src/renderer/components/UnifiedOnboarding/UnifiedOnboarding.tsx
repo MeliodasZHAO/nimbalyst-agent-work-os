@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './UnifiedOnboarding.css';
 
 export interface UnifiedOnboardingProps {
@@ -17,29 +18,29 @@ export interface OnboardingData {
   developerMode: boolean;
 }
 
-const ROLE_OPTIONS = [
-  { value: '', label: 'No Answer' },
-  { value: 'developer', label: 'Software Developer' },
-  { value: 'product_manager', label: 'Product Manager' },
-  { value: 'designer', label: 'Designer' },
-  { value: 'writer', label: 'Writer / Content' },
-  { value: 'researcher', label: 'Researcher' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'sales', label: 'Sales' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'student', label: 'Student' },
-  { value: 'hobbyist', label: 'Hobbyist / Personal Use' },
-  { value: 'other', label: 'Other' },
+const ROLE_KEYS = [
+  { value: '', key: 'noAnswer' },
+  { value: 'developer', key: 'roleDeveloper' },
+  { value: 'product_manager', key: 'roleProductManager' },
+  { value: 'designer', key: 'roleDesigner' },
+  { value: 'writer', key: 'roleWriter' },
+  { value: 'researcher', key: 'roleResearcher' },
+  { value: 'marketing', key: 'roleMarketing' },
+  { value: 'sales', key: 'roleSales' },
+  { value: 'finance', key: 'roleFinance' },
+  { value: 'student', key: 'roleStudent' },
+  { value: 'hobbyist', key: 'roleHobbyist' },
+  { value: 'other', key: 'roleOther' },
 ];
 
-const REFERRAL_OPTIONS = [
-  { value: '', label: 'No Answer' },
-  { value: 'search', label: 'Search' },
-  { value: 'social', label: 'Social', hasSubOptions: true },
-  { value: 'friend', label: 'Friend' },
-  { value: 'ai', label: 'AI' },
-  { value: 'ad', label: 'Ad' },
-  { value: 'other', label: 'Other' },
+const REFERRAL_KEYS = [
+  { value: '', key: 'noAnswer' },
+  { value: 'search', key: 'referralSearch' },
+  { value: 'social', key: 'referralSocial', hasSubOptions: true },
+  { value: 'friend', key: 'referralFriend' },
+  { value: 'ai', key: 'referralAI' },
+  { value: 'ad', key: 'referralAd' },
+  { value: 'other', key: 'referralOther' },
 ];
 
 const SOCIAL_MEDIA_OPTIONS = [
@@ -64,6 +65,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
   onSkip,
   forcedMode,
 }) => {
+  const { t } = useTranslation('dialogs');
   // Mode Selection (at top) - null means no selection yet
   const [developerMode, setDeveloperMode] = useState<boolean | null>(null);
 
@@ -166,7 +168,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
   const handleEmailChange = (value: string) => {
     setEmail(value);
     if (value && !isValidEmail(value)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError(t('emailInvalid'));
     } else {
       setEmailError('');
     }
@@ -219,14 +221,14 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
           <img src="./icon.png" alt="Nimbalyst" className="unified-onboarding-logo-image" />
         </div>
         <div className="unified-onboarding-header">
-          <h2>Welcome to Nimbalyst</h2>
+          <h2>{t('welcomeTitle')}</h2>
         </div>
 
         <div className="unified-onboarding-content">
           {/* Mode Selection - Always shown at top */}
           <div className="unified-onboarding-section">
             <label className="unified-onboarding-label unified-onboarding-label-centered">
-              Choose Your Mode<span className="required-asterisk">*</span>
+              {t('chooseYourMode')}<span className="required-asterisk">*</span>
             </label>
             <div className="mode-selection">
               <label
@@ -244,10 +246,10 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                     <span className="material-symbols-outlined mode-option-icon">
                       edit_note
                     </span>
-                    <span className="mode-option-title">Standard Mode</span>
+                    <span className="mode-option-title">{t('standardMode')}</span>
                   </div>
                   <p className="mode-option-description">
-                    Simplified interface focused on writing, editing, and AI assistance
+                    {t('standardModeDesc')}
                   </p>
                 </div>
               </label>
@@ -267,10 +269,10 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                     <span className="material-symbols-outlined mode-option-icon">
                       terminal
                     </span>
-                    <span className="mode-option-title">Developer Mode</span>
+                    <span className="mode-option-title">{t('developerMode')}</span>
                   </div>
                   <p className="mode-option-description">
-                    Full development environment with git worktrees, terminal access, development specific features
+                    {t('developerModeDesc')}
                   </p>
                 </div>
               </label>
@@ -286,7 +288,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
               {/* Role Dropdown */}
               <div className="unified-onboarding-section">
                 <label className="unified-onboarding-label" htmlFor="role-select">
-                  What best describes your role?
+                  {t('roleQuestion')}
                 </label>
                 <select
                   id="role-select"
@@ -295,9 +297,9 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                   className="unified-onboarding-select"
                   disabled={!isModeSelected}
                 >
-                  {ROLE_OPTIONS.map((option) => (
+                  {ROLE_KEYS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.key)}
                     </option>
                   ))}
                 </select>
@@ -307,7 +309,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                     <input
                       id="custom-role-input"
                       type="text"
-                      placeholder="e.g. Designer, Writer, Student"
+                      placeholder={t('customRolePlaceholder')}
                       value={customRole}
                       onChange={(e) => setCustomRole(e.target.value)}
                       className="unified-onboarding-input"
@@ -321,7 +323,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
               {/* Referral Source */}
               <div className="unified-onboarding-section">
                 <label className="unified-onboarding-label" htmlFor="referral-select">
-                  How did you hear about Nimbalyst?
+                  {t('referralQuestion')}
                 </label>
                 <select
                   id="referral-select"
@@ -341,9 +343,9 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                   className="unified-onboarding-select"
                   disabled={!isModeSelected}
                 >
-                  {REFERRAL_OPTIONS.map((option) => (
+                  {REFERRAL_KEYS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.key)}
                     </option>
                   ))}
                 </select>
@@ -353,7 +355,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                     <input
                       id="custom-referral-input"
                       type="text"
-                      placeholder="e.g. Podcast, Blog, Conference"
+                      placeholder={t('customReferralPlaceholder')}
                       value={customReferral}
                       onChange={(e) => setCustomReferral(e.target.value)}
                       className="unified-onboarding-input"
@@ -368,7 +370,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                     <input
                       id="ai-detail-input"
                       type="text"
-                      placeholder="What model and prompt did you use?"
+                      placeholder={t('aiDetailPlaceholder')}
                       value={aiDetail}
                       onChange={(e) => setAiDetail(e.target.value)}
                       className="unified-onboarding-input"
@@ -382,10 +384,10 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
               {/* Email */}
               <div className="unified-onboarding-section">
                 <label className="unified-onboarding-label" htmlFor="email-input">
-                  Email address
+                  {t('emailLabel')}
                 </label>
                 <p className="unified-onboarding-help-text">
-                  Receive occasional product updates and tips
+                  {t('emailHelp')}
                 </p>
                 <input
                   id="email-input"
@@ -403,7 +405,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
               {referralSource === 'social' && (
                 <div className="unified-onboarding-section">
                   <label className="unified-onboarding-label" htmlFor="social-platform-select">
-                    Which platform?
+                  {t('whichPlatform')}
                   </label>
                   <select
                     id="social-platform-select"
@@ -412,7 +414,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
                     className="unified-onboarding-select"
                     disabled={!isModeSelected}
                   >
-                    <option value="">Select one</option>
+                    <option value="">{t('selectOne')}</option>
                     {SOCIAL_MEDIA_OPTIONS.map((platform) => (
                       <option key={platform} value={platform}>
                         {platform}
@@ -424,7 +426,7 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
 
               <div className="unified-onboarding-disclaimer">
                 <p className="disclaimer-text">
-                  We collect usage data to improve Nimbalyst. No prompts or content is ever collected. You can opt out of analytics any time in Settings.
+                  {t('analyticsDisclaimer')}
                 </p>
               </div>
             </div>
@@ -437,28 +439,28 @@ export const UnifiedOnboarding: React.FC<UnifiedOnboardingProps> = ({
             onClick={handleComplete}
             disabled={!isModeSelected || (showDataCollection && !isEmailValid)}
           >
-            Get Started
+            {t('getStarted')}
           </button>
           <p className="unified-onboarding-legal-links">
-            By continuing, you agree to our{' '}
+            {t('legalText')}{' '}
             <a
               href="https://nimbalyst.com/terms-of-service"
               target="_blank"
               rel="noopener noreferrer"
               className="unified-onboarding-link"
             >
-              Terms of Service
+              {t('termsOfService')}
             </a>{' '}
-            and{' '}
+            {t('and')}{' '}
             <a
               href="https://nimbalyst.com/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
               className="unified-onboarding-link"
             >
-              Privacy Policy
+              {t('privacyPolicy')}
             </a>
-            .
+            。
           </p>
         </div>
       </div>

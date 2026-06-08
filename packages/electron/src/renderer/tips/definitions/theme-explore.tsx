@@ -21,10 +21,10 @@ export const themeExploreTip: TipDefinition = {
   },
   content: {
     icon: PaletteIcon,
-    title: 'Try a different theme',
-    body: 'You have been back a few times without changing the look of the app. **Themes** are already built in, and the settings panel shows the full set at once.',
+    title: '换个主题试试',
+    body: '你已经用了好几次了但一直没换过外观。应用内置了多款**主题**，设置面板可以一次浏览所有选项。',
     action: {
-      label: 'Open Themes',
+      label: '打开主题',
       onClick: () => {
         store.set(openSettingsCommandAtom, {
           category: 'themes',

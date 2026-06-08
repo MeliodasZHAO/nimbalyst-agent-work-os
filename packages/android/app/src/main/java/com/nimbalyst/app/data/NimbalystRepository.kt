@@ -1,6 +1,7 @@
 package com.nimbalyst.app.data
 
 import androidx.room.withTransaction
+import kotlinx.coroutines.flow.map
 
 class NimbalystRepository(
     private val database: NimbalystDatabase
@@ -17,6 +18,16 @@ class NimbalystRepository(
 
     fun observeQueuedPromptsForSession(sessionId: String) =
         database.queuedPromptDao().observeQueuedPromptsForSession(sessionId)
+
+    fun observeAgentWorkOSConfig(scope: String, projectId: String) =
+        database.agentWorkOSConfigDao().observe(scope, projectId)
+
+    fun observeMobilePermissionPolicy(projectId: String) =
+        database.mobilePermissionPolicyDao().observe(projectId)
+
+    fun observeResolvedMobilePermissionPolicy(projectId: String) =
+        database.mobilePermissionPolicyDao().observe(projectId)
+            .map { MobilePermissionPolicy.fromEntity(it) }
 
     suspend fun replaceIndexSnapshot(
         projects: List<ProjectEntity>,
@@ -110,6 +121,24 @@ class NimbalystRepository(
     }
 
     suspend fun syncState(roomId: String): SyncStateEntity? = database.syncStateDao().getByRoomId(roomId)
+
+    suspend fun getAgentWorkOSConfig(scope: String, projectId: String): AgentWorkOSConfigEntity? =
+        database.agentWorkOSConfigDao().get(scope, projectId)
+
+    suspend fun upsertAgentWorkOSConfig(config: AgentWorkOSConfigEntity) {
+        database.agentWorkOSConfigDao().upsert(config)
+    }
+
+    suspend fun getMobilePermissionPolicy(projectId: String): MobilePermissionPolicyEntity? =
+        database.mobilePermissionPolicyDao().get(projectId)
+
+    suspend fun upsertMobilePermissionPolicy(policy: MobilePermissionPolicyEntity) {
+        database.mobilePermissionPolicyDao().upsert(policy)
+    }
+
+    suspend fun saveMobilePermissionPolicy(projectId: String, policy: MobilePermissionPolicy) {
+        database.mobilePermissionPolicyDao().upsert(policy.toEntity(projectId))
+    }
 
     suspend fun markSessionRead(
         sessionId: String,

@@ -27,7 +27,7 @@ export const excalidrawDiscoverTip: TipDefinition = {
   },
   content: {
     icon: DrawIcon,
-    title: 'Sketch architecture in Excalidraw',
-    body: 'Create a **.excalidraw** file to draw boxes, arrows, and freeform diagrams. The agent can read and modify those drawings via tools -- great for system architecture and flow sketches.',
+    title: '用 Excalidraw 画架构图',
+    body: '创建 **.excalidraw** 文件即可绘制方框、箭头和自由图形。Agent 可以通过工具读取和修改这些图——非常适合系统架构和流程图。',
   },
 };

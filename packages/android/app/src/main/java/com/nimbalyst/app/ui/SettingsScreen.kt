@@ -42,6 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.nimbalyst.app.NimbalystApplication
 import com.nimbalyst.app.analytics.AnalyticsManager
+import com.nimbalyst.app.data.AgentWorkOSDefaults
+import com.nimbalyst.app.data.MobilePermissionPolicy
+import com.nimbalyst.app.data.MobilePermissionPolicyMode
 import com.nimbalyst.app.pairing.QRPairingData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,6 +61,9 @@ fun SettingsScreen(
     val pairingState by app.pairingStore.state.collectAsState()
     val syncState by app.syncManager.state.collectAsState()
     val connectedDevices by app.syncManager.connectedDevices.collectAsState()
+    val mobilePolicy by app.repository
+        .observeResolvedMobilePermissionPolicy(AgentWorkOSDefaults.SYSTEM_PROJECT_ID)
+        .collectAsState(initial = MobilePermissionPolicy.balanced())
     val coroutineScope = rememberCoroutineScope()
 
     // Dev section: tap version label 7 times to reveal
@@ -147,6 +153,188 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
+                }
+            }
+        }
+
+        // Agent Work OS mobile permissions
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Agent Work OS",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Control which approvals this Android device can handle while desktop sessions are running.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MobilePermissionPolicyMode.entries.forEach { mode ->
+                        val selected = mobilePolicy.mode == mode
+                        if (selected) {
+                            Button(
+                                onClick = {},
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(mode.label)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    val nextPolicy = mobilePolicy.withModePreset(mode)
+                                    coroutineScope.launch {
+                                        app.repository.saveMobilePermissionPolicy(
+                                            AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                            nextPolicy
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(mode.label)
+                            }
+                        }
+                    }
+                }
+
+                PermissionSwitchRow(
+                    title = "Plan approvals",
+                    description = "Allow approving low-risk plans from Android.",
+                    checked = mobilePolicy.allowPlanApproval,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    allowPlanApproval = checked
+                                )
+                            )
+                        }
+                    }
+                )
+                PermissionSwitchRow(
+                    title = "Tool permissions",
+                    description = "Allow non-risky tool permission prompts from Android.",
+                    checked = mobilePolicy.allowToolPermissionApproval,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    allowToolPermissionApproval = checked
+                                )
+                            )
+                        }
+                    }
+                )
+                PermissionSwitchRow(
+                    title = "Commit approvals",
+                    description = "Allow low-risk commit prompts from Android.",
+                    checked = mobilePolicy.allowCommitApproval,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    allowCommitApproval = checked
+                                )
+                            )
+                        }
+                    }
+                )
+                PermissionSwitchRow(
+                    title = "Database risk",
+                    description = "Allow database-impact approvals from Android.",
+                    checked = mobilePolicy.allowDatabaseRiskApproval,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    allowDatabaseRiskApproval = checked
+                                )
+                            )
+                        }
+                    }
+                )
+                PermissionSwitchRow(
+                    title = "Security risk",
+                    description = "Allow auth, permission, secret, or token approvals from Android.",
+                    checked = mobilePolicy.allowSecurityRiskApproval,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    allowSecurityRiskApproval = checked
+                                )
+                            )
+                        }
+                    }
+                )
+                PermissionSwitchRow(
+                    title = "Destructive risk",
+                    description = "Allow destructive command or data-change approvals from Android.",
+                    checked = mobilePolicy.allowDestructiveRiskApproval,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    allowDestructiveRiskApproval = checked
+                                )
+                            )
+                        }
+                    }
+                )
+                PermissionSwitchRow(
+                    title = "Desktop for shipped state",
+                    description = "Require desktop review before final Work Packet promotion.",
+                    checked = mobilePolicy.requireDesktopForShipped,
+                    enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch {
+                            app.repository.saveMobilePermissionPolicy(
+                                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                                mobilePolicy.copy(
+                                    mode = MobilePermissionPolicyMode.Custom,
+                                    requireDesktopForShipped = checked
+                                )
+                            )
+                        }
+                    }
+                )
+
+                if (mobilePolicy.mode != MobilePermissionPolicyMode.Custom) {
+                    Text(
+                        text = "Choose Custom to adjust individual approval switches.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -336,5 +524,37 @@ fun SettingsScreen(
         }
 
         Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+private fun PermissionSwitchRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = checked,
+            enabled = enabled,
+            onCheckedChange = onCheckedChange
+        )
     }
 }

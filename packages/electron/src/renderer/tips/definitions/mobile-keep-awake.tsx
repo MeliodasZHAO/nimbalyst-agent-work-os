@@ -46,10 +46,10 @@ export const mobileKeepAwakeTip: TipDefinition = {
   },
   content: {
     icon: PowerIcon,
-    title: 'Keep your computer awake for mobile prompts',
-    body: 'Your computer going to sleep will disconnect mobile sync. Enable keep-awake while plugged in to prevent this.',
+    title: '保持电脑唤醒以接收手机端指令',
+    body: '电脑进入睡眠会断开手机同步连接。启用充电时保持唤醒可以避免这个问题。',
     action: {
-      label: 'Enable Keep-Awake',
+      label: '启用保持唤醒',
       onClick: () => {
         window.electronAPI.invoke('sync:set-prevent-sleep', 'pluggedIn');
         // Update local atom so the condition immediately reflects the change
@@ -59,7 +59,7 @@ export const mobileKeepAwakeTip: TipDefinition = {
       variant: 'primary',
     },
     secondaryAction: {
-      label: 'Sync Settings',
+      label: '同步设置',
       onClick: () => {
         store.set(openSettingsCommandAtom, { category: 'sync', timestamp: Date.now() });
       },

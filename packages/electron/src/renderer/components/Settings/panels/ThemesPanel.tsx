@@ -95,11 +95,11 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
     if (!theme) return;
 
     if (theme.isBuiltIn) {
-      setError('Cannot uninstall built-in themes');
+      setError('无法卸载内置主题');
       return;
     }
 
-    const confirmed = confirm(`Are you sure you want to uninstall "${theme.name}"?`);
+    const confirmed = confirm(`确定要卸载 "${theme.name}" 吗？`);
     if (!confirmed) return;
 
     try {
@@ -155,7 +155,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-nim-muted">Loading themes...</div>
+        <div className="text-nim-muted">加载主题中...</div>
       </div>
     );
   }
@@ -165,18 +165,18 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-nim">
         <div>
-          <h2 className="text-lg font-semibold text-nim">Themes</h2>
+          <h2 className="text-lg font-semibold text-nim">主题</h2>
           <p className="text-sm text-nim-muted mt-1">
-            Manage color themes for the editor
+            管理编辑器的颜色主题
           </p>
         </div>
         <button
           onClick={handleRefresh}
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-nim-muted hover:text-nim hover:bg-nim-hover rounded transition-colors"
-          title="Refresh theme list"
+          title="刷新主题列表"
         >
           <MaterialSymbol icon="refresh" size={18} />
-          <span>Refresh</span>
+          <span>刷新</span>
         </button>
       </div>
 
@@ -207,11 +207,11 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
 
       {/* Active theme section */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-nim mb-3">Active Theme</h3>
+        <h3 className="text-sm font-medium text-nim mb-3">当前主题</h3>
         <div className="flex items-center gap-3 p-3 bg-nim-secondary border border-nim rounded-md">
           {(() => {
             const activeTheme = themes.find(t => t.isActive);
-            if (!activeTheme) return <div className="text-nim-muted text-sm">No theme selected</div>;
+            if (!activeTheme) return <div className="text-nim-muted text-sm">未选择主题</div>;
 
             return (
               <>
@@ -220,11 +220,11 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-nim">{activeTheme.name}</div>
-                  <div className="text-xs text-nim-muted">{activeTheme.description || 'No description'}</div>
+                  <div className="text-xs text-nim-muted">{activeTheme.description || '暂无描述'}</div>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 bg-nim-primary/20 text-nim-primary text-xs rounded">
                   <MaterialSymbol icon="check" size={14} />
-                  <span>Active</span>
+                  <span>使用中</span>
                 </div>
               </>
             );
@@ -236,7 +236,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
       <div className="flex-1 overflow-auto">
         {/* Built-in themes */}
         <div className="mb-6">
-          <h3 className="text-sm font-medium text-nim mb-3">Built-in Themes</h3>
+          <h3 className="text-sm font-medium text-nim mb-3">内置主题</h3>
           <div className="space-y-2">
             {builtInThemes.map((theme) => (
               <div
@@ -253,7 +253,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-nim">{theme.name}</div>
-                  <div className="text-xs text-nim-muted">{theme.description || 'No description'}</div>
+                  <div className="text-xs text-nim-muted">{theme.description || '暂无描述'}</div>
                 </div>
                 {theme.isActive && (
                   <div className="flex items-center gap-1 text-nim-primary text-xs">
@@ -268,7 +268,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                     }}
                     className="px-3 py-1 text-xs text-nim-muted hover:text-nim hover:bg-nim-hover rounded transition-colors"
                   >
-                    Apply
+                    应用
                   </button>
                 )}
               </div>
@@ -279,7 +279,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
         {/* User themes */}
         {userThemes.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-nim mb-3">User Themes</h3>
+            <h3 className="text-sm font-medium text-nim mb-3">用户主题</h3>
             <div className="space-y-2">
               {userThemes.map((theme) => (
                 <div
@@ -296,7 +296,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-medium text-nim">{theme.name}</div>
-                    <div className="text-xs text-nim-muted">{theme.description || 'No description'}</div>
+                    <div className="text-xs text-nim-muted">{theme.description || '暂无描述'}</div>
                   </div>
                   {theme.isActive && (
                     <div className="flex items-center gap-1 text-nim-primary text-xs">
@@ -312,7 +312,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                         }}
                         className="px-3 py-1 text-xs text-nim-muted hover:text-nim hover:bg-nim-hover rounded transition-colors"
                       >
-                        Apply
+                        应用
                       </button>
                     )}
                     <button
@@ -321,7 +321,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                         handleUninstall(theme.id);
                       }}
                       className="p-1.5 text-nim-muted hover:text-nim-error hover:bg-nim-error/10 rounded transition-colors"
-                      title="Uninstall theme"
+                      title="卸载主题"
                     >
                       <MaterialSymbol icon="delete" size={16} />
                     </button>
@@ -335,7 +335,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
         {/* Extension themes */}
         {extensionThemes.length > 0 && (
           <div className="extension-themes-section mb-6">
-            <h3 className="text-sm font-medium text-nim mb-3">Extension Themes</h3>
+            <h3 className="text-sm font-medium text-nim mb-3">扩展主题</h3>
             <div className="space-y-2">
               {extensionThemes.map((theme) => (
                 <div
@@ -354,7 +354,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                   <div className="flex-1">
                     <div className="text-sm font-medium text-nim">{theme.name}</div>
                     <div className="text-xs text-nim-muted">
-                      {theme.contributedBy ? `Contributed by ${theme.contributedBy}` : 'Extension theme'}
+                      {theme.contributedBy ? `由 ${theme.contributedBy} 提供` : '扩展主题'}
                     </div>
                   </div>
                   {theme.isActive && (
@@ -370,7 +370,7 @@ export const ThemesPanel: React.FC<ThemesPanelProps> = ({ scope, workspacePath }
                       }}
                       className="px-3 py-1 text-xs text-nim-muted hover:text-nim hover:bg-nim-hover rounded transition-colors"
                     >
-                      Apply
+                      应用
                     </button>
                   )}
                 </div>

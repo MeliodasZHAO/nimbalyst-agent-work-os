@@ -9,7 +9,15 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { NimbalystEditor, MaterialSymbol, ProviderIcon } from '@nimbalyst/runtime';
+import {
+  NimbalystEditor,
+  MaterialSymbol,
+  ProviderIcon,
+  buildFrontendVisualVerificationGuidance,
+  evaluateWorkPacketGateTransition,
+  evaluateWorkPacketGates,
+  routeWorkPacket,
+} from '@nimbalyst/runtime';
 import type { EditorConfig } from '@nimbalyst/runtime/editor';
 import { $convertFromEnhancedMarkdownString, getEditorTransformers } from '@nimbalyst/runtime/editor';
 import { $getRoot } from 'lexical';
@@ -25,6 +33,16 @@ import { buildTrackerDeepLink } from '../../store/atoms/collabDocuments';
 import { errorNotificationService } from '../../services/ErrorNotificationService';
 import { getRelativeTimeString } from '../../utils/dateFormatting';
 import { useTrackerContentCollab } from '../../hooks/useTrackerContentCollab';
+import {
+  getWorkPacketLaunchEvidence,
+  type WorkPacketLaunchEvidenceSession,
+  type WorkPacketReviewerStatus,
+} from './workPacketLaunchEvidence';
+import {
+  buildWorkPacketEvidenceWritebackUpdate,
+  getWorkPacketEvidenceWritebackField,
+  WORK_PACKET_EVIDENCE_WRITEBACK_FIELDS,
+} from './workPacketEvidenceWriteback';
 
 interface TrackerItemDetailProps {
   itemId: string;
@@ -33,6 +51,7 @@ interface TrackerItemDetailProps {
   onSwitchToFilesMode?: () => void;
   onSwitchToAgentMode?: (sessionId: string) => void;
   onLaunchSession?: (trackerItemId: string) => void;
+  onLaunchWorktreeSession?: (trackerItemId: string) => void;
   onArchive?: (itemId: string, archive: boolean) => void;
   onDelete?: (itemId: string) => void;
 }
@@ -104,6 +123,544 @@ function getSourceLabel(record: TrackerRecord): string | null {
   if (record.source === 'import') return `Imported${record.sourceRef ? ` from ${record.sourceRef}` : ''}`;
   return null;
 }
+
+function getWorkPacketRouteInput(item: TrackerRecord) {
+  return {
+    complexity: typeof item.fields.complexity === 'string' ? item.fields.complexity : undefined,
+    risks: typeof item.fields.risks === 'string' ? item.fields.risks : undefined,
+    recommendedAgent: typeof item.fields.recommendedAgent === 'string' ? item.fields.recommendedAgent : undefined,
+    capabilityRoute: typeof item.fields.capabilityRoute === 'string' ? item.fields.capabilityRoute : undefined,
+    requiredSkills: Array.isArray(item.fields.requiredSkills)
+      ? item.fields.requiredSkills.filter((value): value is string => typeof value === 'string')
+      : undefined,
+  };
+}
+
+function getGateCheckIcon(status: 'complete' | 'missing' | 'warning'): string {
+  if (status === 'complete') return 'check_circle';
+  if (status === 'warning') return 'info';
+  return 'radio_button_unchecked';
+}
+
+function getGateCheckClass(status: 'complete' | 'missing' | 'warning'): string {
+  if (status === 'complete') return 'text-[#15803d]';
+  if (status === 'warning') return 'text-[#b45309]';
+  return 'text-nim-muted';
+}
+
+const WorkPacketGateChecklist: React.FC<{ item: TrackerRecord }> = ({ item }) => {
+  const evaluation = useMemo(() => evaluateWorkPacketGates(item), [item]);
+  if (evaluation.checks.length === 0) return null;
+
+  return (
+    <div className="tracker-work-packet-gate-checklist rounded border border-nim bg-nim-tertiary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-medium text-nim-muted uppercase tracking-[0.5px]">
+            Gate Checklist
+          </div>
+          <div className="mt-0.5 text-xs text-nim">
+            {evaluation.readyForCurrentGate
+              ? `${evaluation.gate} gate evidence is ready`
+              : `${evaluation.gate} gate needs evidence`}
+          </div>
+        </div>
+        <MaterialSymbol
+          icon={evaluation.readyForCurrentGate ? 'verified' : 'pending_actions'}
+          size={18}
+          className={evaluation.readyForCurrentGate ? 'text-[#15803d]' : 'text-[#b45309]'}
+        />
+      </div>
+      <div className="mt-2 grid gap-1.5">
+        {evaluation.checks.map((gateCheck) => (
+          <div key={gateCheck.id} className="flex items-start gap-2 text-xs">
+            <MaterialSymbol
+              icon={getGateCheckIcon(gateCheck.status)}
+              size={15}
+              className={`${getGateCheckClass(gateCheck.status)} shrink-0 mt-[1px]`}
+            />
+            <div className="min-w-0">
+              <div className={gateCheck.status === 'missing' && gateCheck.required ? 'text-nim' : 'text-nim-muted'}>
+                {gateCheck.label}
+                {gateCheck.required ? '' : ' (optional)'}
+              </div>
+              {gateCheck.detail && (
+                <div className="mt-0.5 text-[11px] leading-snug text-nim-muted">
+                  {gateCheck.detail}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const WorkPacketCapabilityPanel: React.FC<{ item: TrackerRecord }> = ({ item }) => {
+  const route = useMemo(() => routeWorkPacket(getWorkPacketRouteInput(item)), [item]);
+  const routeItems = [
+    { icon: 'smart_toy', label: 'Provider', value: route.provider },
+    { icon: 'route', label: 'Mode', value: route.sessionMode },
+    { icon: 'account_tree', label: 'Worktree', value: route.worktreeRecommended ? 'Recommended' : 'Optional' },
+    { icon: 'rate_review', label: 'Second Review', value: route.secondAgentReviewRequired ? 'Required' : 'Optional' },
+    { icon: 'article', label: 'Docs Gate', value: route.docsGateRequired ? 'Required' : 'Optional' },
+    { icon: 'verified_user', label: 'Human Approval', value: route.humanApprovalRequired ? 'Required' : 'Not required' },
+  ];
+
+  return (
+    <div className="tracker-work-packet-capability-panel rounded border border-nim bg-nim-tertiary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-medium text-nim-muted uppercase tracking-[0.5px]">
+            Capability Gate
+          </div>
+          <div className="mt-0.5 text-xs text-nim">
+            {route.provider} / {route.sessionMode}
+          </div>
+        </div>
+        <MaterialSymbol
+          icon={route.humanApprovalRequired ? 'admin_panel_settings' : 'tune'}
+          size={18}
+          className={route.humanApprovalRequired ? 'text-[#b45309]' : 'text-nim-muted'}
+        />
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
+        {routeItems.map((routeItem) => (
+          <div key={routeItem.label} className="flex items-center gap-1.5 rounded bg-nim px-2 py-1.5 text-xs">
+            <MaterialSymbol icon={routeItem.icon} size={14} className="shrink-0 text-nim-muted" />
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.4px] text-nim-muted">
+                {routeItem.label}
+              </div>
+              <div className="truncate text-nim">
+                {routeItem.value}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {(route.reviewerProvider || route.highReasoningRecommended || route.pursueGoalRecommended) && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {route.reviewerProvider && (
+            <span className="rounded bg-nim px-1.5 py-0.5 text-[11px] text-nim-muted">
+              reviewer: {route.reviewerProvider}
+            </span>
+          )}
+          {route.highReasoningRecommended && (
+            <span className="rounded bg-nim px-1.5 py-0.5 text-[11px] text-nim-muted">
+              high reasoning
+            </span>
+          )}
+          {route.pursueGoalRecommended && (
+            <span className="rounded bg-nim px-1.5 py-0.5 text-[11px] text-nim-muted">
+              pursue goal
+            </span>
+          )}
+        </div>
+      )}
+
+      {(route.approvalReasons.length > 0 || route.routingNotes.length > 0 || route.warnings.length > 0) && (
+        <div className="mt-2 space-y-1">
+          {[...route.approvalReasons, ...route.routingNotes, ...route.warnings].map((note, index) => (
+            <div key={`${note}-${index}`} className="flex items-start gap-1.5 text-[11px] leading-snug text-nim-muted">
+              <MaterialSymbol icon="info" size={13} className="mt-[1px] shrink-0" />
+              <span>{note}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const WorkPacketVisualEvidencePanel: React.FC<{ item: TrackerRecord; workspacePath?: string }> = ({ item, workspacePath }) => {
+  const guidance = useMemo(() => buildFrontendVisualVerificationGuidance(item), [item]);
+  const [copied, setCopied] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResult, setRunResult] = useState<{
+    success: boolean;
+    resultPath?: string;
+    screenshots?: Array<{ viewport: string; width: number; height: number; path: string }>;
+    error?: string;
+  } | null>(null);
+
+  const handleCopyCommand = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(guidance.command);
+      setCopied(true);
+      errorNotificationService.showInfo(
+        'Visual check command copied',
+        'Run it while Nimbalyst is open in dev mode, then paste the report paths into verification evidence.',
+        { duration: 3000 },
+      );
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('[TrackerItemDetail] Failed to copy visual check command:', err);
+      errorNotificationService.showError(
+        'Copy failed',
+        'Could not write the visual check command to the clipboard.',
+      );
+    }
+  }, [guidance.command]);
+
+  const handleRunVisualCheck = useCallback(async () => {
+    if (!window.electronAPI?.agentWorkOS?.runVisualCheck) {
+      errorNotificationService.showError(
+        'Visual check unavailable',
+        'Restart Nimbalyst to load the Agent Work OS visual check runner.',
+      );
+      return;
+    }
+
+    setIsRunning(true);
+    setRunResult(null);
+    try {
+      const result = await window.electronAPI.agentWorkOS.runVisualCheck({
+        label: item.id,
+        workspacePath,
+      });
+      setRunResult(result);
+      if (result.success) {
+        errorNotificationService.showInfo(
+          'Visual check captured',
+          result.resultPath
+            ? `Report saved to ${result.resultPath}`
+            : 'Screenshots and diagnostics were captured.',
+          { duration: 5000 },
+        );
+      } else {
+        errorNotificationService.showError(
+          'Visual check failed',
+          result.error || 'Could not capture visual evidence.',
+        );
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setRunResult({ success: false, error: message });
+      errorNotificationService.showError('Visual check failed', message);
+    } finally {
+      setIsRunning(false);
+    }
+  }, [item.id, workspacePath]);
+
+  if (!guidance.required) return null;
+
+  return (
+    <div className="tracker-work-packet-visual-evidence rounded border border-nim bg-nim-tertiary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-medium text-nim-muted uppercase tracking-[0.5px]">
+            Visual Evidence
+          </div>
+          <div className="mt-0.5 text-xs text-nim">
+            Desktop and mobile screenshots are recommended for this Work Packet
+          </div>
+        </div>
+        <MaterialSymbol icon="visibility" size={18} className="text-nim-muted" />
+      </div>
+      <div className="mt-2 rounded bg-nim px-2 py-1.5 font-mono text-[11px] leading-snug text-nim-muted break-all">
+        {guidance.command}
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="min-w-0 text-[11px] leading-snug text-nim-muted">
+          Dev mode only. Saves screenshots and JSON under e2e_test_output/agent-work-os-visual.
+        </div>
+        <div className="shrink-0 flex items-center gap-1">
+          <button
+            className="inline-flex items-center gap-1 rounded border border-nim px-2 py-1 text-[11px] font-medium text-nim-muted hover:bg-nim hover:text-nim transition-colors disabled:opacity-60 disabled:hover:bg-transparent"
+            onClick={handleRunVisualCheck}
+            disabled={isRunning}
+            title="Run the frontend visual check against the open Nimbalyst window"
+          >
+            <MaterialSymbol icon={isRunning ? 'hourglass_top' : 'play_arrow'} size={14} />
+            {isRunning ? 'Running' : 'Run'}
+          </button>
+          <button
+            className="inline-flex items-center gap-1 rounded border border-nim px-2 py-1 text-[11px] font-medium text-nim-muted hover:bg-nim hover:text-nim transition-colors"
+            onClick={handleCopyCommand}
+            title="Copy the frontend visual check command"
+          >
+            <MaterialSymbol icon={copied ? 'check' : 'content_copy'} size={14} />
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+      </div>
+      {runResult && (
+        <div className={`mt-2 rounded border px-2 py-1.5 text-[11px] leading-snug ${
+          runResult.success
+            ? 'border-[#86efac] bg-[#f0fdf4] text-[#166534]'
+            : 'border-[#fecaca] bg-[#fef2f2] text-[#991b1b]'
+        }`}>
+          {runResult.success ? (
+            <div className="space-y-1">
+              {runResult.resultPath && (
+                <div className="break-all">Report: {runResult.resultPath}</div>
+              )}
+              {runResult.screenshots?.map((screenshot) => (
+                <div key={screenshot.path} className="break-all">
+                  {screenshot.viewport}: {screenshot.path}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="select-text break-words">
+              {runResult.error || 'Could not capture visual evidence.'}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const WorkPacketEvidenceSessionRow: React.FC<{
+  label: string;
+  evidenceSession: WorkPacketLaunchEvidenceSession;
+  badgeLabel?: string;
+  badgeClassName?: string;
+  onOpen?: (sessionId: string) => void;
+}> = ({ label, evidenceSession, badgeLabel, badgeClassName, onOpen }) => {
+  const session = evidenceSession.session;
+  const title = session?.title || evidenceSession.id;
+  const provider = session?.provider || 'claude';
+
+  return (
+    <button
+      className="w-full flex items-center gap-2 rounded bg-nim px-2 py-1.5 text-left hover:bg-nim-hover transition-colors disabled:hover:bg-nim"
+      onClick={() => onOpen?.(evidenceSession.id)}
+      disabled={!onOpen}
+      title={`Open ${label.toLowerCase()} session: ${title}`}
+    >
+      <ProviderIcon provider={provider} size={14} />
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] uppercase tracking-[0.4px] text-nim-muted">
+          {label}
+        </div>
+        <div className="truncate text-xs text-nim">
+          {title}
+        </div>
+      </div>
+      {badgeLabel && (
+        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] ${badgeClassName ?? 'bg-nim-tertiary text-nim-faint'}`}>
+          {badgeLabel}
+        </span>
+      )}
+      {session ? (
+        <span className="shrink-0 text-[10px] text-nim-faint">
+          {getRelativeTimeString(session.updatedAt)}
+        </span>
+      ) : (
+        <span className="shrink-0 rounded bg-nim-tertiary px-1.5 py-0.5 text-[10px] text-nim-faint">
+          pending
+        </span>
+      )}
+    </button>
+  );
+};
+
+function getReviewerStatusBadge(status: WorkPacketReviewerStatus): { label: string; className: string } | null {
+  switch (status) {
+    case 'required':
+      return { label: 'review needed', className: 'bg-[#f973161a] text-[#f97316]' };
+    case 'session-recorded':
+      return { label: 'ready', className: 'bg-[#3b82f61a] text-[#3b82f6]' };
+    case 'active':
+      return { label: 'active', className: 'bg-[#8b5cf61a] text-[#8b5cf6]' };
+    case 'recorded':
+      return { label: 'recorded', className: 'bg-[#16a34a1a] text-[#16a34a]' };
+    default:
+      return null;
+  }
+}
+
+const WorkPacketLaunchEvidencePanel: React.FC<{
+  evidence: ReturnType<typeof getWorkPacketLaunchEvidence>;
+  onSwitchToAgentMode?: (sessionId: string) => void;
+}> = ({ evidence, onSwitchToAgentMode }) => {
+  if (!evidence.hasEvidence) return null;
+  const reviewerBadge = getReviewerStatusBadge(evidence.reviewerStatus);
+
+  return (
+    <div className="tracker-work-packet-launch-evidence rounded border border-nim bg-nim-tertiary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-medium text-nim-muted uppercase tracking-[0.5px]">
+            Launch Evidence
+          </div>
+          <div className="mt-0.5 text-xs text-nim">
+            Agent sessions and worktree recorded for this Work Packet
+          </div>
+        </div>
+        <MaterialSymbol icon="fact_check" size={18} className="text-nim-muted" />
+      </div>
+
+      <div className="mt-2 space-y-1.5">
+        {evidence.implementationSession && (
+          <WorkPacketEvidenceSessionRow
+            label="Implementation"
+            evidenceSession={evidence.implementationSession}
+            onOpen={onSwitchToAgentMode}
+          />
+        )}
+        {evidence.reviewerSession && (
+          <WorkPacketEvidenceSessionRow
+            label="Reviewer"
+            evidenceSession={evidence.reviewerSession}
+            badgeLabel={reviewerBadge?.label}
+            badgeClassName={reviewerBadge?.className}
+            onOpen={onSwitchToAgentMode}
+          />
+        )}
+      </div>
+
+      {!evidence.reviewerSession && reviewerBadge && (
+        <div className="mt-2 flex items-start gap-1.5 rounded bg-nim px-2 py-1.5 text-[11px] leading-snug text-nim-muted">
+          <MaterialSymbol icon="rate_review" size={13} className="mt-[1px] shrink-0 text-[#f97316]" />
+          <span>Second-agent review is required, but no reviewer session has been recorded yet.</span>
+        </div>
+      )}
+
+      {(evidence.worktreeId || evidence.worktreePath) && (
+        <div className="mt-2 grid gap-1.5 text-xs">
+          {evidence.worktreeId && (
+            <div className="flex items-center gap-2 rounded bg-nim px-2 py-1.5">
+              <MaterialSymbol icon="account_tree" size={14} className="shrink-0 text-nim-muted" />
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.4px] text-nim-muted">Worktree</div>
+                <div className="truncate font-mono text-nim">{evidence.worktreeId}</div>
+              </div>
+            </div>
+          )}
+          {evidence.worktreePath && (
+            <div className="flex items-center gap-2 rounded bg-nim px-2 py-1.5">
+              <MaterialSymbol icon="folder_open" size={14} className="shrink-0 text-nim-muted" />
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.4px] text-nim-muted">Path</div>
+                <div className="truncate font-mono text-nim" title={evidence.worktreePath}>
+                  {evidence.worktreePath}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const WorkPacketEvidenceWritebackPanel: React.FC<{
+  item: TrackerRecord;
+  editable: boolean;
+  selectedField: string;
+  draft: string;
+  saving: boolean;
+  error: string | null;
+  onSelectedFieldChange: (fieldName: string) => void;
+  onDraftChange: (value: string) => void;
+  onSave: () => void;
+}> = ({
+  item,
+  editable,
+  selectedField,
+  draft,
+  saving,
+  error,
+  onSelectedFieldChange,
+  onDraftChange,
+  onSave,
+}) => {
+  const selectedDefinition = getWorkPacketEvidenceWritebackField(selectedField)
+    ?? WORK_PACKET_EVIDENCE_WRITEBACK_FIELDS[0];
+  const existingFieldValue = (item.fields as Record<string, unknown>)[selectedDefinition.name];
+  const existingValue = typeof existingFieldValue === 'string'
+    ? existingFieldValue.trim()
+    : '';
+
+  return (
+    <div className="tracker-work-packet-evidence-writeback rounded border border-nim bg-nim-tertiary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-medium text-nim-muted uppercase tracking-[0.5px]">
+            Evidence Writeback
+          </div>
+          <div className="mt-0.5 text-xs text-nim">
+            Add observed facts without changing gates or approvals
+          </div>
+        </div>
+        <MaterialSymbol icon="edit_note" size={18} className="text-nim-muted" />
+      </div>
+
+      <div className="mt-2 grid gap-2">
+        <label className="grid gap-1">
+          <span className="text-[10px] font-medium uppercase tracking-[0.4px] text-nim-muted">
+            Field
+          </span>
+          <select
+            className="w-full rounded border border-nim bg-nim px-2 py-1.5 text-xs text-nim outline-none focus:border-nim-focus disabled:opacity-60"
+            value={selectedDefinition.name}
+            onChange={(event) => onSelectedFieldChange(event.target.value)}
+            disabled={!editable || saving}
+            title="Choose a Work Packet evidence field"
+          >
+            {WORK_PACKET_EVIDENCE_WRITEBACK_FIELDS.map((field) => (
+              <option key={field.name} value={field.name}>
+                {field.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="text-[11px] leading-snug text-nim-muted">
+          {selectedDefinition.description}
+        </div>
+
+        {existingValue && (
+          <div className="rounded bg-nim px-2 py-1.5">
+            <div className="text-[10px] uppercase tracking-[0.4px] text-nim-muted">
+              Current value
+            </div>
+            <div className="mt-0.5 max-h-20 overflow-y-auto whitespace-pre-wrap text-[11px] leading-snug text-nim-muted">
+              {existingValue}
+            </div>
+          </div>
+        )}
+
+        <textarea
+          className="min-h-[86px] w-full resize-y rounded border border-nim bg-nim px-2 py-1.5 text-xs leading-snug text-nim outline-none focus:border-nim-focus disabled:opacity-60"
+          value={draft}
+          onChange={(event) => onDraftChange(event.target.value)}
+          onKeyDown={(event) => event.stopPropagation()}
+          placeholder="Paste observed evidence, test output, review notes, or visual evidence paths..."
+          disabled={!editable || saving}
+        />
+
+        {error && (
+          <div className="text-[11px] leading-snug text-nim-error">
+            {error}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 text-[11px] leading-snug text-nim-muted">
+            Guarded fields stay controlled by the Work Packet workflow.
+          </div>
+          <button
+            className="shrink-0 inline-flex items-center gap-1 rounded border border-nim px-2 py-1 text-[11px] font-medium text-nim-muted hover:bg-nim hover:text-nim transition-colors disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-nim-muted"
+            onClick={onSave}
+            disabled={!editable || saving || draft.trim().length === 0}
+            title="Save evidence to the selected Work Packet field"
+          >
+            <MaterialSymbol icon={saving ? 'hourglass_empty' : 'save'} size={14} />
+            {saving ? 'Saving' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /** Inline editor for adding/removing secondary type tags */
 const TypeTagsEditor: React.FC<{
@@ -177,6 +734,7 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
   onSwitchToFilesMode,
   onSwitchToAgentMode,
   onLaunchSession,
+  onLaunchWorktreeSession,
   onArchive,
   onDelete,
 }) => {
@@ -187,6 +745,11 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
   const refreshSessionList = useSetAtom(refreshSessionListAtom);
 
   const model = useMemo(() => globalRegistry.get(item?.primaryType ?? ''), [item?.primaryType]);
+  const worktreeLaunchRecommended = useMemo(() => {
+    if (!item || item.primaryType !== 'work-packet') return false;
+    const route = routeWorkPacket(getWorkPacketRouteInput(item));
+    return route.worktreeRecommended;
+  }, [item]);
 
   // Detect whether this workspace has a team. The team check feeds the
   // content editor mode (collab vs local); the member list feeds the
@@ -201,6 +764,12 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
   //   string    -- orgId resolved
   const [teamOrgId, setTeamOrgId] = useState<string | null | undefined>(undefined);
   const [teamMembers, setTeamMembers] = useState<TeamMemberOption[]>([]);
+  const [evidenceWritebackField, setEvidenceWritebackField] = useState(
+    WORK_PACKET_EVIDENCE_WRITEBACK_FIELDS[0].name,
+  );
+  const [evidenceWritebackDraft, setEvidenceWritebackDraft] = useState('');
+  const [evidenceWritebackError, setEvidenceWritebackError] = useState<string | null>(null);
+  const [evidenceWritebackSaving, setEvidenceWritebackSaving] = useState(false);
 
   const handleCopyLink = useCallback(async () => {
     if (!item || !teamOrgId) return;
@@ -304,6 +873,10 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
       .sort((a, b) => b.updatedAt - a.updatedAt);
   }, [item, sessionRegistry]);
   const linkedSessionIds = useMemo(() => new Set(linkedSessions.map((session) => session.id)), [linkedSessions]);
+  const workPacketLaunchEvidence = useMemo(
+    () => getWorkPacketLaunchEvidence(item, sessionRegistry),
+    [item, sessionRegistry],
+  );
   const canLinkExistingSession = Boolean(item && workspacePath);
   const [isLinkingExistingSession, setIsLinkingExistingSession] = useState(false);
   const [sessionSearchQuery, setSessionSearchQuery] = useState('');
@@ -381,6 +954,10 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
     setSessionSearchQuery('');
     setLinkingSessionId(null);
     setLinkSessionError(null);
+    setEvidenceWritebackField(WORK_PACKET_EVIDENCE_WRITEBACK_FIELDS[0].name);
+    setEvidenceWritebackDraft('');
+    setEvidenceWritebackError(null);
+    setEvidenceWritebackSaving(false);
   }, [itemId]); // itemId only -- not item fields
 
   // Load rich content from PGLite once when navigating to a new item.
@@ -570,7 +1147,7 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
 
   /** Save a field update -- routes to file-based save for file-backed items, DB for native */
   const saveField = useCallback(async (updates: Record<string, any>) => {
-    if (!editable || !item) return;
+    if (!editable || !item) return false;
     try {
       if ((item.source === 'frontmatter' || item.source === 'import' || item.source === 'inline') && item.system.documentPath) {
         // File-backed items with a real document path: update in source file
@@ -586,10 +1163,42 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
           syncMode,
         });
       }
+      return true;
     } catch (err) {
       console.error('[TrackerItemDetail] Failed to save field:', err);
+      return false;
     }
   }, [item?.id, item?.source, editable, syncMode]);
+
+  const handleSaveEvidenceWriteback = useCallback(async () => {
+    const result = buildWorkPacketEvidenceWritebackUpdate(
+      item,
+      evidenceWritebackField,
+      evidenceWritebackDraft,
+    );
+    if (!result.allowed) {
+      setEvidenceWritebackError(result.error || 'Evidence cannot be saved.');
+      return;
+    }
+
+    setEvidenceWritebackSaving(true);
+    setEvidenceWritebackError(null);
+    try {
+      const saved = await saveField(result.updates);
+      if (!saved) {
+        setEvidenceWritebackError('Could not save evidence. Check the app logs for details.');
+        return;
+      }
+      setEvidenceWritebackDraft('');
+      errorNotificationService.showInfo(
+        'Evidence saved',
+        `Updated ${getWorkPacketEvidenceWritebackField(evidenceWritebackField)?.label ?? evidenceWritebackField}.`,
+        { duration: 2500 },
+      );
+    } finally {
+      setEvidenceWritebackSaving(false);
+    }
+  }, [evidenceWritebackDraft, evidenceWritebackField, item, saveField]);
 
   /** Debounced save for text fields */
   const debouncedSave = useCallback((updates: Record<string, any>) => {
@@ -682,8 +1291,18 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
 
   /** Handle immediate field change (selects, checkboxes) */
   const handleImmediateFieldChange = useCallback((fieldName: string, value: any) => {
+    if (item?.primaryType === 'work-packet' && fieldName === 'gate') {
+      const transition = evaluateWorkPacketGateTransition(item, value);
+      if (!transition.allowed) {
+        errorNotificationService.showError(
+          `Cannot move to ${transition.toGate} gate`,
+          `Add required evidence first: ${transition.blockedReasons.join(', ')}`,
+        );
+        return;
+      }
+    }
     saveField({ [fieldName]: value });
-  }, [saveField]);
+  }, [item, saveField]);
 
   /** Handle debounced text field change */
   const handleTextFieldChange = useCallback((fieldName: string, value: any) => {
@@ -1043,6 +1662,35 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
           />
         )}
 
+        {item.primaryType === 'work-packet' && (
+          <div className="space-y-2">
+            <WorkPacketCapabilityPanel item={item} />
+            <WorkPacketGateChecklist item={item} />
+            <WorkPacketVisualEvidencePanel item={item} workspacePath={workspacePath} />
+            <WorkPacketLaunchEvidencePanel
+              evidence={workPacketLaunchEvidence}
+              onSwitchToAgentMode={onSwitchToAgentMode}
+            />
+            <WorkPacketEvidenceWritebackPanel
+              item={item}
+              editable={editable}
+              selectedField={evidenceWritebackField}
+              draft={evidenceWritebackDraft}
+              saving={evidenceWritebackSaving}
+              error={evidenceWritebackError}
+              onSelectedFieldChange={(fieldName) => {
+                setEvidenceWritebackField(fieldName);
+                setEvidenceWritebackError(null);
+              }}
+              onDraftChange={(value) => {
+                setEvidenceWritebackDraft(value);
+                setEvidenceWritebackError(null);
+              }}
+              onSave={() => void handleSaveEvidenceWriteback()}
+            />
+          </div>
+        )}
+
         {/* Custom fields */}
         {customFields.length > 0 && (
           <div className="space-y-3 pt-1 border-t border-nim">
@@ -1142,7 +1790,7 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
         </div>
 
         {/* Linked Sessions */}
-        {(linkedSessions.length > 0 || onLaunchSession || canLinkExistingSession || isLinkingExistingSession) && (
+        {(linkedSessions.length > 0 || onLaunchSession || onLaunchWorktreeSession || canLinkExistingSession || isLinkingExistingSession) && (
           <div className="pt-1 border-t border-nim">
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[11px] font-medium text-nim-muted uppercase tracking-[0.5px]">
@@ -1172,6 +1820,16 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
                   >
                     <MaterialSymbol icon="add" size={14} />
                     Launch Session
+                  </button>
+                )}
+                {worktreeLaunchRecommended && onLaunchWorktreeSession && (
+                  <button
+                    className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-medium rounded text-nim-muted hover:text-nim hover:bg-nim-tertiary transition-colors"
+                    onClick={() => onLaunchWorktreeSession(item.id)}
+                    title="Launch a new worktree session for this Work Packet"
+                  >
+                    <MaterialSymbol icon="account_tree" size={14} />
+                    Launch Worktree
                   </button>
                 )}
               </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { ProviderIcon, MaterialSymbol } from '@nimbalyst/runtime';
 import type { SessionData } from '@nimbalyst/runtime/ai/server/types';
@@ -38,6 +39,7 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
   sessionData,
   workspacePath,
 }) => {
+  const { t } = useTranslation('agent');
   const sessionId = sessionData?.id ?? '';
   const worktreeId = sessionData?.worktreeId ?? '';
 
@@ -149,7 +151,7 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
     dialogRef.current?.open<ShareDialogData>(DIALOG_IDS.SHARE, {
       contentType: 'session',
       sessionId: sessionData.id,
-      title: sessionData.title || 'Untitled Session',
+      title: sessionData.title || t('untitledSession'),
     });
   }, [sessionData]);
 
@@ -157,7 +159,7 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
     return null;
   }
 
-  const displayTitle = sessionData.title || 'Untitled Session';
+  const displayTitle = sessionData.title || t('untitledSession');
 
   return (
     <div className="agent-session-header shrink-0 px-4 py-2 border-b border-[var(--nim-border)] bg-[var(--nim-bg)]">
@@ -199,22 +201,22 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
                   <span className="agent-session-header-worktree-name text-[var(--nim-text-muted)] font-medium">{worktreeMetadata.name}</span>
                   {worktreeGitStatus && worktreeGitStatus.ahead > 0 && (
                     <span className="agent-session-header-badge ahead inline-flex items-center px-1.5 py-0.5 rounded text-[0.625rem] font-medium uppercase tracking-wide bg-green-500/15 text-green-500">
-                      {worktreeGitStatus.ahead} ahead
+                      {worktreeGitStatus.ahead} {t('ahead')}
                     </span>
                   )}
                   {worktreeGitStatus && worktreeGitStatus.behind > 0 && (
                     <span className="agent-session-header-badge behind inline-flex items-center px-1.5 py-0.5 rounded text-[0.625rem] font-medium uppercase tracking-wide bg-orange-500/15 text-orange-500">
-                      {worktreeGitStatus.behind} behind
+                      {worktreeGitStatus.behind} {t('behind')}
                     </span>
                   )}
                   {worktreeGitStatus?.hasUncommittedChanges && (
                     <span className="agent-session-header-badge uncommitted inline-flex items-center px-1.5 py-0.5 rounded text-[0.625rem] font-medium uppercase tracking-wide bg-violet-500/15 text-violet-500">
-                      uncommitted
+                      {t('uncommitted')}
                     </span>
                   )}
                 </>
               ) : (
-                <span className="agent-session-header-worktree-name agent-session-header-loading text-[var(--nim-text-faint)] italic">Loading...</span>
+                <span className="agent-session-header-worktree-name agent-session-header-loading text-[var(--nim-text-faint)] italic">{t('loading')}</span>
               )
             ) : null}
           </div>
@@ -229,7 +231,7 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
         {/* Share button */}
         <button
           className="agent-session-header-share shrink-0 flex items-center justify-center w-7 h-7 rounded-md bg-transparent border-none text-[var(--nim-text-faint)] cursor-pointer transition-colors duration-150 hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
-          title="Share session link"
+          title={t('shareSessionLink')}
           onClick={handleShareLink}
         >
           <MaterialSymbol icon="link" size={16} />
@@ -238,7 +240,7 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
         {/* Export button */}
         <button
           className="agent-session-header-export shrink-0 flex items-center justify-center w-7 h-7 rounded-md bg-transparent border-none text-[var(--nim-text-faint)] cursor-pointer transition-colors duration-150 hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
-          title="Export session as HTML"
+          title={t('exportSessionAsHtml')}
           onClick={() => (window as any).electronAPI?.exportSessionToHtml({ sessionId: sessionData.id })}
         >
           <MaterialSymbol icon="download" size={16} />

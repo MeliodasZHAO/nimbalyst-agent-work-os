@@ -8,7 +8,6 @@ import { getTheme, saveWorkspaceWindowState, getWorkspaceNavigationHistory, save
 import { stopFileWatcher } from '../file/FileWatcher';
 import { stopWorkspaceWatcher, startWorkspaceWatcher } from '../file/WorkspaceWatcher.ts';
 import { getFolderContents } from '../utils/FileTree';
-import { getTitleBarColors } from '../theme/ThemeManager';
 import { ElectronDocumentService, setupDocumentServiceHandlers } from '../services/ElectronDocumentService';
 import { ElectronFileSystemService } from '../services/ElectronFileSystemService';
 import { isWorktreePath, resolveProjectPath } from '../utils/workspaceDetection';
@@ -25,6 +24,7 @@ import { ExtensionLogService } from '../services/ExtensionLogService';
 import { getMcpConfigService } from '../mcpConfigServiceRef';
 import { addNimAssetRoot } from '../protocols/nimAssetProtocol';
 import { windows, windowStates, anyWindowReferencesWorkspace } from './windowState';
+import { applyHiddenNativeMenuBar, shouldHideNativeMenuBar } from './windowChrome';
 
 // Window management
 export { windows, windowStates };
@@ -242,6 +242,7 @@ export function createWindow(
             y,
             title: isWorkspaceMode && workspacePath ? basename(workspacePath) : 'Nimbalyst',
             backgroundColor,
+            autoHideMenuBar: shouldHideNativeMenuBar(),
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
@@ -257,7 +258,9 @@ export function createWindow(
                 webviewTag: false
             },
             show: false,
-            titleBarStyle: process.platform === 'darwin' ? undefined : 'default',
+            ...(process.platform === 'darwin'
+                ? {}
+                : { frame: false }),
         };
 
         if (iconPath) {
@@ -266,6 +269,17 @@ export function createWindow(
 
         const window = new BrowserWindow(windowOptions);
 
+        applyHiddenNativeMenuBar(window);
+
+        // Notify renderer of maximize state changes (for custom title bar)
+        if (process.platform !== 'darwin') {
+            window.on('maximize', () => {
+                window.webContents.send('window:maximize-change', true);
+            });
+            window.on('unmaximize', () => {
+                window.webContents.send('window:maximize-change', false);
+            });
+        }
         // Generate a unique window ID
         const windowId = ++windowIdCounter;
         // console.log('[MAIN] Created window with ID:', windowId, 'Electron ID:', window.id);
@@ -588,10 +602,10 @@ export function createWindow(
             console.warn('[MAIN] Window became unresponsive');
             const choice = dialog.showMessageBoxSync(window, {
                 type: 'warning',
-                buttons: ['Reload', 'Keep Waiting'],
+                buttons: ['重新载入', '继续等待'],
                 defaultId: 0,
-                message: 'The window is not responding',
-                detail: 'Would you like to reload the window?'
+                message: 'Nimbalyst 窗口暂时没有响应',
+                detail: '是否重新载入这个窗口？'
             });
 
             if (choice === 0 && !window.isDestroyed()) {

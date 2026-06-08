@@ -64,6 +64,7 @@ export default defineConfig(({ mode }) => ({
       entry: {
         index: resolve(__dirname, 'src/index.ts'),
         'ui/index': resolve(__dirname, 'src/ui/index.ts'),
+        'agent-work-os/index': resolve(__dirname, 'src/agent-work-os/index.ts'),
       },
       name: 'NimbalystRuntime',
       formats: ['es']

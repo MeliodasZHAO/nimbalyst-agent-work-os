@@ -34,11 +34,12 @@ import { setSelectedWorkstreamAtom, sessionRegistryAtom, refreshSessionListAtom,
 import { trackerItemsMapAtom } from '@nimbalyst/runtime/plugins/TrackerPlugin/trackerDataAtoms';
 import { workstreamStateAtom } from '../../store/atoms/workstreamState';
 import { setWindowModeAtom } from '../../store/atoms/windowMode';
-import { defaultAgentModelAtom } from '../../store/atoms/appSettings';
+import { aiProviderSettingsAtom, defaultAgentModelAtom } from '../../store/atoms/appSettings';
 import { ModelIdentifier } from '@nimbalyst/runtime/ai/server/types';
 import { store } from '../../store';
 import { useFloatingMenu } from '../../hooks/useFloatingMenu';
 import { buildTrackerTagOptions, filterTrackerItemsByTags } from './trackerTagFilterUtils';
+import { createWorkPacketLaunchPlan, type WorkPacketLaunchPlan } from './workPacketLaunchRecommendation';
 
 export type ViewMode = 'list' | 'table' | 'kanban';
 
@@ -76,6 +77,7 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
   // falling back to claude-code (which fails for Codex-only installs).
   // See nimbalyst#176.
   const defaultModel = useAtomValue(defaultAgentModelAtom);
+  const aiProviderSettings = useAtomValue(aiProviderSettingsAtom);
 
   useEffect(() => {
     if (!workspacePath) return;
@@ -132,6 +134,168 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
   const setWindowMode = useSetAtom(setWindowModeAtom);
   const refreshSessionList = useSetAtom(refreshSessionListAtom);
 
+  const persistWorkPacketLaunchEvidence = useCallback(async (
+    trackerItem: TrackerRecord | undefined,
+    launchEvidence: Record<string, string | undefined>,
+  ) => {
+    if (!trackerItem || trackerItem.primaryType !== 'work-packet') return;
+    const cleanLaunchEvidence = Object.fromEntries(
+      Object.entries(launchEvidence).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].trim().length > 0),
+    );
+    if (Object.keys(cleanLaunchEvidence).length === 0) return;
+
+    try {
+      if ((trackerItem.source === 'frontmatter' || trackerItem.source === 'import' || trackerItem.source === 'inline') && trackerItem.system.documentPath) {
+        await window.electronAPI.documentService.updateTrackerItemInFile({
+          itemId: trackerItem.id,
+          updates: cleanLaunchEvidence,
+        });
+      } else {
+        const tracker = trackerTypes.find(t => t.type === trackerItem.primaryType);
+        await window.electronAPI.documentService.updateTrackerItem({
+          itemId: trackerItem.id,
+          updates: cleanLaunchEvidence,
+          syncMode: tracker?.sync?.mode || 'local',
+        });
+      }
+    } catch (err) {
+      console.error('[TrackerMainView] Failed to record Work Packet launch evidence:', err);
+      errorNotificationService.showWarning(
+        'Work Packet evidence not saved',
+        'The agent session was created, but launch evidence could not be written back to the Work Packet.',
+        { duration: 7000 },
+      );
+    }
+  }, [trackerTypes]);
+
+  const createReviewerForRegularSession = useCallback(async ({
+    primarySessionId,
+    trackerItem,
+    launchPlan,
+  }: {
+    primarySessionId: string;
+    trackerItem: TrackerRecord;
+    launchPlan: WorkPacketLaunchPlan;
+  }): Promise<string | undefined> => {
+    if (!launchPlan.shouldCreateReviewerSession || !launchPlan.reviewerProvider || !workspacePath) {
+      return undefined;
+    }
+
+    const parentId = crypto.randomUUID();
+    const title = getRecordTitle(trackerItem) || 'Work Packet Review';
+    const parentResult = await window.electronAPI.invoke('sessions:create', {
+      session: {
+        id: parentId,
+        provider: launchPlan.provider,
+        model: launchPlan.model,
+        title,
+        sessionType: 'workstream',
+        metadata: {
+          isWorkstreamRoot: true,
+          agentWorkOS: {
+            ...launchPlan.metadata.agentWorkOS as Record<string, unknown>,
+            primarySessionId,
+          },
+        },
+      },
+      workspaceId: workspacePath,
+    });
+    if (!parentResult?.success || !parentResult?.id) {
+      throw new Error(parentResult?.error || 'Failed to create multi-agent workstream');
+    }
+
+    await window.electronAPI.invoke('sessions:update-metadata', primarySessionId, {
+      parentSessionId: parentResult.id,
+    });
+
+    const reviewerResult = await window.electronAPI.invoke('sessions:create-child', {
+      parentSessionId: parentResult.id,
+      workspacePath,
+      provider: launchPlan.reviewerProvider,
+      model: launchPlan.reviewerModel,
+    });
+    if (!reviewerResult?.success || !reviewerResult?.sessionId) {
+      throw new Error(reviewerResult?.error || 'Failed to create reviewer session');
+    }
+
+    await window.electronAPI.invoke('sessions:update-metadata', reviewerResult.sessionId, {
+      metadata: {
+        ...(launchPlan.reviewerEffortLevel ? { effortLevel: launchPlan.reviewerEffortLevel } : {}),
+        agentWorkOS: {
+          ...launchPlan.metadata.agentWorkOS as Record<string, unknown>,
+          role: 'reviewer',
+          primarySessionId,
+          reviewRequired: launchPlan.recommendation.route.secondAgentReviewRequired,
+        },
+      },
+    });
+    if (launchPlan.reviewerPrompt) {
+      await window.electronAPI.invoke('ai:saveDraftInput', reviewerResult.sessionId, launchPlan.reviewerPrompt, workspacePath);
+    }
+
+    return reviewerResult.sessionId;
+  }, [workspacePath]);
+
+  const createReviewerForWorktreeSession = useCallback(async ({
+    primarySessionId,
+    trackerItem,
+    launchPlan,
+    worktreeId,
+  }: {
+    primarySessionId: string;
+    trackerItem: TrackerRecord;
+    launchPlan: WorkPacketLaunchPlan;
+    worktreeId: string;
+  }): Promise<string | undefined> => {
+    if (!launchPlan.shouldCreateReviewerSession || !launchPlan.reviewerProvider || !workspacePath) {
+      return undefined;
+    }
+
+    const reviewerSessionId = crypto.randomUUID();
+    const title = `${getRecordTitle(trackerItem) || 'Work Packet'} Review`;
+    const result = await window.electronAPI.invoke('sessions:create', {
+      session: {
+        id: reviewerSessionId,
+        provider: launchPlan.reviewerProvider,
+        model: launchPlan.reviewerModel,
+        title,
+        worktreeId,
+        metadata: {
+          ...(launchPlan.reviewerEffortLevel ? { effortLevel: launchPlan.reviewerEffortLevel } : {}),
+          agentWorkOS: {
+            ...launchPlan.metadata.agentWorkOS as Record<string, unknown>,
+            role: 'reviewer',
+            primarySessionId,
+            reviewRequired: launchPlan.recommendation.route.secondAgentReviewRequired,
+          },
+        },
+      },
+      workspaceId: workspacePath,
+    });
+    if (!result?.success || !result?.id) {
+      throw new Error(result?.error || 'Failed to create reviewer worktree session');
+    }
+
+    if (launchPlan.reviewerPrompt) {
+      await window.electronAPI.invoke('ai:saveDraftInput', result.id, launchPlan.reviewerPrompt, workspacePath);
+    }
+
+    return result.id;
+  }, [workspacePath]);
+
+  const loadAgentWorkOSConfigInputs = useCallback(async () => {
+    const [systemConfig, workspaceState] = await Promise.all([
+      window.electronAPI.invoke('app-settings:get', 'agentWorkOSConfig'),
+      workspacePath
+        ? window.electronAPI.invoke('workspace:get-state', workspacePath)
+        : Promise.resolve(undefined),
+    ]);
+    return {
+      systemConfig,
+      projectConfig: workspaceState?.agentWorkOSConfig,
+    };
+  }, [workspacePath]);
+
   /** Navigate to Agent mode and activate a linked session */
   const handleSwitchToAgentMode = useCallback((sessionId: string) => {
     // Determine session type for proper workstream selection
@@ -167,62 +331,58 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
   /** Launch a new AI session linked to a tracker item */
   const handleLaunchSession = useCallback(async (trackerItemId: string) => {
     try {
+      const itemsMap = store.get(trackerItemsMapAtom);
+      const trackerItem = itemsMap.get(trackerItemId);
+      const workPacketConfig = trackerItem?.primaryType === 'work-packet'
+        ? await loadAgentWorkOSConfigInputs()
+        : undefined;
+      const initialLaunchPlan = trackerItem?.primaryType === 'work-packet' && workPacketConfig
+        ? createWorkPacketLaunchPlan({
+          trackerItem,
+          systemConfig: workPacketConfig.systemConfig,
+          projectConfig: workPacketConfig.projectConfig,
+          aiProviderSettings,
+          defaultModel,
+        })
+        : undefined;
+
       // Derive provider from the user's default model rather than hardcoding
       // 'claude-code'. Mirrors AgentMode.createNewSession so a Codex-only
       // workspace launches a Codex session, not a failed claude-code one.
       // See nimbalyst#176.
       const sessionId = crypto.randomUUID();
       const parsedModel = defaultModel ? ModelIdentifier.tryParse(defaultModel) : null;
-      const provider = parsedModel?.provider || 'claude-code';
+      const provider = initialLaunchPlan?.provider || parsedModel?.provider || 'claude-code';
+      const model = initialLaunchPlan?.model ?? defaultModel;
       const result = await window.electronAPI.invoke('sessions:create', {
         session: {
           id: sessionId,
           provider,
-          model: defaultModel,
+          model,
           title: 'New Session',
+          metadata: initialLaunchPlan?.metadata,
         },
         workspaceId: workspacePath,
       });
       if (result?.success && result?.id) {
-        // Look up the tracker item to build a context-aware draft prompt
-        const itemsMap = store.get(trackerItemsMapAtom);
-        const trackerItem = itemsMap.get(trackerItemId);
+        const buildDraft = () => {
+          if (trackerItem?.primaryType === 'work-packet') {
+            const launchPlan = createWorkPacketLaunchPlan({
+              trackerItem,
+              systemConfig: workPacketConfig?.systemConfig,
+              projectConfig: workPacketConfig?.projectConfig,
+              aiProviderSettings,
+              defaultModel,
+              extraFields: { linkedSession: result.id },
+            });
+            return launchPlan.prompt;
+          }
 
-        if (trackerItem?.system?.documentPath) {
-          // File-backed item: link via file path and pre-fill draft with item context
-          await window.electronAPI.invoke('tracker:link-session', {
-            trackerId: `file:${trackerItem.system.documentPath}`,
-            sessionId: result.id,
-          });
-          // Build a context-rich prompt with the specific item's details
-          const title = getRecordTitle(trackerItem);
-          const status = getRecordStatus(trackerItem);
-          const priority = getRecordPriority(trackerItem);
-          const description = getRecordFieldStr(trackerItem, 'description');
-          const itemId = trackerItem.issueKey || trackerItemId;
-          const lines: string[] = [];
-          lines.push(`implement tracker item ${itemId}: ${title}`);
-          const meta: string[] = [];
-          if (trackerItem.primaryType) meta.push(`type: ${trackerItem.primaryType}`);
-          if (status) meta.push(`status: ${status}`);
-          if (priority) meta.push(`priority: ${priority}`);
-          if (meta.length > 0) lines.push(meta.join(', '));
-          if (description) lines.push(`\n${description}`);
-          lines.push(`\nSource: @${trackerItem.system.documentPath}`);
-          lines.push(`\nUpdate this tracker item's status when done using tracker_update with id "${itemId}".`);
-          await window.electronAPI.invoke('ai:saveDraftInput', result.id,
-            lines.join('\n'), workspacePath);
-        } else {
-          // Native DB item: link by ID
-          await window.electronAPI.invoke('tracker:link-session', {
-            trackerId: trackerItemId,
-            sessionId: result.id,
-          });
-          // Pre-fill draft with item context
           const title = trackerItem ? getRecordTitle(trackerItem) : trackerItemId;
           const itemId = trackerItem?.issueKey || trackerItemId;
           const lines: string[] = [];
           lines.push(`implement tracker item ${itemId}: ${title}`);
+
           if (trackerItem) {
             const status = getRecordStatus(trackerItem);
             const priority = getRecordPriority(trackerItem);
@@ -234,10 +394,53 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
             if (meta.length > 0) lines.push(meta.join(', '));
             if (description) lines.push(`\n${description}`);
           }
+
+          if (trackerItem?.system.documentPath) {
+            lines.push(`\nSource: @${trackerItem.system.documentPath}`);
+          }
           lines.push(`\nUpdate this tracker item's status when done using tracker_update with id "${itemId}".`);
+          return lines.join('\n');
+        };
+
+        if (trackerItem?.system?.documentPath) {
+          // File-backed item: link via file path and pre-fill draft with item context
+          await window.electronAPI.invoke('tracker:link-session', {
+            trackerId: `file:${trackerItem.system.documentPath}`,
+            sessionId: result.id,
+          });
           await window.electronAPI.invoke('ai:saveDraftInput', result.id,
-            lines.join('\n'), workspacePath);
+            buildDraft(), workspacePath);
+        } else {
+          // Native DB item: link by ID
+          await window.electronAPI.invoke('tracker:link-session', {
+            trackerId: trackerItemId,
+            sessionId: result.id,
+          });
+          await window.electronAPI.invoke('ai:saveDraftInput', result.id,
+            buildDraft(), workspacePath);
         }
+
+        let reviewerSessionId: string | undefined;
+        if (trackerItem?.primaryType === 'work-packet' && workPacketConfig) {
+          const reviewLaunchPlan = createWorkPacketLaunchPlan({
+            trackerItem,
+            systemConfig: workPacketConfig.systemConfig,
+            projectConfig: workPacketConfig.projectConfig,
+            aiProviderSettings,
+            defaultModel,
+            extraFields: { linkedSession: result.id },
+          });
+          reviewerSessionId = await createReviewerForRegularSession({
+            primarySessionId: result.id,
+            trackerItem,
+            launchPlan: reviewLaunchPlan,
+          });
+        }
+
+        await persistWorkPacketLaunchEvidence(trackerItem, {
+          linkedSession: result.id,
+          reviewerSession: reviewerSessionId,
+        });
 
         // Refresh session list to pick up the new session, then navigate
         await refreshSessionList();
@@ -250,7 +453,106 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
     } catch (err) {
       console.error('[TrackerMainView] Failed to launch session:', err);
     }
-  }, [workspacePath, refreshSessionList, setSelectedWorkstream, setWindowMode, defaultModel]);
+  }, [workspacePath, refreshSessionList, setSelectedWorkstream, setWindowMode, defaultModel, aiProviderSettings, loadAgentWorkOSConfigInputs, persistWorkPacketLaunchEvidence, createReviewerForRegularSession]);
+
+  /** Launch a new worktree AI session linked to a Work Packet. */
+  const handleLaunchWorktreeSession = useCallback(async (trackerItemId: string) => {
+    try {
+      if (!workspacePath) {
+        errorNotificationService.showError('Cannot launch worktree', 'No workspace path is available.');
+        return;
+      }
+
+      const itemsMap = store.get(trackerItemsMapAtom);
+      const trackerItem = itemsMap.get(trackerItemId);
+      if (!trackerItem || trackerItem.primaryType !== 'work-packet') {
+        errorNotificationService.showError('Cannot launch worktree', 'Worktree launch is only available for Work Packets.');
+        return;
+      }
+
+      const workPacketConfig = await loadAgentWorkOSConfigInputs();
+      const initialLaunchPlan = createWorkPacketLaunchPlan({
+        trackerItem,
+        systemConfig: workPacketConfig.systemConfig,
+        projectConfig: workPacketConfig.projectConfig,
+        aiProviderSettings,
+        defaultModel,
+      });
+      const provider = initialLaunchPlan.provider;
+      const title = getRecordTitle(trackerItem) || 'Work Packet';
+      const worktreeResult = await window.electronAPI.worktreeCreate(workspacePath, {
+        name: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || undefined,
+      });
+      if (!worktreeResult.success || !worktreeResult.worktree) {
+        throw new Error(worktreeResult.error || 'Failed to create worktree');
+      }
+
+      const sessionResult = await window.electronAPI.aiCreateSession(
+        provider,
+        undefined,
+        workspacePath,
+        initialLaunchPlan.model,
+        'session',
+        worktreeResult.worktree.id,
+      );
+      if (!sessionResult?.id) {
+        throw new Error(sessionResult?.error || 'Failed to create worktree session');
+      }
+      if (Object.keys(initialLaunchPlan.metadata).length > 0) {
+        await window.electronAPI.invoke('sessions:update-metadata', sessionResult.id, {
+          metadata: initialLaunchPlan.metadata,
+        });
+      }
+
+      const trackerId = trackerItem.system.documentPath
+        ? `file:${trackerItem.system.documentPath}`
+        : trackerItemId;
+      await window.electronAPI.invoke('tracker:link-session', {
+        trackerId,
+        sessionId: sessionResult.id,
+      });
+
+      const launchEvidence = {
+        linkedSession: sessionResult.id,
+        worktreeId: worktreeResult.worktree.id,
+        worktreePath: worktreeResult.worktree.path,
+      };
+
+      const launchPlan = createWorkPacketLaunchPlan({
+        trackerItem,
+        systemConfig: workPacketConfig.systemConfig,
+        projectConfig: workPacketConfig.projectConfig,
+        aiProviderSettings,
+        defaultModel,
+        extraFields: launchEvidence,
+      });
+      await window.electronAPI.invoke('ai:saveDraftInput', sessionResult.id, launchPlan.prompt, workspacePath);
+
+      const reviewerSessionId = await createReviewerForWorktreeSession({
+        primarySessionId: sessionResult.id,
+        trackerItem,
+        launchPlan,
+        worktreeId: worktreeResult.worktree.id,
+      });
+      await persistWorkPacketLaunchEvidence(trackerItem, {
+        ...launchEvidence,
+        reviewerSession: reviewerSessionId,
+      });
+
+      await refreshSessionList();
+      setSelectedWorkstream({
+        workspacePath,
+        selection: { type: 'worktree', id: sessionResult.id },
+      });
+      setWindowMode('agent');
+    } catch (err) {
+      console.error('[TrackerMainView] Failed to launch worktree session:', err);
+      errorNotificationService.showError(
+        'Failed to launch worktree session',
+        err instanceof Error ? err.message : 'Unknown error',
+      );
+    }
+  }, [workspacePath, defaultModel, aiProviderSettings, loadAgentWorkOSConfigInputs, persistWorkPacketLaunchEvidence, createReviewerForWorktreeSession, refreshSessionList, setSelectedWorkstream, setWindowMode]);
 
   // Base item sets from atoms
   const activeItems = useAtomValue(trackerItemsByTypeAtom(filterType));
@@ -873,6 +1175,7 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
               onSwitchToFilesMode={onSwitchToFilesMode}
               onSwitchToAgentMode={handleSwitchToAgentMode}
               onLaunchSession={handleLaunchSession}
+              onLaunchWorktreeSession={handleLaunchWorktreeSession}
               onArchive={handleArchiveItem}
               onDelete={handleDeleteItem}
             />

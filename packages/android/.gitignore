@@ -1,6 +1,7 @@
 .gradle/
 build/
 local.properties
+keystores/
 app/build/
 dist-transcript/
 node_modules/

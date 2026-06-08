@@ -27,10 +27,10 @@ export const sessionSharedTip: TipDefinition = {
   },
   content: {
     icon: ShareIcon,
-    title: 'Share a session, not a screenshot',
-    body: 'Sessions can be published as **end-to-end-encrypted links** with 1, 7, or 30 day expiry. Use the share button on a session to send the full transcript to a teammate.',
+    title: '分享会话，而不是截图',
+    body: '会话可以发布为**端到端加密链接**，有效期 1 天、7 天或 30 天。用会话上的分享按钮将完整对话记录发送给队友。',
     action: {
-      label: 'Manage Shared Links',
+      label: '管理共享链接',
       onClick: () => {
         store.set(openSettingsCommandAtom, { category: 'shared-links', timestamp: Date.now() });
       },

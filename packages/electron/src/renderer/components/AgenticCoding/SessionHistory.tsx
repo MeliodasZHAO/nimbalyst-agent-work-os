@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { CollapsibleGroup } from './CollapsibleGroup';
@@ -201,6 +202,7 @@ function compareNumbersAsc(a: number, b: number): number {
  * now); we keep the constant for code paths that still branch on it.
  */
 const SessionHistoryComponent: React.FC = () => {
+  const { t } = useTranslation('agent');
   const workspacePath = useAtomValue(activeWorkspacePathAtom) ?? '';
   const activeSessionId = useAtomValue(globalActiveSessionIdAtom);
   const collapsedGroups = useAtomValue(collapsedGroupsAtom);
@@ -2743,7 +2745,7 @@ const SessionHistoryComponent: React.FC = () => {
             </>
           }
         />
-        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
         <div className="session-history-search px-3 py-2 border-b border-[var(--nim-border)] shrink-0 relative">
           <input
             type="text"
@@ -2843,7 +2845,7 @@ const SessionHistoryComponent: React.FC = () => {
             </>
           }
         />
-        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
         <div className="session-history-error flex flex-col items-center justify-center px-4 py-8 text-center text-[var(--nim-error)] text-[13px]">
           <span>{error}</span>
         </div>
@@ -2879,7 +2881,7 @@ const SessionHistoryComponent: React.FC = () => {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          <span>New Session</span>
+          <span>{t('newSession')}</span>
           <span className="session-history-new-option-shortcut flex-none text-[11px] text-[var(--nim-text-muted)] opacity-70">{getShortcutDisplay(KeyboardShortcuts.file.newSession)}</span>
         </button>
       )}
@@ -3038,7 +3040,7 @@ const SessionHistoryComponent: React.FC = () => {
             </>
           }
         />
-        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
         <div className="session-history-empty flex flex-col items-center justify-center px-4 py-8 text-center text-[var(--nim-text-faint)] text-[13px]">
           <p className="my-1">No sessions yet</p>
           <p className="session-history-empty-hint my-1 text-xs text-[var(--nim-text-faint)]">
@@ -3133,13 +3135,13 @@ const SessionHistoryComponent: React.FC = () => {
           </>
         }
       />
-      <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+      <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
       <div className="session-history-search px-3 py-2 border-b border-[var(--nim-border)] shrink-0 relative z-10">
         <input
           ref={searchInputRef}
           type="text"
           className="session-history-search-input nim-input w-full px-3 py-2 pr-14 text-[13px] text-[var(--nim-text)] bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded outline-none transition-colors duration-150 placeholder:text-[var(--nim-text-faint)] focus:border-[var(--nim-primary)] focus:bg-[var(--nim-bg)]"
-          placeholder="Search or type # to filter by tag..."
+          placeholder={t('searchOrFilterByTag')}
           value={showTagDropdown
             ? (searchQuery ? searchQuery + ' ' : '') + '#' + tagQuery
             : searchQuery}
@@ -3506,7 +3508,18 @@ const SessionHistoryComponent: React.FC = () => {
                           size={12}
                           className={`collapsible-group-chevron shrink-0 text-nim-faint transition-transform duration-200 ${entry.isExpanded ? 'rotate-90' : ''}`}
                         />
-                        <span className="collapsible-group-title flex-1 overflow-hidden text-ellipsis whitespace-nowrap uppercase tracking-wide">{entry.groupKey}</span>
+                        <span className="collapsible-group-title flex-1 overflow-hidden text-ellipsis whitespace-nowrap uppercase tracking-wide">{
+                          {
+                            'Today': t('today'),
+                            'Yesterday': t('yesterday'),
+                            'This Week': t('thisWeek'),
+                            'Last Week': t('lastWeek'),
+                            'This Month': t('thisMonth'),
+                            'Last Month': t('lastMonth'),
+                            'Older': t('older'),
+                            'Pinned': t('pinned'),
+                          }[entry.groupKey] ?? entry.groupKey
+                        }</span>
                         <span className="collapsible-group-count shrink-0 text-[0.625rem] text-nim-faint font-normal">{entry.itemCount}</span>
                       </button>
                     </div>

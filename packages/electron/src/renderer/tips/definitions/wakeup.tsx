@@ -25,7 +25,7 @@ export const wakeupTip: TipDefinition = {
   },
   content: {
     icon: ScheduleIcon,
-    title: 'Let the agent page itself later',
-    body: 'Ask the agent to **schedule a wakeup** ("check the build in 5 minutes", "poll the PR every 30s") and it self-resumes -- no need to babysit a long-running task.',
+    title: '让 Agent 自己定时唤醒',
+    body: '让 Agent **设置定时唤醒**（"5 分钟后检查构建"、"每 30 秒轮询 PR"），它会自动恢复执行——不用一直盯着长时间运行的任务。',
   },
 };

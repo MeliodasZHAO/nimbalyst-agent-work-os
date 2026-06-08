@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import {
   TrackerDataModelRegistry,
   getRoleField,
@@ -186,5 +188,33 @@ fields:
 `;
     const model = parseTrackerYAML(yaml);
     expect(model.roles).toBeUndefined();
+  });
+
+  it('parses the Agent Work OS Work Packet schema', () => {
+    const yaml = fs.readFileSync(
+      path.resolve(process.cwd(), 'UserDocs/examples/work-packet.yaml'),
+      'utf8',
+    );
+
+    const model = parseTrackerYAML(yaml);
+
+    expect(model.type).toBe('work-packet');
+    expect(model.displayName).toBe('Work Packet');
+    expect(model.modes.inline).toBe(true);
+    expect(model.modes.fullDocument).toBe(true);
+    expect(model.roles?.title).toBe('title');
+    expect(model.roles?.workflowStatus).toBe('gate');
+    expect(model.roles?.priority).toBe('priority');
+    expect(model.roles?.progress).toBe('progress');
+    expect(model.roles?.tags).toBe('tags');
+    expect(model.tableView?.defaultColumns).toEqual([
+      'title',
+      'gate',
+      'complexity',
+      'priority',
+      'recommendedAgent',
+      'capabilityRoute',
+      'progress',
+    ]);
   });
 });

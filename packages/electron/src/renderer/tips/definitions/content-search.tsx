@@ -25,7 +25,7 @@ export const contentSearchTip: TipDefinition = {
   },
   content: {
     icon: SearchIcon,
-    title: 'Cmd+Shift+F searches inside files',
-    body: 'Hit **Cmd+Shift+F** for cross-file regex search across the workspace. Results group by file with one-click jump-to-line.',
+    title: 'Cmd+Shift+F 搜索文件内容',
+    body: '按 **Cmd+Shift+F** 在整个工作区内进行跨文件正则搜索，结果按文件分组，点击即可跳转到对应行。',
   },
 };

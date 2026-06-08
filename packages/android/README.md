@@ -58,8 +58,50 @@ npm run sync:transcript-assets
 ```bash
 cd packages/android
 ./gradlew :app:assembleDebug
+./gradlew :app:installDebug
 ./gradlew :app:testDebugUnitTest
 ```
+
+The same debug install path is available through npm scripts:
+
+```bash
+cd packages/android
+npm run android:assemble:debug
+npm run android:install:debug
+npm run android:test:unit
+```
+
+For an unsigned local release APK:
+
+```bash
+cd packages/android
+npm run android:assemble:release
+```
+
+### Signed release APK
+
+Release signing is local-only. Initialize a local keystore and `local.properties` signing block with:
+
+```powershell
+cd packages/android
+npm run agent-work-os:release-signing:init
+```
+
+Verify the local signing setup with:
+
+```powershell
+npm run agent-work-os:release-signing:verify
+```
+
+When `NIMBALYST_RELEASE_STORE_FILE`, `NIMBALYST_RELEASE_STORE_PASSWORD`, `NIMBALYST_RELEASE_KEY_ALIAS`, and `NIMBALYST_RELEASE_KEY_PASSWORD` are all present in `local.properties`, this command emits a signed release APK:
+
+```bash
+npm run android:assemble:release
+```
+
+Do not commit `local.properties` or files under `keystores/`.
+
+Use `npm run agent-work-os:release-signing:init -- --force` only when you intentionally want to rotate local signing materials. Existing Android installs signed with the old local key may need to be uninstalled before installing a build signed with a new key.
 
 If `JAVA_HOME` points at GraalVM on this machine, Android builds can fail during the AGP `jlink` step. Using the installed OpenJDK at `/Users/ghinkle/Library/Java/JavaVirtualMachines/openjdk-20.0.2/Contents/Home` worked for `assembleDebug` and `testDebugUnitTest`.
 
@@ -79,6 +121,8 @@ Android can now:
 - send AskUserQuestion, ToolPermission, ExitPlanMode, and GitCommit widget responses from the transcript bridge
 - clear unread indicators as sessions are viewed on Android
 - show desktop-synced available models and the current default model in settings
+- receive the desktop User-scope Agent Work OS mobile permission policy through encrypted settings sync and store it in Room
+- receive desktop Project-scope Agent Work OS mobile permission policy through encrypted project config sync and store it per Android project
 - request notification permission and attempt FCM token registration when Firebase config is present
 
 Current push blocker:

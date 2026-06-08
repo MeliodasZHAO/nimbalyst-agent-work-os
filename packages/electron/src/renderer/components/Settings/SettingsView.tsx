@@ -17,6 +17,7 @@ import { LMStudioPanel } from '../GlobalSettings/panels/LMStudioPanel';
 import { AdvancedPanel } from '../GlobalSettings/panels/AdvancedPanel';
 import { DatabasePanel } from '../GlobalSettings/panels/DatabasePanel';
 import { AgentFeaturesPanel } from './AgentFeaturesPanel';
+import { AgentWorkOSPanel } from './AgentWorkOSPanel';
 import { BetaFeaturesPanel } from '../GlobalSettings/panels/BetaFeaturesPanel';
 import { NotificationsPanel } from '../GlobalSettings/panels/NotificationsPanel';
 import { VoiceModePanel } from './VoiceModePanel';
@@ -32,6 +33,7 @@ import { ThemesPanel } from './panels/ThemesPanel';
 import { TeamPanel } from './panels/TeamPanel';
 import { TrackerConfigPanel } from './panels/TrackerConfigPanel';
 import { ExtensionMarketplacePanel } from './panels/ExtensionMarketplacePanel';
+import { LanguagePanel } from '../GlobalSettings/panels/LanguagePanel';
 import { walkthroughs } from '../../walkthroughs';
 import {
   aiProviderSettingsAtom,
@@ -147,8 +149,8 @@ export function SettingsView({
   const [workspaceMcpServerCount, setWorkspaceMcpServerCount] = useState(0);
 
   // Valid categories for each scope
-  const projectCategories: SettingsCategory[] = ['agent-permissions', 'team', 'tracker-config', 'installed-extensions', 'claude-plugins', 'mcp-servers', 'claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio'];
-  const userCategories: SettingsCategory[] = ['claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio', 'sync', 'notifications', 'voice-mode', 'agent-features', 'advanced', 'marketplace', 'installed-extensions', 'claude-plugins', 'mcp-servers'];
+  const projectCategories: SettingsCategory[] = ['agent-permissions', 'team', 'tracker-config', 'agent-work-os', 'installed-extensions', 'claude-plugins', 'mcp-servers', 'claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio'];
+  const userCategories: SettingsCategory[] = ['claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio', 'sync', 'notifications', 'voice-mode', 'agent-work-os', 'agent-features', 'language', 'advanced', 'marketplace', 'installed-extensions', 'claude-plugins', 'mcp-servers'];
 
   // When initialCategory/initialScope props change, update state (for deep linking)
   useEffect(() => {
@@ -556,6 +558,14 @@ export function SettingsView({
         return <DatabasePanel />;
       case 'agent-features':
         return <AgentFeaturesPanel />;
+      case 'agent-work-os':
+        return (
+          <AgentWorkOSPanel
+            scope={scope}
+            workspacePath={scope === 'project' ? workspacePath ?? undefined : undefined}
+            workspaceName={workspaceName ?? undefined}
+          />
+        );
       case 'beta-features':
         return <BetaFeaturesPanel />;
       case 'notifications':
@@ -611,6 +621,8 @@ export function SettingsView({
             workspacePath={workspacePath ?? undefined}
           />
         );
+      case 'language':
+        return <LanguagePanel />;
       case 'team':
         return <TeamPanel workspacePath={workspacePath ?? undefined} />;
       case 'tracker-config':

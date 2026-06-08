@@ -94,6 +94,32 @@ export function registerWindowHandlers() {
         }
     });
 
+    // Window control handlers (frameless title bar on Windows)
+    safeOn('window:minimize', (event) => {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        if (window) window.minimize();
+    });
+
+    safeOn('window:maximize-toggle', (event) => {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        if (!window) return;
+        if (window.isMaximized()) {
+            window.unmaximize();
+        } else {
+            window.maximize();
+        }
+    });
+
+    safeOn('window:close', (event) => {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        if (window) window.close();
+    });
+
+    safeHandle('window:is-maximized', (event) => {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        return window ? window.isMaximized() : false;
+    });
+
 
     // Open image in default application
     safeHandle('image:open-in-default-app', async (event, imagePath: string) => {

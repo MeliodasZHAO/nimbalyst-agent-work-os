@@ -810,6 +810,10 @@ interface CachedSessionIndex {
 // CollabV3 Sync Provider
 // ============================================================================
 
+export function shouldIncludeEncryptedProjectConfig(projectConfig: ProjectConfig): boolean {
+  return projectConfig.commands.length > 0 || Boolean(projectConfig.agentWorkOSConfig);
+}
+
 export function createCollabV3Sync(config: SyncConfig): SyncProvider {
   // We need to get the initial JWT synchronously for setup, but will refresh before each connection
   // The getJwt function is called before each WebSocket connection to ensure fresh JWT
@@ -3138,7 +3142,7 @@ export function createCollabV3Sync(config: SyncConfig): SyncProvider {
       // Encrypt project ID (deterministic)
       const { encryptedProjectId, projectIdIv } = await encryptProjectId(projectId, config.encryptionKey);
 
-      // Build message -- only include encrypted config if there are commands
+      // Build message -- only include encrypted config when there is real config
       // (skip when just sending gitRemoteHash on startup to avoid overwriting existing config)
       const message: Record<string, unknown> = {
         type: 'projectConfigUpdate',
@@ -3147,7 +3151,7 @@ export function createCollabV3Sync(config: SyncConfig): SyncProvider {
         gitRemoteHash: projectConfig.gitRemoteHash,
       };
 
-      if (projectConfig.commands.length > 0) {
+      if (shouldIncludeEncryptedProjectConfig(projectConfig)) {
         const configJson = JSON.stringify(projectConfig);
         const { encrypted: encryptedConfig, iv: configIv } = await encrypt(configJson, config.encryptionKey);
         message.encryptedConfig = encryptedConfig;

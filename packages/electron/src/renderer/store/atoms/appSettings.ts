@@ -2008,6 +2008,44 @@ export const externalEditorNameAtom = atom((get) => {
 });
 
 // ============================================================================
+// PHASE 9: App Language Settings
+// ============================================================================
+
+/**
+ * The current app language (BCP-47 code).
+ * Should be initialized from IPC on app load.
+ */
+export const appLanguageAtom = atom<string>('zh-CN');
+
+/**
+ * Setter atom for app language.
+ * Updates the atom and persists via IPC.
+ */
+export const setAppLanguageAtom = atom(
+  null,
+  async (_get, set, language: string) => {
+    set(appLanguageAtom, language);
+    if (typeof window !== 'undefined' && window.electronAPI) {
+      await window.electronAPI.invoke('app-language:set', language);
+    }
+  }
+);
+
+/**
+ * Initialize app language from IPC.
+ * Call this once at app startup.
+ */
+export async function initAppLanguage(): Promise<string> {
+  if (typeof window === 'undefined' || !window.electronAPI) return 'zh-CN';
+  try {
+    const lang = await window.electronAPI.invoke('app-language:get');
+    return lang ?? 'zh-CN';
+  } catch {
+    return 'zh-CN';
+  }
+}
+
+// ============================================================================
 // FILE ACTIONS
 // Action atoms for common file operations. Components can use these directly
 // without prop drilling callbacks.

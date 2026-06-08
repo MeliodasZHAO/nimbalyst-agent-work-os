@@ -25,7 +25,7 @@ export const lightningInterruptTip: TipDefinition = {
   },
   content: {
     icon: BoltIcon,
-    title: 'Lightning button stops a runaway',
-    body: 'If the agent is heading the wrong way, hit the **lightning bolt** next to the composer to interrupt it. Type a redirect into the composer and it resumes from there -- no need to wait the turn out.',
+    title: '闪电按钮中断失控的 Agent',
+    body: '如果 Agent 走偏了方向，点击编辑器旁的**闪电按钮**来中断它。在编辑器中输入新指令，它会从那里继续——不用等整个回合结束。',
   },
 };

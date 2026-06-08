@@ -26,7 +26,7 @@ export const quickOpenTip: TipDefinition = {
   },
   content: {
     icon: SearchIcon,
-    title: 'Cmd+O fuzzy-opens any file',
-    body: 'Skip the file tree. **Cmd+O** opens a fuzzy finder over every file in the workspace -- type a fragment of the path and hit enter.',
+    title: 'Cmd+O 模糊搜索打开文件',
+    body: '跳过文件树。**Cmd+O** 打开工作区内所有文件的模糊搜索——输入路径片段然后回车。',
   },
 };

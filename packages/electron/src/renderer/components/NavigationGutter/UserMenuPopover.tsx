@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue } from 'jotai';
 import { MaterialSymbol } from '@nimbalyst/runtime';
 import { useAlphaFeature } from '../../hooks/useAlphaFeature';
@@ -18,6 +19,8 @@ interface UserMenuPopoverProps {
 }
 
 export function UserMenuPopover({ onNavigateSettings, onClose, isProjectConnected = false, anchorEl }: UserMenuPopoverProps) {
+  const { t } = useTranslation('navigation');
+  const { t: tc } = useTranslation('common');
   const authState = useAtomValue(stytchAuthAtom);
 
   const menu = useFloatingMenu({
@@ -39,7 +42,7 @@ export function UserMenuPopover({ onNavigateSettings, onClose, isProjectConnecte
 
   const menuItems = [
     {
-      label: 'User Settings',
+      label: t('userSettings'),
       icon: 'person' as const,
       onClick: () => {
         onNavigateSettings('user');
@@ -47,7 +50,7 @@ export function UserMenuPopover({ onNavigateSettings, onClose, isProjectConnecte
       },
     },
     {
-      label: 'Project Settings',
+      label: t('projectSettings'),
       icon: 'folder' as const,
       onClick: () => {
         onNavigateSettings('project');
@@ -56,7 +59,7 @@ export function UserMenuPopover({ onNavigateSettings, onClose, isProjectConnecte
     },
     // Show Team Settings when connected AND collaboration alpha is enabled
     ...(isProjectConnected && isCollaborationEnabled ? [{
-      label: 'Team Settings',
+      label: t('teamSettings'),
       icon: 'group' as const,
       alpha: true,
       onClick: () => {
@@ -66,7 +69,7 @@ export function UserMenuPopover({ onNavigateSettings, onClose, isProjectConnecte
     }] : []),
     // Sync Settings -- always available (login and mobile sync are GA features)
     {
-      label: 'Sync Settings',
+      label: t('syncSettings'),
       icon: 'sync' as const,
       onClick: () => {
         onNavigateSettings('user', 'sync');
@@ -117,10 +120,10 @@ export function UserMenuPopover({ onNavigateSettings, onClose, isProjectConnecte
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-sm text-nim truncate">
-              {email ?? 'No account'}
+              {email ?? tc('noAccount')}
             </span>
             <span className="text-xs text-nim-muted">
-              {isSignedIn ? 'Signed in' : 'Not signed in'}
+              {isSignedIn ? tc('signedIn') : tc('notSignedIn')}
             </span>
           </div>
         </button>

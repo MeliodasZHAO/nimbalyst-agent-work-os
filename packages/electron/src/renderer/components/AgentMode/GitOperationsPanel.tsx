@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MaterialSymbol } from '@nimbalyst/runtime';
 import { ModelIdentifier } from '@nimbalyst/runtime/ai/server/types';
@@ -81,6 +82,7 @@ interface GitOperationsPanelProps {
 
 export const GitOperationsPanel: React.FC<GitOperationsPanelProps> = React.memo(
   ({ workspacePath, workstreamId, sessionId, editedFiles, worktreeId, worktreePath, onWorktreeArchived, onFileClick }) => {
+    const { t } = useTranslation('agent');
     // Use useAtomValue for read-only, useSetAtom for write-only to minimize re-renders
     const gitStatus = useAtomValue(gitStatusAtom);
     const setGitStatus = useSetAtom(gitStatusAtom);
@@ -1333,7 +1335,7 @@ Please proceed with this strategy.`;
               <div className="flex flex-col gap-2 pt-3">
                 {/* Commit mode toggle and header */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[var(--nim-text)]">Commit</span>
+                  <span className="text-[11px] font-semibold text-[var(--nim-text)]">{t('commit')}</span>
                   <HelpTooltip testId="git-commit-mode-toggle">
                     <div className="flex rounded-[3px] overflow-hidden border border-[var(--nim-border)]" data-testid="git-commit-mode-toggle">
                       <button
@@ -1343,7 +1345,7 @@ Please proceed with this strategy.`;
                         onClick={() => setCommitMode('manual')}
                         aria-label="Manual commit message"
                       >
-                        Manual
+                        {t('manual')}
                       </button>
                       <button
                         className={`px-1.5 py-0.5 border-none bg-transparent text-[var(--nim-text-muted)] text-[10px] font-medium cursor-pointer transition-all duration-150 ${
@@ -1352,7 +1354,7 @@ Please proceed with this strategy.`;
                         onClick={() => setCommitMode('smart')}
                         aria-label="AI-assisted commit"
                       >
-                        Smart
+                        {t('smart')}
                       </button>
                     </div>
                   </HelpTooltip>
@@ -1365,7 +1367,7 @@ Please proceed with this strategy.`;
                       className="w-full p-2 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text)] text-[11px] font-[var(--nim-font-mono)] resize-y focus:outline-none focus:border-[var(--nim-primary)]"
                       value={commitMessage}
                       onChange={(e) => setCommitMessage(e.target.value)}
-                      placeholder="Enter commit message..."
+                      placeholder={t('commitMessage')}
                       rows={3}
                     />
                     <button
@@ -1373,7 +1375,7 @@ Please proceed with this strategy.`;
                       onClick={handleManualCommit}
                       disabled={isCommitting || !commitMessage?.trim() || stagedFiles.size === 0}
                     >
-                      {isCommitting ? 'Committing...' : `Commit (${stagedFiles.size})`}
+                      {isCommitting ? t('committing') : t('commitCount', { count: stagedFiles.size })}
                     </button>
                   </div>
                 )}
@@ -1382,7 +1384,7 @@ Please proceed with this strategy.`;
                 {commitMode === 'smart' && (
                   <div className="flex flex-col gap-2" data-testid="git-operations-smart-mode">
                     <p className="text-xs text-[var(--nim-text-muted)] m-0 leading-normal">
-                      Let AI analyze your changes and propose a commit message.
+                      {t('letAiAnalyze')}
                     </p>
                     <HelpTooltip testId="git-operations-commit-with-ai-button">
                       <button
@@ -1392,7 +1394,7 @@ Please proceed with this strategy.`;
                         data-testid="git-operations-commit-with-ai-button"
                       >
                         <MaterialSymbol icon="auto_awesome" size={16} />
-                        Commit with AI
+                        {t('commitWithAi')}
                       </button>
                     </HelpTooltip>
                   </div>
@@ -1405,7 +1407,7 @@ Please proceed with this strategy.`;
               <div className="flex flex-col gap-3 pt-3">
                 {/* Section header with refresh button */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[var(--nim-text)]">Commit & Sync</span>
+                  <span className="text-[11px] font-semibold text-[var(--nim-text)]">{t('commitAndSync')}</span>
                   <div className="flex items-center gap-2">
                     <HelpTooltip testId="git-commit-mode-toggle">
                       <div className="flex rounded-[3px] overflow-hidden border border-[var(--nim-border)]" data-testid="git-commit-mode-toggle">
@@ -1416,7 +1418,7 @@ Please proceed with this strategy.`;
                           onClick={() => setWorktreeCommitMode('manual')}
                           aria-label="Manual commit message"
                         >
-                          Manual
+                          {t('manual')}
                         </button>
                         <button
                           className={`px-1.5 py-0.5 border-none bg-transparent text-[var(--nim-text-muted)] text-[10px] font-medium cursor-pointer transition-all duration-150 ${
@@ -1425,7 +1427,7 @@ Please proceed with this strategy.`;
                           onClick={() => setWorktreeCommitMode('smart')}
                           aria-label="AI-assisted commit"
                         >
-                          Smart
+                          {t('smart')}
                         </button>
                       </div>
                     </HelpTooltip>
@@ -1450,7 +1452,7 @@ Please proceed with this strategy.`;
                       title="Refresh worktree status and uncommitted files"
                     >
                       <MaterialSymbol icon="refresh" size={14} />
-                      <span>Refresh</span>
+                      <span>{t('refresh')}</span>
                     </button>
                   </div>
                 </div>
@@ -1478,7 +1480,7 @@ Please proceed with this strategy.`;
                   <div className="flex flex-col gap-2" data-testid="git-operations-manual-mode">
                     <textarea
                       className="w-full p-2 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text)] text-[11px] font-[var(--nim-font-mono)] resize-y focus:outline-none focus:border-[var(--nim-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder="Commit message..."
+                      placeholder={t('worktreeCommitMessage')}
                       value={worktreeCommitMessage}
                       onChange={(e) => setWorktreeCommitMessage(e.target.value)}
                       disabled={worktreeIsCommitting}
@@ -1491,7 +1493,7 @@ Please proceed with this strategy.`;
                 {worktreeCommitMode === 'smart' && (
                   <div className="flex flex-col gap-2" data-testid="git-operations-smart-mode">
                     <p className="text-xs text-[var(--nim-text-muted)] m-0 leading-normal">
-                      Let AI analyze your changes and propose a commit message.
+                      {t('letAiAnalyze')}
                     </p>
                   </div>
                 )}
@@ -1528,7 +1530,7 @@ Please proceed with this strategy.`;
                         data-testid="git-operations-commit-with-ai-button"
                       >
                         <MaterialSymbol icon="auto_awesome" size={16} />
-                        Commit with AI
+                        {t('commitWithAi')}
                       </button>
                     </HelpTooltip>
                   )}
@@ -1690,7 +1692,7 @@ Please proceed with this strategy.`;
                 onClick={() => setShowHistory(!showHistory)}
                 className="git-operations-panel__btn-text bg-transparent border-none text-[var(--nim-primary)] text-[10px] font-medium cursor-pointer p-0 hover:underline"
               >
-                {showHistory ? 'Hide' : 'Show'} Recent Commits
+                {showHistory ? t('hideRecentCommits') : t('showRecentCommits')}
               </button>
             </div>
 

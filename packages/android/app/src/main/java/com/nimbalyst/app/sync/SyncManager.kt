@@ -11,6 +11,7 @@ import com.nimbalyst.app.data.NimbalystRepository
 import com.nimbalyst.app.data.ProjectEntity
 import com.nimbalyst.app.data.QueuedPromptEntity
 import com.nimbalyst.app.data.SessionEntity
+import com.nimbalyst.app.data.AgentWorkOSDefaults
 import com.nimbalyst.app.notifications.NotificationManager
 import com.nimbalyst.app.pairing.PairingCredentials
 import com.nimbalyst.app.pairing.PairingStore
@@ -677,7 +678,10 @@ class SyncManager(
 
     private suspend fun handleIndexSyncResponse(message: String) {
         val response = parse<IndexSyncResponse>(message) ?: return
-        val projects = response.projects.mapNotNull(::processProjectEntry)
+        val projects = mutableListOf<ProjectEntity>()
+        for (entry in response.projects) {
+            processProjectEntry(entry)?.let(projects::add)
+        }
         val sessions = response.sessions.mapNotNull { processSessionEntry(it) }
         val syncedAt = System.currentTimeMillis()
         repository.replaceIndexSnapshot(
@@ -723,7 +727,7 @@ class SyncManager(
         }
     }
 
-    private fun handleSettingsSyncBroadcast(message: String) {
+    private suspend fun handleSettingsSyncBroadcast(message: String) {
         val broadcast = parse<SettingsSyncBroadcast>(message) ?: return
         val settingsJson = crypto?.decryptOrNull(
             broadcast.settings.encryptedSettings,
@@ -733,6 +737,12 @@ class SyncManager(
 
         _availableModels.value = settings.availableModels.orEmpty()
         _desktopDefaultModel.value = settings.defaultModel
+        settings.agentWorkOSConfig?.mobilePermissions?.let { mobilePermissions ->
+            repository.saveMobilePermissionPolicy(
+                AgentWorkOSDefaults.SYSTEM_PROJECT_ID,
+                mobilePermissions.toMobilePermissionPolicy()
+            )
+        }
         _state.update { it.copy(lastError = null) }
     }
 
@@ -822,9 +832,15 @@ class SyncManager(
         )
     }
 
-    private fun processProjectEntry(entry: ServerProjectEntry): ProjectEntity? {
+    private suspend fun processProjectEntry(entry: ServerProjectEntry): ProjectEntity? {
         val crypto = crypto ?: return null
         val projectId = crypto.decryptOrNull(entry.encryptedProjectId, entry.projectIdIv) ?: return null
+        decodeProjectConfig(entry)?.mobilePermissionPolicyOrNull()?.let { mobilePermissions ->
+            repository.saveMobilePermissionPolicy(
+                projectId,
+                mobilePermissions
+            )
+        }
         return ProjectEntity(
             id = projectId,
             name = File(projectId).name.ifBlank { projectId },
@@ -833,6 +849,13 @@ class SyncManager(
             sortOrder = 0,
             commandsJson = null
         )
+    }
+
+    private fun decodeProjectConfig(entry: ServerProjectEntry): SyncedProjectConfig? {
+        val encryptedConfig = entry.encryptedConfig ?: return null
+        val configIv = entry.configIv ?: return null
+        val configJson = crypto?.decryptOrNull(encryptedConfig, configIv) ?: return null
+        return parse<SyncedProjectConfig>(configJson)
     }
 
     private suspend fun processSessionEntry(entry: ServerSessionEntry): ProcessedSessionEntry? {

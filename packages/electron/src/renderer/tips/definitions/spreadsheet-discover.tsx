@@ -26,7 +26,7 @@ export const spreadsheetDiscoverTip: TipDefinition = {
   },
   content: {
     icon: TableIcon,
-    title: 'CSV files open as spreadsheets',
-    body: 'Drop a **.csv** in the workspace and it opens with sorting, formulas, and AI tooling -- no need to flip to source view to make edits.',
+    title: 'CSV 文件以电子表格形式打开',
+    body: '将 **.csv** 文件放入工作区，它会以支持排序、公式和 AI 工具的电子表格形式打开——无需切换到源码视图即可编辑。',
   },
 };

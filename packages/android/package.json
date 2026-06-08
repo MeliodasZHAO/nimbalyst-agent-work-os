@@ -6,8 +6,12 @@
   "scripts": {
     "build:transcript": "vite build --config vite.config.transcript.ts",
     "sync:transcript-assets": "bash ./scripts/sync-transcript-assets.sh",
-    "android:assemble:debug": "./gradlew :app:assembleDebug",
-    "android:test:unit": "./gradlew :app:testDebugUnitTest"
+    "android:assemble:debug": "gradlew.bat :app:assembleDebug",
+    "android:install:debug": "gradlew.bat :app:installDebug",
+    "android:assemble:release": "gradlew.bat :app:assembleRelease",
+    "agent-work-os:release-signing:init": "node scripts/agent-work-os-release-signing.mjs init",
+    "agent-work-os:release-signing:verify": "node scripts/agent-work-os-release-signing.mjs verify",
+    "android:test:unit": "gradlew.bat :app:testDebugUnitTest"
   },
   "dependencies": {
     "@nimbalyst/runtime": "file:../runtime",

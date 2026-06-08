@@ -21,10 +21,10 @@ export const keyboardShortcutsTip: TipDefinition = {
   },
   content: {
     icon: KeyboardIcon,
-    title: 'Learn the shortcuts that matter',
-    body: 'You have used the app for a while, but have not triggered any tracked keyboard shortcuts yet. The shortcuts dialog is a fast way to find the ones you will actually use.',
+    title: '学习常用快捷键',
+    body: '你已经用了一段时间了，但还没触发过任何快捷键。快捷键对话框能帮你快速找到最实用的那些。',
     action: {
-      label: 'Open Shortcuts',
+      label: '打开快捷键',
       onClick: () => {
         dialogRef.current?.open(DIALOG_IDS.KEYBOARD_SHORTCUTS, {});
       },

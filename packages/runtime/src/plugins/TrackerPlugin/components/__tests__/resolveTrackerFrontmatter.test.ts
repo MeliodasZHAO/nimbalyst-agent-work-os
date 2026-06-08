@@ -47,6 +47,22 @@ describe('resolveTrackerFrontmatter - extension-owned automationStatus (#67)', (
     expect(resolved?.title).toBe('Q3 Plan');
   });
 
+  it('resolves canonical Work Packet frontmatter', () => {
+    const frontmatter = {
+      trackerStatus: { type: 'work-packet' },
+      title: 'Import image runtime fix',
+      gate: 'plan',
+      complexity: 'risky',
+      recommendedAgent: 'codex',
+      capabilityRoute: 'plan-first',
+    };
+    const resolved = resolveTrackerFrontmatter(frontmatter, 'work-packet');
+    expect(resolved).not.toBeNull();
+    expect(resolved?.title).toBe('Import image runtime fix');
+    expect(resolved?.gate).toBe('plan');
+    expect(resolved?.complexity).toBe('risky');
+  });
+
   it('falls back to legacy planStatus blocks for plan documents', () => {
     const frontmatter = {
       planStatus: {

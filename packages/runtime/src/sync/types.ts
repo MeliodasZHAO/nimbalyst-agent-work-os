@@ -6,6 +6,7 @@
  */
 
 import type { AgentMessage } from '../ai/server/types';
+import type { AgentWorkOSConfig } from '../agent-work-os/config';
 
 export interface SyncConfig {
   /** WebSocket server URL (e.g., ws://localhost:8787 or wss://sync.nimbalyst.com) */
@@ -532,6 +533,8 @@ export interface ProjectConfig {
   commands: SyncedSlashCommand[];
   /** Timestamp of last commands update */
   lastCommandsUpdate: number;
+  /** Project-level Agent Work OS overrides for mobile clients */
+  agentWorkOSConfig?: AgentWorkOSConfig;
   /** SHA-256 hash of the normalized git remote URL (for server-side project identity lookup) */
   gitRemoteHash?: string;
 }
@@ -646,6 +649,8 @@ export interface SyncedSettings {
   openaiApiKey?: string;
   /** Voice mode settings */
   voiceMode?: SyncedVoiceModeSettings;
+  /** Agent Work OS system-level configuration, including mobile permissions */
+  agentWorkOSConfig?: AgentWorkOSConfig;
   /** Available AI models from desktop, for mobile model picker */
   availableModels?: SyncedAvailableModel[];
   /** Desktop's default model ID (e.g., "claude-code:opus") */

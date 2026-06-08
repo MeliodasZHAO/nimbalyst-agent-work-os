@@ -25,10 +25,10 @@ export const worktreeSessionTip: TipDefinition = {
   },
   content: {
     icon: BranchIcon,
-    title: 'Isolate risky work in a worktree',
-    body: 'You are deep into agent sessions on a git repo, but have not created a **worktree session** yet. Worktrees give experiments their own branch and working directory without disturbing the main checkout.',
+    title: '用 Worktree 隔离高风险操作',
+    body: '你在 Git 仓库中频繁使用 Agent 会话，但还没创建过 **Worktree 会话**。Worktree 为实验提供独立的分支和工作目录，不会影响主分支的代码。',
     action: {
-      label: 'New Worktree Session',
+      label: '新建 Worktree 会话',
       onClick: () => {
         store.set(setWindowModeAtom, 'agent');
         store.set(tipCreateWorktreeSessionRequestAtom, (prev) => prev + 1);

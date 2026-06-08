@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSetAtom } from 'jotai';
 import { MaterialSymbol } from '@nimbalyst/runtime';
 import type { NewFileType, ExtensionFileType } from './NewFileMenu';
@@ -40,6 +41,7 @@ export function FileContextMenu({
   selectedPaths,
   extensionFileTypes = []
 }: FileContextMenuProps) {
+  const { t } = useTranslation('editor');
   const openHistoryDialog = useSetAtom(historyDialogFileAtom);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(fileName);
@@ -203,11 +205,11 @@ export function FileContextMenu({
               <>
                 <div className={menuItemClasses} onClick={() => { onNewFile(filePath, 'markdown'); onClose(); }}>
                   <MaterialSymbol icon="description" size={18} />
-                  <span>New Markdown File</span>
+                  <span>{t('newMarkdownFile')}</span>
                 </div>
                 <div className={menuItemClasses} onClick={() => { onNewFile(filePath, 'mockup'); onClose(); }}>
                   <MaterialSymbol icon="web" size={18} />
-                  <span>New Mockup</span>
+                  <span>{t('newMockup')}</span>
                 </div>
                 {extensionFileTypes.map((extType) => (
                   <div
@@ -221,21 +223,21 @@ export function FileContextMenu({
                 ))}
                 <div className={menuItemClasses} onClick={() => { onNewFile(filePath, 'any'); onClose(); }}>
                   <MaterialSymbol icon="note_add" size={18} />
-                  <span>New File...</span>
+                  <span>{t('newFile')}</span>
                 </div>
               </>
             )}
             {onNewFolder && (
               <div className={menuItemClasses} onClick={() => { onNewFolder(filePath); onClose(); }}>
                 <MaterialSymbol icon="create_new_folder" size={18} />
-                <span>New Folder</span>
+                <span>{t('newFolder')}</span>
               </div>
             )}
             {(onNewFile || onNewFolder) && <div className={separatorClasses} />}
             {onViewWorkspaceHistory && (
               <div className={menuItemClasses} onClick={() => { onViewWorkspaceHistory(filePath); onClose(); }}>
                 <MaterialSymbol icon="history" size={18} />
-                <span>View Folder History...</span>
+                <span>{t('viewFolderHistory')}</span>
               </div>
             )}
           </>
@@ -244,7 +246,7 @@ export function FileContextMenu({
         {fileType === 'file' && (
           <div className={menuItemClasses} onClick={() => { openHistoryDialog(filePath); onClose(); }}>
             <MaterialSymbol icon="history" size={18} />
-            <span>View History...</span>
+            <span>{t('viewHistoryEllipsis')}</span>
           </div>
         )}
 
@@ -261,7 +263,7 @@ export function FileContextMenu({
 
         <div className={menuItemClasses} onClick={handleRenameClick}>
           <MaterialSymbol icon="edit" size={18} />
-          <span>Rename</span>
+          <span>{t('rename')}</span>
         </div>
 
         <div className={separatorClasses} />
@@ -272,7 +274,7 @@ export function FileContextMenu({
           onClick={handleDelete}
         >
           <MaterialSymbol icon="delete" size={18} />
-          <span>Delete</span>
+          <span>{t('delete')}</span>
         </div>
       </div>
     </FloatingPortal>

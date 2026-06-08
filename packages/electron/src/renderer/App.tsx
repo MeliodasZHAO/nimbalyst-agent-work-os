@@ -122,6 +122,7 @@ import { TrackerMode } from './components/TrackerMode';
 import { CollabMode, type CollabModeRef } from './components/CollabMode';
 import { TerminalBottomPanel } from './components/TerminalBottomPanel';
 import { ProjectRail } from './components/ProjectRail';
+import { WindowTitleBar } from './components/WindowTitleBar';
 import {
   activeWorkspacePathAtom,
   multiProjectModeAtom,
@@ -385,7 +386,7 @@ export default function App() {
     // Set window title for Workspace Manager
     React.useEffect(() => {
       if (window.electronAPI) {
-        window.electronAPI.setTitle('Project Manager - Nimbalyst');
+        window.electronAPI.setTitle('Nimbalyst 工作台');
       }
     }, []);
     return <WorkspaceManager />;
@@ -2005,7 +2006,9 @@ export default function App() {
     />
     <WalkthroughProvider currentMode={activeMode}>
     <TipProvider currentMode={activeMode} workspacePath={workspacePath || undefined}>
-    <div data-layout="root-container" className="h-screen flex flex-row">
+    <div data-layout="app-shell" className="h-screen flex flex-col">
+    <WindowTitleBar />
+    <div data-layout="root-container" className="flex-1 flex flex-row overflow-hidden">
       {/* Far-left: project rail (Discord-style) — visible only when
           multi-project mode is enabled in settings. */}
       <ProjectRail />
@@ -2335,6 +2338,7 @@ export default function App() {
         onDismiss={() => setForceShowTrustToast(false)}
       />
       {/* FeedbackIntakeDialog is now managed by DialogProvider */}
+    </div>
     </div>
     </TipProvider>
     </WalkthroughProvider>

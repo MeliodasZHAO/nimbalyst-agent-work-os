@@ -10,15 +10,17 @@ import type { SyncProvider, SessionControlMessage } from '@nimbalyst/runtime/syn
 import { ProviderFactory } from '@nimbalyst/runtime/ai/server';
 import type { BrowserWindow } from 'electron';
 import { logger } from '../../utils/logger';
-import type { PermissionScope } from '@nimbalyst/runtime';
 import { TrayManager } from '../../tray/TrayManager';
 import { resolveRequestUserInputPromptTargets } from '../../mcp/tools/codexToolCallResolver';
 import {
   getGitCommitProposalResponseChannel,
   resolveGitCommitProposalPromptId,
 } from './gitCommitProposalPromptUtils';
+import { evaluateMobileWorkPacketGuard } from './mobileWorkPacketGuard';
 
 const log = logger.ai;
+
+type PermissionScope = 'once' | 'session' | 'always' | 'always-all';
 
 /**
  * Known control message types.
@@ -238,7 +240,7 @@ function handlePromptResponse(
 
     case 'exit_plan_mode': {
       const response = payload.response as ExitPlanModeResponse;
-      handleExitPlanModeResponse(
+      void handleExitPlanModeResponse(
         sessionId,
         payload.promptId,
         response,
@@ -249,7 +251,7 @@ function handlePromptResponse(
 
     case 'tool_permission': {
       const response = payload.response as ToolPermissionResponse;
-      handleToolPermissionResponse(
+      void handleToolPermissionResponse(
         sessionId,
         payload.promptId,
         response,
@@ -278,6 +280,22 @@ function handlePromptResponse(
     default:
       log.warn('Unknown prompt type:', payload.promptType);
   }
+}
+
+function notifyMobileWorkPacketGuardBlocked(
+  sessionId: string,
+  promptId: string,
+  promptType: PromptResponsePayload['promptType'],
+  warningText?: string,
+): void {
+  const message = warningText || 'Work Packet requires desktop review before this mobile approval can proceed.';
+  log.warn(`[Mobile] Blocked ${promptType} response for Work Packet guard:`, message);
+  void notifyAllWindows('ai:mobileWorkPacketGuardBlocked', {
+    sessionId,
+    promptId,
+    promptType,
+    warningText: message,
+  });
 }
 
 /**
@@ -521,13 +539,24 @@ function handleAskUserQuestionResponse(
 /**
  * Handle ExitPlanMode response from mobile
  */
-function handleExitPlanModeResponse(
+async function handleExitPlanModeResponse(
   sessionId: string,
   promptId: string,
   response: ExitPlanModeResponse,
   _findWindowByWorkspace: (workspacePath: string) => BrowserWindow | null | undefined
-): void {
+): Promise<void> {
   log.info('Handling ExitPlanMode response:', promptId, 'approved:', response.approved);
+  if (response.approved) {
+    const guard = await evaluateMobileWorkPacketGuard(sessionId, { action: 'plan-approval' });
+    if (guard.blocked) {
+      notifyMobileWorkPacketGuardBlocked(sessionId, promptId, 'exit_plan_mode', guard.warningText);
+      response = {
+        ...response,
+        approved: false,
+        feedback: guard.warningText || 'Desktop review is required before approving this Work Packet plan.',
+      };
+    }
+  }
 
   // Get the provider to resolve the SDK's pending promise
   const provider = ProviderFactory.getProvider('claude-code', sessionId);
@@ -569,13 +598,23 @@ function handleExitPlanModeResponse(
 /**
  * Handle ToolPermission response from mobile
  */
-function handleToolPermissionResponse(
+async function handleToolPermissionResponse(
   sessionId: string,
   promptId: string,
   response: ToolPermissionResponse,
   _findWindowByWorkspace: (workspacePath: string) => BrowserWindow | null | undefined
-): void {
+): Promise<void> {
   log.info('Handling ToolPermission response:', promptId, 'decision:', response.decision, 'scope:', response.scope);
+  if (response.decision === 'allow') {
+    const guard = await evaluateMobileWorkPacketGuard(sessionId, { action: 'tool-permission' });
+    if (guard.blocked) {
+      notifyMobileWorkPacketGuardBlocked(sessionId, promptId, 'tool_permission', guard.warningText);
+      response = {
+        ...response,
+        decision: 'deny',
+      };
+    }
+  }
 
   // Resolve the permission on the provider directly (same as desktop renderer does via IPC)
   const provider = ProviderFactory.getProvider('claude-code', sessionId);
@@ -654,6 +693,16 @@ async function handleGitCommitResponse(
 
   if (response.action === 'cancelled') {
     await emitProposalResponse({ action: 'cancelled' });
+    return;
+  }
+
+  const guard = await evaluateMobileWorkPacketGuard(sessionId, { action: 'commit-approval' });
+  if (guard.blocked) {
+    notifyMobileWorkPacketGuardBlocked(sessionId, promptId, 'git_commit', guard.warningText);
+    await emitProposalResponse({
+      action: 'cancelled',
+      error: guard.warningText || 'Desktop review is required before committing this Work Packet.',
+    });
     return;
   }
 

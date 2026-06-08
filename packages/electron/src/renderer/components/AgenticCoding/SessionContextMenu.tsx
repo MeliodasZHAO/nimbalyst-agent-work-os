@@ -8,6 +8,7 @@
  * Internal actions (copy ID, export, share, set phase) are always available.
  */
 import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MaterialSymbol, copyToClipboard } from '@nimbalyst/runtime';
 import { sessionShareAtom, shareKeysAtom, removeSessionShareAtom, buildShareUrl } from '../../store';
@@ -63,6 +64,7 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
   onDelete,
   selectedCount = 1,
 }) => {
+  const { t } = useTranslation('agent');
   const [showPhaseSubmenu, setShowPhaseSubmenu] = useState(false);
   const [submenuFlipped, setSubmenuFlipped] = useState(false);
   const submenuParentRef = useRef<HTMLDivElement>(null);
@@ -183,13 +185,13 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
         {onRename && (
           <button className={menuItemClass} onClick={(e) => handleAction(e, onRename)}>
             <MaterialSymbol icon="edit" size={14} />
-            Rename
+            {t('rename')}
           </button>
         )}
         {onPinToggle && (
           <button className={menuItemClass} onClick={(e) => handleAction(e, () => onPinToggle(!isPinned))}>
             <MaterialSymbol icon="push_pin" size={14} />
-            {isPinned ? 'Unpin' : 'Pin'}
+            {isPinned ? t('unpin') : t('pin')}
           </button>
         )}
         {/* Set Phase submenu */}
@@ -212,7 +214,7 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
             onClick={(e) => { e.stopPropagation(); setShowPhaseSubmenu(!showPhaseSubmenu); }}
           >
             <MaterialSymbol icon="view_kanban" size={14} />
-            <span className="flex-1">Set Phase</span>
+            <span className="flex-1">{t('setPhase')}</span>
             {phase && (
               <span className="text-[10px] text-[var(--nim-text-faint)] ml-1">{phase}</span>
             )}
@@ -247,7 +249,7 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
                     }}
                   >
                     <MaterialSymbol icon="close" size={14} />
-                    Remove from board
+                    {t('removeFromBoard')}
                   </button>
                 </>
               )}
@@ -262,13 +264,13 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
         {onBranch && (
           <button className={menuItemClass} onClick={(e) => handleAction(e, onBranch)}>
             <MaterialSymbol icon="fork_right" size={14} />
-            Branch conversation
+            {t('branchConversation')}
           </button>
         )}
         {onRemoveFromWorkstream && parentSessionId && !isWorktreeSession && (
           <button className={menuItemClass} onClick={(e) => handleAction(e, onRemoveFromWorkstream)}>
             <MaterialSymbol icon="drive_file_move_rtl" size={14} />
-            Remove from workstream
+            {t('removeFromWorkstream')}
           </button>
         )}
 
@@ -276,11 +278,11 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
         <div className="h-px bg-[var(--nim-border)] my-1" />
         <button className={menuItemClass} onClick={handleCopyTranscript}>
           <MaterialSymbol icon="assignment" size={14} />
-          Copy transcript
+          {t('copyTranscript')}
         </button>
         <button className={menuItemClass} onClick={handleCopySessionId}>
           <MaterialSymbol icon="content_copy" size={14} />
-          Copy Session ID
+          {t('copySessionId')}
         </button>
 
         {/* Group 4: Share / export */}
@@ -289,22 +291,22 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
           <>
             <button className={menuItemClass} onClick={handleCopyShareLink}>
               <MaterialSymbol icon="content_copy" size={14} />
-              Copy share link
+              {t('copyShareLink')}
             </button>
             <button className={menuItemClass} onClick={handleUnshare}>
               <MaterialSymbol icon="link_off" size={14} />
-              Unshare
+              {t('unshare')}
             </button>
           </>
         ) : (
           <button className={menuItemClass} onClick={handleShareLink}>
             <MaterialSymbol icon="link" size={14} />
-            Share link
+            {t('shareLink')}
           </button>
         )}
         <button className={menuItemClass} onClick={handleExportHtml}>
           <MaterialSymbol icon="download" size={14} />
-          Export as HTML
+          {t('exportAsHtml')}
         </button>
 
         {isDevMode && (
@@ -312,7 +314,7 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
             <div className="h-px bg-[var(--nim-border)] my-1" />
             <button className={menuItemClass} onClick={handleForceReparseSession}>
               <MaterialSymbol icon="sync" size={14} />
-              Reprocess transcript
+              {t('reprocessTranscript')}
             </button>
           </>
         )}
@@ -332,12 +334,12 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
             {isArchived ? (
               <>
                 <MaterialSymbol icon="unarchive" size={14} />
-                Unarchive {selectedCount > 1 ? `${selectedCount} Sessions` : isWorkstream ? 'Workstream' : isWorktreeSession ? 'Worktree' : 'Session'}
+                {selectedCount > 1 ? t('unarchiveCount', { count: selectedCount }) : isWorkstream ? t('unarchiveWorkstream') : isWorktreeSession ? t('unarchiveWorktree') : t('unarchiveSession')}
               </>
             ) : (
               <>
                 <MaterialSymbol icon="archive" size={14} />
-                Archive {selectedCount > 1 ? `${selectedCount} Sessions` : isWorkstream ? 'Workstream' : isWorktreeSession ? 'Worktree' : 'Session'}
+                {selectedCount > 1 ? t('archiveCount', { count: selectedCount }) : isWorkstream ? t('archiveWorkstream') : isWorktreeSession ? t('archiveWorktree') : t('archiveSession')}
               </>
             )}
           </button>
@@ -348,7 +350,7 @@ export const SessionContextMenu: React.FC<SessionContextMenuProps> = ({
             onClick={(e) => handleAction(e, onDelete)}
           >
             <MaterialSymbol icon="delete" size={14} />
-            Delete
+            {t('delete')}
           </button>
         )}
       </div>

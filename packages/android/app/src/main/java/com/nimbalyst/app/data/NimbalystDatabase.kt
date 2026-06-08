@@ -15,8 +15,10 @@ import org.json.JSONObject
         MessageEntity::class,
         QueuedPromptEntity::class,
         SyncStateEntity::class,
+        AgentWorkOSConfigEntity::class,
+        MobilePermissionPolicyEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class NimbalystDatabase : RoomDatabase() {
@@ -25,6 +27,8 @@ abstract class NimbalystDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun queuedPromptDao(): QueuedPromptDao
     abstract fun syncStateDao(): SyncStateDao
+    abstract fun agentWorkOSConfigDao(): AgentWorkOSConfigDao
+    abstract fun mobilePermissionPolicyDao(): MobilePermissionPolicyDao
 
     companion object {
         @Volatile
@@ -37,9 +41,7 @@ abstract class NimbalystDatabase : RoomDatabase() {
                     NimbalystDatabase::class.java,
                     "nimbalyst-android.db"
                 )
-                    // Add explicit migrations here as schema evolves (e.g., .addMigrations(MIGRATION_1_2))
-                    // Only fall back to destructive migration if no migration path exists (pre-release safety net)
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_1_2)
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)

@@ -28,6 +28,17 @@
     "ios:test:swift": "npm run test:swift --prefix packages/ios",
     "ios:build:transcript": "npm run build:transcript --prefix packages/ios",
     "ios:build:editor": "npm run build:editor --prefix packages/ios",
+    "agent-work-os:desktop:win": "npm run build:win --prefix packages/electron",
+    "agent-work-os:desktop:win:arm64": "npm run build:win:arm64 --prefix packages/electron",
+    "agent-work-os:desktop:win-dir": "npm run build:win:dir-local --prefix packages/electron",
+    "agent-work-os:desktop:unpack": "npm run build:unpack --prefix packages/electron",
+    "agent-work-os:android:debug": "npm run android:assemble:debug --prefix packages/android",
+    "agent-work-os:android:install": "npm run android:install:debug --prefix packages/android",
+    "agent-work-os:android:release-signing:init": "npm run agent-work-os:release-signing:init --prefix packages/android --",
+    "agent-work-os:android:release-signing:verify": "npm run agent-work-os:release-signing:verify --prefix packages/android --",
+    "agent-work-os:android:release": "npm run android:assemble:release --prefix packages/android",
+    "agent-work-os:android:test": "npm run android:test:unit --prefix packages/android",
+    "agent-work-os:visual-check": "npm run agent-work-os:visual-check --prefix packages/electron --",
     "test:extensions": "bash scripts/run-extension-tests.sh"
   },
   "devDependencies": {
