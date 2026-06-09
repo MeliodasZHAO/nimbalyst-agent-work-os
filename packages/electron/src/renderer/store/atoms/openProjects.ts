@@ -50,7 +50,7 @@ export const activeWorkspacePathAtom = atom<string | null>(null);
  * Persisted via `app:set-multi-project-mode` IPC; seeded from store on
  * launch by an effect that reads `app:get-multi-project-mode`.
  */
-export const multiProjectModeAtom = atom<boolean>(false);
+export const multiProjectModeAtom = atom<boolean>(true);
 
 /**
  * When true, the rail rehydrates with the projects that were open at last
@@ -58,7 +58,7 @@ export const multiProjectModeAtom = atom<boolean>(false);
  * the user picked from the launch screen; additional projects are added
  * explicitly via the `+` button.
  */
-export const restorePreviousProjectsAtom = atom<boolean>(false);
+export const restorePreviousProjectsAtom = atom<boolean>(true);
 
 /**
  * Ordered list of open projects in the rail. First entry is leftmost.

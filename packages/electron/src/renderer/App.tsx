@@ -122,6 +122,7 @@ import { TrackerMode } from './components/TrackerMode';
 import { CollabMode, type CollabModeRef } from './components/CollabMode';
 import { TerminalBottomPanel } from './components/TerminalBottomPanel';
 import { ProjectRail } from './components/ProjectRail';
+import { ProjectTabBar } from './components/ProjectTabBar';
 import { WindowTitleBar } from './components/WindowTitleBar';
 import {
   activeWorkspacePathAtom,
@@ -1997,10 +1998,8 @@ export default function App() {
     <TipProvider currentMode={activeMode} workspacePath={workspacePath || undefined}>
     <div data-layout="app-shell" className="h-screen flex flex-col">
     <WindowTitleBar />
+    <ProjectTabBar />
     <div data-layout="root-container" className="flex-1 flex flex-row overflow-hidden">
-      {/* Far-left: project rail (Discord-style) — visible only when
-          multi-project mode is enabled in settings. */}
-      <ProjectRail />
       {/* Left: Navigation Gutter - full height */}
       <NavigationGutter
         contentMode={activeMode}
