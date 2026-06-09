@@ -116,9 +116,10 @@ public final class AppState: ObservableObject {
     }
 
     /// Store pairing credentials from QR code.
-    /// The QR code provides the encryption seed, server URL, and (v6+) the desktop's
-    /// auth session so mobile is authenticated immediately without a separate login step.
-    public func pair(with seed: String, serverUrl: String, userId: String, analyticsId: String? = nil, personalOrgId: String? = nil, personalUserId: String? = nil, authSessionToken: String? = nil, authSessionJwt: String? = nil, authUserId: String? = nil, authOrgId: String? = nil, authEmail: String? = nil) throws {
+    /// The QR code provides the encryption seed and server URL.
+    /// The userId parameter is informational only (e.g., syncEmail from QR) -- the actual
+    /// user ID for crypto and routing comes from Stytch auth.
+    public func pair(with seed: String, serverUrl: String, userId: String, analyticsId: String? = nil, personalOrgId: String? = nil, personalUserId: String? = nil) throws {
         // Delete any leftover database from a previous pairing.
         // This ensures stale decrypted data from a different account doesn't survive
         // into the new pairing (e.g., if unpair() couldn't delete the locked file).
@@ -136,30 +137,14 @@ public final class AppState: ObservableObject {
         if let personalUserId, !personalUserId.isEmpty {
             try KeychainManager.storePairingPersonalUserId(personalUserId)
         }
-
-        // Store auth session from QR (v6+) — instant auth without separate login
-        if let authSessionToken, let authSessionJwt, let authUserId, let authOrgId,
-           !authSessionToken.isEmpty, !authSessionJwt.isEmpty, !authUserId.isEmpty, !authOrgId.isEmpty {
-            try KeychainManager.storeAuthSession(
-                sessionToken: authSessionToken,
-                sessionJwt: authSessionJwt,
-                userId: authUserId,
-                email: authEmail ?? userId,
-                expiresAt: "",
-                orgId: authOrgId
-            )
-            authManager.isAuthenticated = true
-            authManager.email = authEmail ?? userId
-            logger.info("QR pairing included auth session — authenticated immediately")
-        }
-
         logger.info("Paired with userId=\(userId), personalOrgId=\(personalOrgId ?? "nil"), personalUserId=\(personalUserId ?? "nil")")
         isPaired = true
 
         // Link mobile analytics to desktop's PostHog identity
         AnalyticsManager.shared.setDistinctIdFromPairing(analyticsId)
         AnalyticsManager.shared.capture("mobile_pairing_completed")
-        // If already authenticated (re-pairing scenario or QR with auth), set up managers and connect.
+        // If already authenticated (re-pairing scenario), set up managers and connect.
+        // On fresh install this won't fire -- the auth observer handles post-login setup.
         if authManager.isAuthenticated {
             setupManagers()
             connectIfReady()

@@ -13,12 +13,6 @@ data class QRPairingData(
     val analyticsId: String? = null,
     val personalOrgId: String? = null,
     val personalUserId: String? = null,
-    // Auth session fields (v6+) — instant auth without separate login
-    val authSessionToken: String? = null,
-    val authSessionJwt: String? = null,
-    val authUserId: String? = null,
-    val authOrgId: String? = null,
-    val authEmail: String? = null,
 ) {
     companion object {
         fun parse(rawValue: String): QRPairingData? {
@@ -68,12 +62,7 @@ data class QRPairingData(
                 userId = userId,
                 analyticsId = json.string("analyticsId"),
                 personalOrgId = json.string("personalOrgId"),
-                personalUserId = json.string("personalUserId"),
-                authSessionToken = json.string("authSessionToken"),
-                authSessionJwt = json.string("authSessionJwt"),
-                authUserId = json.string("authUserId"),
-                authOrgId = json.string("authOrgId"),
-                authEmail = json.string("authEmail"),
+                personalUserId = json.string("personalUserId")
             )
         }
     }

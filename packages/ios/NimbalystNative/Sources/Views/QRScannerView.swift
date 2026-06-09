@@ -23,12 +23,6 @@ public struct QRPairingData: Equatable {
     public let personalOrgId: String?
     /// Desktop's personalUserId for room routing (v5+). Ensures mobile uses the same index room.
     public let personalUserId: String?
-    // Auth session fields (v6+) — instant auth without separate login
-    public let authSessionToken: String?
-    public let authSessionJwt: String?
-    public let authUserId: String?
-    public let authOrgId: String?
-    public let authEmail: String?
 
     /// Parse QR code string into pairing data.
     /// Supports three formats:
@@ -103,7 +97,7 @@ public struct QRPairingData: Equatable {
         let personalOrgId = json["personalOrgId"] as? String
         let personalUserId = json["personalUserId"] as? String
 
-        return QRPairingData(seed: seed, serverUrl: serverUrl, userId: userId, analyticsId: analyticsId, personalOrgId: personalOrgId, personalUserId: personalUserId, authSessionToken: json.string("authSessionToken"), authSessionJwt: json.string("authSessionJwt"), authUserId: json.string("authUserId"), authOrgId: json.string("authOrgId"), authEmail: json.string("authEmail"))
+        return QRPairingData(seed: seed, serverUrl: serverUrl, userId: userId, analyticsId: analyticsId, personalOrgId: personalOrgId, personalUserId: personalUserId)
     }
 }
 
