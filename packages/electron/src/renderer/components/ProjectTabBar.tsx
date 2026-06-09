@@ -207,7 +207,7 @@ export function ProjectTabBar() {
   return (
     <>
       <div
-        className="project-tab-bar flex items-center h-9 bg-[var(--nim-bg-secondary)] border-b border-[var(--nim-border)] [-webkit-app-region:drag] select-none shrink-0 px-1 gap-0.5 overflow-x-auto"
+        className="project-tab-bar flex items-end h-8 bg-[var(--nim-bg-secondary)] [-webkit-app-region:drag] select-none shrink-0 pl-1 pr-1 gap-px overflow-x-auto"
         data-testid="project-tab-bar"
       >
         {openProjects.map((project) => {
@@ -220,10 +220,10 @@ export function ProjectTabBar() {
             <button
               key={project.path}
               type="button"
-              className={`project-tab flex items-center gap-1.5 h-7 px-3 rounded-md border-none cursor-pointer text-[12px] font-medium transition-all duration-100 shrink-0 [-webkit-app-region:no-drag] ${
+              className={`project-tab group flex items-center gap-1.5 h-[26px] px-3 border-none cursor-pointer text-[11px] font-medium transition-all duration-100 shrink-0 [-webkit-app-region:no-drag] ${
                 isActive
-                  ? 'bg-[var(--nim-bg)] text-[var(--nim-text)] shadow-[inset_0_-2px_0_var(--nim-primary)]'
-                  : 'bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)]'
+                  ? 'bg-[var(--nim-bg)] text-[var(--nim-text)] rounded-t-md'
+                  : 'bg-transparent text-[var(--nim-text-faint)] hover:text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-tertiary)] rounded-t-md'
               }`}
               onClick={() => handleActivate(project.path)}
               onContextMenu={(e) => handleContextMenu(project, e)}
@@ -242,14 +242,13 @@ export function ProjectTabBar() {
 
               {!isOnlyProject && (
                 <span
-                  className="project-tab-close flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:!opacity-100 hover:bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-faint)] hover:text-[var(--nim-text)]"
+                  className="project-tab-close flex items-center justify-center w-4 h-4 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-[var(--nim-bg-hover)] text-[var(--nim-text-faint)] hover:text-[var(--nim-text)] transition-opacity duration-100"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleClose(project);
                   }}
                   role="button"
                   tabIndex={-1}
-                  style={{ opacity: isActive ? 0.6 : undefined }}
                 >
                   <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                     <line stroke="currentColor" strokeWidth="1.2" x1="1" y1="1" x2="7" y2="7" />
@@ -268,13 +267,13 @@ export function ProjectTabBar() {
             addRefs.setReference(el);
           }}
           type="button"
-          className="project-tab-add flex items-center justify-center w-7 h-7 rounded-md border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag]"
+          className="project-tab-add flex items-center justify-center w-6 h-6 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag] mb-0.5"
           onClick={handleAddClick}
           title={atCap ? '已达到最大项目数 (8)' : '添加项目'}
           disabled={atCap}
           data-testid="project-tab-add"
         >
-          <MaterialSymbol icon="add" size={16} />
+          <MaterialSymbol icon="add" size={14} />
         </button>
 
         {/* Spacer for window dragging */}
