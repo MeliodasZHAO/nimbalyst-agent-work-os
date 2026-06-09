@@ -164,7 +164,12 @@ public struct PairingView: View {
                 userId: pairingData.userId,
                 analyticsId: pairingData.analyticsId,
                 personalOrgId: pairingData.personalOrgId,
-                personalUserId: pairingData.personalUserId
+                personalUserId: pairingData.personalUserId,
+                authSessionToken: pairingData.authSessionToken,
+                authSessionJwt: pairingData.authSessionJwt,
+                authUserId: pairingData.authUserId,
+                authOrgId: pairingData.authOrgId,
+                authEmail: pairingData.authEmail
             )
             isScanning = false
         } catch {

@@ -207,27 +207,23 @@ export function isUsingSecureStorage(): boolean {
 /**
  * Generate QR pairing payload for mobile device.
  *
- * The QR code contains the encryption key seed, server URL, analytics ID, and sync email.
- * Mobile devices authenticate independently via Stytch OAuth, but must use the same email.
- *
- * @param serverUrl - The sync server URL
- * @param syncEmail - The email address used for sync (mobile must login with same email)
+ * The QR code contains the encryption key seed, server URL, analytics ID,
+ * sync email, and (v6+) the desktop's auth session so mobile is authenticated
+ * immediately upon scanning — no separate login step required.
  */
 export function generateQRPairingPayload(
   serverUrl: string,
   syncEmail?: string,
   personalOrgId?: string,
   personalUserId?: string,
-): {
-  version: number;
-  serverUrl: string;
-  encryptionKeySeed: string;
-  expiresAt: number;
-  analyticsId: string;
-  syncEmail?: string;
-  personalOrgId?: string;
-  personalUserId?: string;
-} {
+  authSession?: {
+    sessionToken?: string;
+    sessionJwt?: string;
+    userId?: string;
+    orgId?: string;
+    email?: string;
+  },
+): Record<string, unknown> {
   const credentials = getCredentials();
 
   // QR code expires in 15 minutes for security
@@ -237,7 +233,7 @@ export function generateQRPairingPayload(
   const analyticsId = AnalyticsService.getInstance().getDistinctId();
 
   return {
-    version: 5, // Version 5 = includes personalOrgId/personalUserId for room routing
+    version: 6, // Version 6 = includes auth session for instant mobile auth
     serverUrl,
     encryptionKeySeed: credentials.encryptionKeySeed,
     expiresAt,
@@ -245,5 +241,11 @@ export function generateQRPairingPayload(
     syncEmail,
     personalOrgId,
     personalUserId,
+    // Auth session fields (v6+) — mobile skips login when present
+    ...(authSession?.sessionToken && { authSessionToken: authSession.sessionToken }),
+    ...(authSession?.sessionJwt && { authSessionJwt: authSession.sessionJwt }),
+    ...(authSession?.userId && { authUserId: authSession.userId }),
+    ...(authSession?.orgId && { authOrgId: authSession.orgId }),
+    ...(authSession?.email && { authEmail: authSession.email }),
   };
 }

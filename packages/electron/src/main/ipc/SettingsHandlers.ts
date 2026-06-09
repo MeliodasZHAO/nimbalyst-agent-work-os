@@ -1013,6 +1013,13 @@ export function registerSettingsHandlers() {
             syncEmail,
             personalOrgId,
             personalUserId,
+            {
+                sessionToken: authState.sessionToken ?? undefined,
+                sessionJwt: authState.personalSessionJwt ?? authState.sessionJwt ?? undefined,
+                userId: authState.personalUserId ?? undefined,
+                orgId: authState.personalOrgId ?? authState.orgId ?? undefined,
+                email: syncEmail,
+            },
         );
     });
 

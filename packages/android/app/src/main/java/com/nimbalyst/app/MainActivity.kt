@@ -46,17 +46,20 @@ class MainActivity : ComponentActivity() {
                             serverUrl = pairingData.serverUrl,
                             encryptionSeed = pairingData.seed,
                             pairedUserId = pairingData.userId,
-                            authJwt = existing?.authJwt,
-                            authUserId = existing?.authUserId,
-                            orgId = existing?.orgId,
+                            authJwt = pairingData.authSessionJwt ?: existing?.authJwt,
+                            authUserId = pairingData.authUserId ?: existing?.authUserId,
+                            orgId = pairingData.authOrgId ?: existing?.orgId,
                             personalUserId = pairingData.personalUserId,
                             personalOrgId = pairingData.personalOrgId,
-                            sessionToken = existing?.sessionToken,
-                            authEmail = existing?.authEmail,
+                            sessionToken = pairingData.authSessionToken ?: existing?.sessionToken,
+                            authEmail = pairingData.authEmail ?: existing?.authEmail,
                             authExpiresAt = existing?.authExpiresAt
                         )
                     )
-                    "Pairing payload imported."
+                    if (pairingData.authSessionJwt != null) {
+                        app.syncManager.connectIfConfigured()
+                    }
+                    if (pairingData.authSessionJwt != null) "Paired and authenticated." else "Pairing payload imported."
                 }
             }
 
