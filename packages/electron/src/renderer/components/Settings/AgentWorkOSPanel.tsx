@@ -36,60 +36,60 @@ interface AgentWorkOSPanelProps {
 type EditorMode = 'visual' | 'json';
 
 const AGENT_OPTIONS = [
-  { value: 'auto', label: 'Auto' },
+  { value: 'auto', label: '自动' },
   { value: 'codex', label: 'Codex' },
-  { value: 'claude-code', label: 'Claude Agent' },
-  { value: 'mixed', label: 'Mixed Agents' },
-  { value: 'research-only', label: 'Research Only' },
+  { value: 'claude-code', label: 'Claude 智能体' },
+  { value: 'mixed', label: '混合智能体' },
+  { value: 'research-only', label: '仅研究' },
 ] as const;
 
 const PROVIDER_OPTIONS = [
-  { value: 'auto', label: 'Auto' },
+  { value: 'auto', label: '自动' },
   { value: 'codex', label: 'Codex' },
-  { value: 'claude-code', label: 'Claude Agent' },
-  { value: 'mixed', label: 'Mixed Agents' },
-  { value: 'research-only', label: 'Research Only' },
+  { value: 'claude-code', label: 'Claude 智能体' },
+  { value: 'mixed', label: '混合智能体' },
+  { value: 'research-only', label: '仅研究' },
 ] as const;
 
 const ROLE_OPTIONS: Array<{ value: AgentWorkOSAgentRole; label: string }> = [
-  { value: 'planner', label: 'Planner' },
-  { value: 'implementer', label: 'Implementer' },
-  { value: 'reviewer', label: 'Reviewer' },
-  { value: 'verifier', label: 'Verifier' },
-  { value: 'frontend-inspector', label: 'Frontend Inspector' },
-  { value: 'researcher', label: 'Researcher' },
+  { value: 'planner', label: '规划者' },
+  { value: 'implementer', label: '实现者' },
+  { value: 'reviewer', label: '审查者' },
+  { value: 'verifier', label: '验证者' },
+  { value: 'frontend-inspector', label: '前端检查员' },
+  { value: 'researcher', label: '研究员' },
 ];
 
 const CONTROL_MODES: Array<{ value: AgentWorkOSControlMode; label: string }> = [
-  { value: 'manual', label: 'Manual' },
-  { value: 'assisted', label: 'Assisted' },
-  { value: 'autopilot', label: 'Autopilot' },
+  { value: 'manual', label: '手动' },
+  { value: 'assisted', label: '辅助' },
+  { value: 'autopilot', label: '自动驾驶' },
 ];
 
 const REASONING_LEVELS: Array<{ value: AgentWorkOSReasoningLevel; label: string }> = [
-  { value: 'auto', label: 'Auto' },
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'max', label: 'Max' },
+  { value: 'auto', label: '自动' },
+  { value: 'low', label: '低' },
+  { value: 'medium', label: '中' },
+  { value: 'high', label: '高' },
+  { value: 'max', label: '最高' },
 ];
 
 const REASONING_LABELS = new Map(REASONING_LEVELS.map(option => [option.value, option.label]));
 
 const COLLABORATION_MODES: Array<{ value: AgentWorkOSCollaborationMode; label: string }> = [
-  { value: 'solo', label: 'Solo' },
-  { value: 'plan-implement', label: 'Plan + Implement' },
-  { value: 'implement-review', label: 'Implement + Review' },
-  { value: 'frontend-repair', label: 'Frontend Repair' },
-  { value: 'risky-change', label: 'Risky Change' },
-  { value: 'research-only', label: 'Research Only' },
+  { value: 'solo', label: '单独' },
+  { value: 'plan-implement', label: '规划 + 实现' },
+  { value: 'implement-review', label: '实现 + 审查' },
+  { value: 'frontend-repair', label: '前端修复' },
+  { value: 'risky-change', label: '高风险变更' },
+  { value: 'research-only', label: '仅研究' },
 ];
 
 const MOBILE_POLICY_MODES: Array<{ value: AgentWorkOSMobilePolicyMode; label: string }> = [
-  { value: 'strict', label: 'Strict' },
-  { value: 'balanced', label: 'Balanced' },
-  { value: 'flexible', label: 'Flexible' },
-  { value: 'custom', label: 'Custom' },
+  { value: 'strict', label: '严格' },
+  { value: 'balanced', label: '平衡' },
+  { value: 'flexible', label: '灵活' },
+  { value: 'custom', label: '自定义' },
 ];
 
 function SelectRow<T extends string>({
@@ -128,7 +128,7 @@ function providerLabel(provider: string): string {
   const capability = AGENT_WORK_OS_PROVIDER_CAPABILITIES[provider as keyof typeof AGENT_WORK_OS_PROVIDER_CAPABILITIES];
   if (capability) return capability.label;
   switch (provider) {
-    case 'claude-code': return 'Claude Agent';
+    case 'claude-code': return 'Claude 智能体';
     case 'openai-codex': return 'OpenAI Codex';
     case 'openai-codex-acp': return 'Codex ACP';
     case 'opencode': return 'OpenCode';
@@ -148,8 +148,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
 
   const storageLabel = scope === 'project' && workspaceName
-    ? `${workspaceName} project`
-    : 'all projects';
+    ? `${workspaceName} 项目`
+    : '所有项目';
 
   const loadConfig = useCallback(async () => {
     setStatus('loading');
@@ -262,7 +262,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
           [provider]: {
             ...aiProviderSettings.providers[provider],
             testStatus: result.success ? 'success' : 'error',
-            testMessage: result.success ? 'Connected' : result.error,
+            testMessage: result.success ? '已连接' : result.error,
           },
         },
       });
@@ -278,7 +278,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
           [provider]: {
             ...aiProviderSettings.providers[provider],
             testStatus: 'error',
-            testMessage: error instanceof Error ? error.message : 'Connection failed',
+            testMessage: error instanceof Error ? error.message : '连接失败',
           },
         },
       });
@@ -291,10 +291,10 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
     <div className="agent-work-os-panel provider-panel flex flex-col">
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">
-          Agent Work OS
+          智能体工作系统
         </h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Configure default agent routing, Work Packet automation, mobile approvals, and multi-agent collaboration for {storageLabel}.
+          配置默认的智能体路由、Work Packet 自动化、移动端审批和多智能体协作，适用于 {storageLabel}。
         </p>
       </div>
 
@@ -304,7 +304,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
             className={`px-3 py-1.5 rounded-md text-xs font-medium ${editorMode === 'visual' ? 'bg-[var(--nim-primary)] text-white' : 'text-[var(--nim-text-muted)] hover:text-[var(--nim-text)]'}`}
             onClick={() => setEditorMode('visual')}
           >
-            Visual
+            可视化
           </button>
           <button
             className={`px-3 py-1.5 rounded-md text-xs font-medium ${editorMode === 'json' ? 'bg-[var(--nim-primary)] text-white' : 'text-[var(--nim-text-muted)] hover:text-[var(--nim-text)]'}`}
@@ -319,8 +319,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
         <div className="space-y-4">
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] p-4">
           <SelectRow
-            label="Control mode"
-            description="How much routing Nimbalyst should manage by default."
+            label="控制模式"
+            description="Nimbalyst 默认管理多少路由。"
             value={config.automation.controlMode}
             options={CONTROL_MODES}
             onChange={(value) => updateConfig((current) => ({
@@ -329,8 +329,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
             }))}
           />
           <SelectRow
-            label="Default agent"
-            description="Auto chooses from real configured agent providers for each packet."
+            label="默认智能体"
+            description="自动从已配置的智能体供应商中为每个 Packet 选择。"
             value={config.automation.defaultAgent}
             options={[...AGENT_OPTIONS]}
             onChange={(value) => updateConfig((current) => ({
@@ -339,16 +339,16 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
             }))}
           />
           <SelectRow
-            label="Default capability route"
-            description="Manual keeps packet routing explicit; assisted/autopilot can supply this when the packet says auto."
+            label="默认能力路由"
+            description="手动模式保持 Packet 路由显式指定；辅助/自动驾驶模式可在 Packet 设为自动时提供此路由。"
             value={config.automation.defaultCapabilityRoute}
             options={[
-              { value: 'auto', label: 'Auto' },
-              { value: 'default', label: 'Default' },
-              { value: 'plan-first', label: 'Plan First' },
-              { value: 'pursue-goal', label: 'Pursue Goal' },
-              { value: 'high-reasoning', label: 'High Reasoning' },
-              { value: 'second-agent-review', label: 'Second-Agent Review' },
+              { value: 'auto', label: '自动' },
+              { value: 'default', label: '默认' },
+              { value: 'plan-first', label: '优先规划' },
+              { value: 'pursue-goal', label: '追求目标' },
+              { value: 'high-reasoning', label: '高推理' },
+              { value: 'second-agent-review', label: '二次智能体审查' },
             ]}
             onChange={(value) => updateConfig((current) => ({
               ...current,
@@ -356,8 +356,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
             }))}
           />
           <SelectRow
-            label="Default reasoning"
-            description="Used as the session effort level when the chosen agent supports it."
+            label="默认推理级别"
+            description="当选定的智能体支持时，用作会话的推理力度级别。"
             value={config.automation.defaultReasoning}
             options={REASONING_LEVELS}
             onChange={(value) => updateConfig((current) => ({
@@ -366,8 +366,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
             }))}
           />
           <SelectRow
-            label="Collaboration"
-            description="Default multi-agent pattern for new Work Packets."
+            label="协作模式"
+            description="新 Work Packet 的默认多智能体协作模式。"
             value={config.automation.defaultCollaborationMode}
             options={COLLABORATION_MODES}
             onChange={(value) => updateConfig((current) => ({
@@ -380,9 +380,9 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
-              <h4 className="text-sm font-semibold text-[var(--nim-text)]">Agent Providers</h4>
+              <h4 className="text-sm font-semibold text-[var(--nim-text)]">智能体供应商</h4>
               <p className="text-xs text-[var(--nim-text-muted)] mt-0.5">
-                Agent Work OS only routes to providers that are enabled here or in the provider panels.
+                智能体工作系统仅路由到此处或供应商面板中已启用的供应商。
               </p>
             </div>
             <MaterialSymbol icon="cable" size={18} className="text-[var(--nim-text-muted)]" />
@@ -393,7 +393,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
                 <div className="min-w-0 flex-1">
                   <div className="text-sm text-[var(--nim-text)]">{providerLabel(item.provider)}</div>
                   <div className="text-xs text-[var(--nim-text-muted)]">
-                    {item.enabled ? `Enabled, ${item.testStatus}` : 'Disabled'}
+                    {item.enabled ? `已启用, ${item.testStatus}` : '已禁用'}
                     {item.testMessage ? ` - ${item.testMessage}` : ''}
                   </div>
                 </div>
@@ -413,7 +413,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
                   disabled={!item.enabled || testingProvider === item.provider}
                   onClick={() => void handleTestProvider(item.provider)}
                 >
-                  {testingProvider === item.provider ? 'Testing...' : 'Test'}
+                  {testingProvider === item.provider ? '测试中...' : '测试'}
                 </button>
               </div>
             ))}
@@ -422,9 +422,9 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
 
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] p-4">
           <div className="mb-3">
-            <h4 className="text-sm font-semibold text-[var(--nim-text)]">Role Defaults</h4>
+            <h4 className="text-sm font-semibold text-[var(--nim-text)]">角色默认设置</h4>
             <p className="text-xs text-[var(--nim-text-muted)] mt-0.5">
-              These choices drive planner, implementer, reviewer, verifier, frontend repair, and research handoffs.
+              这些选项驱动规划者、实现者、审查者、验证者、前端修复和研究的分配。
             </p>
           </div>
           <div className="space-y-3">
@@ -516,7 +516,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
                   </select>
                   {(selectedModel !== preference.model || selectedReasoning !== preference.reasoning) && (
                     <div className="col-start-2 col-span-3 text-[11px] text-[var(--nim-text-muted)]">
-                      Saved value is outside this provider capability set and will be treated as Auto until saved.
+                      已保存的值超出当前供应商的能力范围，在重新保存前将被视为自动。
                     </div>
                   )}
                 </div>
@@ -527,8 +527,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
 
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] p-4">
           <SelectRow
-            label="Mobile policy"
-            description="How much approval authority Android should have while desktop is running."
+            label="移动端权限策略"
+            description="桌面端运行时，Android 端拥有多大的审批权限。"
             value={config.mobilePermissions.mode}
             options={MOBILE_POLICY_MODES}
             onChange={(value) => updateConfig((current) => ({
@@ -542,8 +542,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
               ...current,
               automation: { ...current.automation, preferWorktreesForMediumRisk: checked },
             }))}
-            name="Prefer worktrees for medium or risky tasks"
-            description="Start isolated worktree sessions for medium, large, risky, or parallel Work Packets."
+            name="中等风险任务优先使用 Worktree"
+            description="为中等、大型、高风险或并行的 Work Packet 启动隔离的 Worktree 会话。"
           />
           <SettingsToggle
             checked={config.automation.requireFrontendVisualEvidence}
@@ -551,8 +551,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
               ...current,
               automation: { ...current.automation, requireFrontendVisualEvidence: checked },
             }))}
-            name="Require frontend visual evidence"
-            description="Frontend Work Packets should gather screenshots, DOM observations, or browser automation evidence before verification."
+            name="要求前端视觉验证"
+            description="前端 Work Packet 在验证前应收集截图、DOM 观测或浏览器自动化证据。"
           />
           <SettingsToggle
             checked={config.automation.allowAgentToUpdateWorkPackets}
@@ -560,8 +560,8 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
               ...current,
               automation: { ...current.automation, allowAgentToUpdateWorkPackets: checked },
             }))}
-            name="Allow agent Work Packet updates"
-            description="Agents may propose or fill non-approval evidence fields as task facts change."
+            name="允许智能体更新 Work Packet"
+            description="智能体可以在任务事实变化时提议或填写非审批类证据字段。"
           />
         </div>
         </div>
@@ -578,13 +578,13 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
               className="px-3 py-1.5 rounded-md text-sm border border-[var(--nim-border)] text-[var(--nim-text)] bg-[var(--nim-bg-tertiary)] hover:bg-[var(--nim-bg-hover)]"
               onClick={validateJson}
             >
-              Validate
+              验证
             </button>
             <button
               className="px-3 py-1.5 rounded-md text-sm border border-[var(--nim-primary)] text-white bg-[var(--nim-primary)] hover:opacity-90"
               onClick={saveJson}
             >
-              Save JSON
+              保存 JSON
             </button>
           </div>
         </div>
@@ -592,7 +592,7 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
 
       {validationErrors.length > 0 && (
         <div className="mt-4 rounded border border-[var(--nim-error)]/40 bg-[var(--nim-error)]/10 p-3 text-sm text-[var(--nim-text)]">
-          <div className="font-medium mb-1">Configuration needs attention</div>
+          <div className="font-medium mb-1">配置需要注意</div>
           {validationErrors.map((error) => (
             <div key={error} className="text-xs text-[var(--nim-text-muted)]">{error}</div>
           ))}
@@ -600,9 +600,9 @@ export function AgentWorkOSPanel({ scope, workspacePath, workspaceName }: AgentW
       )}
 
       <div className="mt-3 text-xs text-[var(--nim-text-muted)]">
-        {status === 'loading' && 'Loading...'}
-        {status === 'saved' && 'Saved'}
-        {status === 'error' && validationErrors.length === 0 && 'Unable to save settings'}
+        {status === 'loading' && '加载中...'}
+        {status === 'saved' && '已保存'}
+        {status === 'error' && validationErrors.length === 0 && '无法保存设置'}
       </div>
     </div>
   );

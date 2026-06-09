@@ -585,7 +585,7 @@ export const FilesEditedSidebar: React.FC<FilesEditedSidebarProps> = React.memo(
             className="files-edited-sidebar__keep-all-btn flex items-center gap-1 px-2.5 py-1 bg-transparent border border-[var(--nim-warning)] rounded text-[var(--nim-warning)] text-[11px] font-medium cursor-pointer transition-all duration-200 font-inherit hover:enabled:bg-[color-mix(in_srgb,var(--nim-warning)_15%,transparent)] disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleKeepAll}
             disabled={isClearing}
-            title="Accept all pending AI changes"
+            title="接受所有待审查的 AI 更改"
           >
             <MaterialSymbol icon="check_circle" size={14} />
             {isClearing ? t('keeping') : t('keepAll')}

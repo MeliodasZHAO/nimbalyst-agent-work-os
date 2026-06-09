@@ -794,7 +794,7 @@ export function SyncPanel() {
               </div>
               <div className="flex-1">
                 <div className="text-[13px] font-semibold text-nim mb-0.5">
-                  Nimbalyst for iOS
+                  Nimbalyst 移动端
                 </div>
                 <div className="text-[11px] text-nim-faint mb-2">
                   在手机上查看和回复 AI 会话
