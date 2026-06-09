@@ -682,7 +682,7 @@ const SessionKanbanCard = React.memo(function SessionKanbanCard({ session, onSel
       )}
     </>
   );
-}
+});
 
 // ============================================================
 // SessionKanbanColumn
@@ -1024,7 +1024,7 @@ function UnphasedColumn({ sessions, onSelect, onArchive, onRename, onDropToPhase
       </div>
     </div>
   );
-});
+}
 
 // ============================================================
 // DispatchDropdownItem - single entry in the dispatch filter dropdown
