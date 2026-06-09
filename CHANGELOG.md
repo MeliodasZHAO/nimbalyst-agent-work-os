@@ -14,10 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README rewritten in Chinese with Agent Work OS feature overview
 
 ### Changed
-<!-- Changes to existing functionality go here -->
+- Project tab bar resized to browser-like proportions (taller tabs, larger text, accent-color active indicator)
+- iOS: all "your Mac" references replaced with "your desktop" for cross-platform correctness
 
 ### Fixed
-<!-- Bug fixes go here -->
+- Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)
 
 ### Removed
 <!-- Removed features go here -->

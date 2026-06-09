@@ -174,19 +174,17 @@ export async function initOpenProjects(): Promise<void> {
   if (!window.electronAPI?.invoke) return;
 
   try {
-    const [mode, restorePrev, paths, activePath] = await Promise.all([
+    const [, restorePrev, paths, activePath] = await Promise.all([
       window.electronAPI.invoke('app:get-multi-project-mode') as Promise<boolean>,
       window.electronAPI.invoke('app:get-restore-previous-projects') as Promise<boolean>,
       window.electronAPI.invoke('app:get-open-projects') as Promise<string[]>,
       window.electronAPI.invoke('app:get-active-project-path') as Promise<string | null>,
     ]);
 
-    store.set(multiProjectModeAtom, true);
-    store.set(restorePreviousProjectsAtom, true);
+    // Multi-project mode is always on; restorePreviousProjects defaults to
+    // true on disk (store.ts) and here. No need to override the atoms —
+    // their initial values already match.
 
-    // Only rehydrate the rail when the user opted in. Otherwise the rail
-    // starts empty and is seeded by the project the user picks from the
-    // launch screen (handled in App.tsx loadInitialState).
     if (restorePrev) {
       const validPaths = Array.isArray(paths) ? paths.filter((p) => typeof p === 'string' && p.length > 0) : [];
       const projects: OpenProject[] = validPaths.map((path) => ({

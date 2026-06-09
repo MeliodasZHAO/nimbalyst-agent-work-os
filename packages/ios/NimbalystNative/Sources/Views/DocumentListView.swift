@@ -110,7 +110,7 @@ struct DocumentListView: View {
                 .foregroundStyle(.secondary)
             Text("No Documents")
                 .font(.title3)
-            Text("Markdown files will appear here once synced from your Mac.")
+            Text("Markdown files will appear here once synced from your desktop.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

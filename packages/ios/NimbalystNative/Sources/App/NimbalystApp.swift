@@ -92,13 +92,13 @@ public struct LoginView: View {
                 .fontWeight(.bold)
 
             if let pairedEmail {
-                Text("Sign in as **\(pairedEmail)** to sync with your Mac.")
+                Text("Sign in as **\(pairedEmail)** to sync with your desktop.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             } else {
-                Text("Sign in with the same account you use on your Mac to sync your sessions.")
+                Text("Sign in with the same account you use on your desktop to sync your sessions.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -317,7 +317,7 @@ public struct MainNavigationView: View {
             }
             Button("Dismiss", role: .cancel) {}
         } message: {
-            Text("Your sessions could not be decrypted. The encryption key on this device no longer matches your Mac. Please re-pair by scanning the QR code from your Mac's settings.")
+            Text("Your sessions could not be decrypted. The encryption key on this device no longer matches your desktop. Please re-pair by scanning the QR code from your desktop's settings.")
         }
     }
 
@@ -373,7 +373,7 @@ struct IPadNavigationView: View {
                         .foregroundStyle(.secondary)
                     Text("No Projects")
                         .font(.title3)
-                    Text("Projects will appear once synced from your Mac.")
+                    Text("Projects will appear once synced from your desktop.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

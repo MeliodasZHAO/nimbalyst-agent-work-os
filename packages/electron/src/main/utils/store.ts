@@ -2278,7 +2278,7 @@ export function setActiveProjectPath(path: string | null): void {
 }
 
 export function getRestorePreviousProjectsOnLaunch(): boolean {
-  return getAppStore().get('restorePreviousProjectsOnLaunch', false);
+  return getAppStore().get('restorePreviousProjectsOnLaunch', true);
 }
 
 export function setRestorePreviousProjectsOnLaunch(enabled: boolean): void {

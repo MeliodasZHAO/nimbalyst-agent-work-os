@@ -33,6 +33,7 @@ import {
   projectActivitySummaryAtom,
 } from '../store/atoms/sessionActivity';
 import { MaterialSymbol } from '@nimbalyst/runtime';
+import { generateWorkspaceAccentColor } from './WorkspaceSummaryHeader';
 
 const isWindows = navigator.userAgent.includes('Windows');
 
@@ -257,7 +258,7 @@ export function ProjectTabBar() {
   return (
     <>
       <div
-        className="project-tab-bar flex items-end h-8 bg-[var(--nim-bg-secondary)] [-webkit-app-region:drag] select-none shrink-0 pl-1 pr-1 gap-px overflow-x-auto"
+        className="project-tab-bar flex items-center h-10 bg-[var(--nim-bg-secondary)] [-webkit-app-region:drag] select-none shrink-0 pl-1 pr-1 gap-px overflow-x-auto"
         data-testid="project-tab-bar"
       >
         {openProjects.map((project) => {
@@ -265,22 +266,24 @@ export function ProjectTabBar() {
           const summary = activitySummary.get(project.path);
           const processingCount = summary?.processing ?? 0;
           const isOnlyProject = openProjects.length <= 1;
+          const accentColor = generateWorkspaceAccentColor(project.path);
 
           return (
             <button
               key={project.path}
               type="button"
-              className={`project-tab group flex items-center gap-1.5 h-[26px] px-3 border-none cursor-pointer text-[11px] font-medium transition-all duration-100 shrink-0 [-webkit-app-region:no-drag] ${
+              className={`project-tab group flex items-center gap-1.5 h-[34px] px-3 border-none cursor-pointer text-[13px] font-medium transition-all duration-100 shrink-0 min-w-[60px] [-webkit-app-region:no-drag] ${
                 isActive
                   ? 'bg-[var(--nim-bg)] text-[var(--nim-text)] rounded-t-md'
                   : 'bg-transparent text-[var(--nim-text-faint)] hover:text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-tertiary)] rounded-t-md'
               }`}
+              style={isActive ? { borderBottom: `2px solid ${accentColor}` } : undefined}
               onClick={() => handleActivate(project.path)}
               onContextMenu={(e) => handleContextMenu(project, e)}
               title={project.path}
               data-testid={`project-tab-${project.path}`}
             >
-              <span className="project-tab-name truncate max-w-[160px]">
+              <span className="project-tab-name truncate max-w-[200px]">
                 {projectDisplayName(project)}
               </span>
 
@@ -317,7 +320,7 @@ export function ProjectTabBar() {
             addRefs.setReference(el);
           }}
           type="button"
-          className="project-tab-add flex items-center justify-center w-6 h-6 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag] mb-0.5"
+          className="project-tab-add flex items-center justify-center w-7 h-7 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag]"
           onClick={handleAddClick}
           title={atCap ? '已达到最大项目数 (8)' : '添加项目'}
           disabled={atCap}
