@@ -34,7 +34,7 @@ import {
   type SessionMeta,
 } from '../../store';
 import { alphaFeatureEnabledAtom, worktreesFeatureAvailableAtom } from '../../store/atoms/appSettings';
-import { activeWorkspacePathAtom } from '../../store/atoms/openProjects';
+import { activeWorkspacePathAtom, multiProjectModeAtom } from '../../store/atoms/openProjects';
 import { activeSessionIdAtom as globalActiveSessionIdAtom } from '../../store/atoms/sessions';
 import { collapsedGroupsAtom, sortOrderAtom, setCollapsedGroupsAtom, setSortOrderAtom } from '../../store/atoms/agentMode';
 import {
@@ -552,6 +552,7 @@ const SessionHistoryComponent: React.FC = () => {
   // Extract workspace name from path
   const workspaceName = getFileName(workspacePath) || '工作区';
   const workspaceColor = generateWorkspaceAccentColor(workspacePath);
+  const isMultiProject = useAtomValue(multiProjectModeAtom);
   const useThrottledTurnOrdering = mode === 'agent' && sortBy === 'updated';
   const liveOrderTimestampMap = useMemo(() => {
     const timestamps = new Map<string, number>();
@@ -2788,7 +2789,7 @@ const SessionHistoryComponent: React.FC = () => {
   if (loading) {
     return (
       <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-        <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+        {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
         <WorkspaceSummaryHeader
           workspacePath={workspacePath}
           workspaceName={workspaceName}
@@ -2916,7 +2917,7 @@ const SessionHistoryComponent: React.FC = () => {
   if (error) {
     return (
       <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-        <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+        {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
         <WorkspaceSummaryHeader
           workspacePath={workspacePath}
           workspaceName={workspaceName}
@@ -3084,7 +3085,7 @@ const SessionHistoryComponent: React.FC = () => {
     // session with the filtered tag). See GitHub #470 / NIM-675.
     return (
       <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-        <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+        {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
         <WorkspaceSummaryHeader
           workspacePath={workspacePath}
           workspaceName={workspaceName}
