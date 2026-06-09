@@ -104,6 +104,7 @@ export interface SessionKanbanFilter {
   search: string;
   tags: string[];
   showComplete: boolean;
+  dispatchId: string | null;
 }
 
 /** Filter state for the kanban board */
@@ -111,6 +112,7 @@ export const sessionKanbanFilterAtom = atom<SessionKanbanFilter>({
   search: '',
   tags: [],
   showComplete: true,
+  dispatchId: null,
 });
 
 // ============================================================
@@ -132,8 +134,13 @@ export const sessionsByPhaseAtom = atom((get) => {
   }
 
   for (const [_id, meta] of registry) {
-    // Only show root sessions (not children of workstreams)
-    if (meta.parentSessionId) continue;
+    // Dispatch filter mode: only show children of the selected dispatch
+    if (filter.dispatchId) {
+      if (meta.parentSessionId !== filter.dispatchId) continue;
+    } else {
+      // Normal mode: only show root sessions (not children of workstreams)
+      if (meta.parentSessionId) continue;
+    }
 
     // For workstream parents without an explicit phase, derive from children
     const phase = meta.phase
@@ -182,13 +189,18 @@ export const sessionKanbanTotalCountAtom = atom((get) => {
   return total;
 });
 
-/** Derived: all unique tags from root sessions (with counts) */
+/** Derived: all unique tags from visible sessions (with counts) */
 export const sessionKanbanTagsAtom = atom((get) => {
   const registry = get(sessionRegistryAtom);
+  const filter = get(sessionKanbanFilterAtom);
   const tagCounts = new Map<string, number>();
 
   for (const [_id, meta] of registry) {
-    if (meta.parentSessionId) continue;
+    if (filter.dispatchId) {
+      if (meta.parentSessionId !== filter.dispatchId) continue;
+    } else {
+      if (meta.parentSessionId) continue;
+    }
     if (meta.tags) {
       for (const tag of meta.tags) {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
@@ -296,4 +308,34 @@ export const setSessionTagsAtom = atom(
       }
     }
   }
+);
+
+// ============================================================
+// Dispatch Atoms
+// ============================================================
+
+/** Derived: list of active dispatch sessions (for the dispatch filter dropdown) */
+export const dispatchSessionsAtom = atom((get) => {
+  const registry = get(sessionRegistryAtom);
+  const dispatches: SessionMeta[] = [];
+
+  for (const [_id, meta] of registry) {
+    if (meta.sessionType === 'dispatch' && !meta.isArchived) {
+      dispatches.push(meta);
+    }
+  }
+
+  return dispatches.sort((a, b) => b.createdAt - a.createdAt);
+});
+
+/** Derived: child count for a specific dispatch (used in filter dropdown) */
+export const dispatchChildCountAtom = atomFamily((dispatchId: string) =>
+  atom((get) => {
+    const registry = get(sessionRegistryAtom);
+    let count = 0;
+    for (const [_id, meta] of registry) {
+      if (meta.parentSessionId === dispatchId) count++;
+    }
+    return count;
+  })
 );

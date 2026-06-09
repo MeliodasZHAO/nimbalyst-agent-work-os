@@ -7,6 +7,7 @@ import { WorktreeBaseBranchPicker } from './WorktreeBaseBranchPicker';
 import { SessionListItem } from './SessionListItem';
 import { WorkstreamGroup } from './WorkstreamGroup';
 import { BlitzGroup } from './BlitzGroup';
+import { DispatchGroup } from './DispatchGroup';
 import { SuperLoopGroup } from './SuperLoopGroup';
 import { MetaAgentGroup } from './MetaAgentGroup';
 import { NewSuperLoopDialog } from './NewSuperLoopDialog';
@@ -53,6 +54,7 @@ import {
 } from '../../store/actions/sessionHistoryActions';
 import { worktreeDisplayNameUpdateAtom } from '../../store/atoms/worktrees';
 import { blitzCreatedAtom, blitzDisplayNameUpdateAtom } from '../../store/atoms/blitz';
+import { dispatchCreatedAtom } from '../../store/atoms/dispatch';
 import { superLoopListAtom, upsertSuperLoopAtom, removeSuperLoopAtom } from '../../store/atoms/superLoop';
 import { useSuperLoopDialog } from '../../hooks/useSuperLoop';
 import { workspaceSessionTurnActivityAtom } from '../../store/atoms/sessionActivity';
@@ -94,6 +96,16 @@ interface BlitzData {
   createdAt?: number;
 }
 
+interface DispatchData {
+  id: string;
+  title: string;
+  displayName?: string;
+  tasks?: Array<{ title: string; provider?: string }>;
+  mergeStrategy?: string;
+  isArchived?: boolean;
+  createdAt?: number;
+}
+
 interface WorktreeWithStatus extends WorktreeData {
   gitStatus?: {
     ahead?: number;
@@ -107,6 +119,7 @@ type UnifiedListItem =
   | { type: 'workstream'; session: SessionItem; sessions: SessionItem[]; timestamp: number; rank: number }
   | { type: 'worktree'; worktreeId: string; sessions: SessionItem[]; timestamp: number; rank: number }
   | { type: 'blitz'; blitzId: string; worktrees: { worktreeId: string; sessions: SessionItem[] }[]; timestamp: number; rank: number }
+  | { type: 'dispatch'; dispatchId: string; childSessions: SessionItem[]; timestamp: number; rank: number }
   | { type: 'superLoop'; loop: SuperLoop; timestamp: number; rank: number }
   | { type: 'metaAgent'; metaSession: SessionItem; childSessions: SessionItem[]; timestamp: number; rank: number };
 
@@ -378,7 +391,7 @@ const SessionHistoryComponent: React.FC = () => {
     for (const s of sessionRegistry.values()) {
       if (s.workspaceId !== workspacePath) continue;
       if (s.isArchived) continue;
-      if (s.sessionType === 'workstream' || s.sessionType === 'blitz') continue;
+      if (s.sessionType === 'workstream' || s.sessionType === 'blitz' || s.sessionType === 'dispatch') continue;
       count++;
     }
     return count;
@@ -405,7 +418,8 @@ const SessionHistoryComponent: React.FC = () => {
   const lastSelectedIdRef = useRef<string | null>(null); // For shift+click range selection
   const [worktreeCache, setWorktreeCache] = useState<Map<string, WorktreeWithStatus>>(new Map()); // Cache worktree data
   const [workstreamChildrenCache, setWorkstreamChildrenCache] = useState<Map<string, SessionItem[]>>(new Map()); // Cache workstream children
-  const [blitzCache, setBlitzCache] = useState<Map<string, BlitzData>>(new Map()); // Cache blitz data
+  const [blitzCache, setBlitzCache] = useState<Map<string, BlitzData>>(new Map());
+  const [dispatchCache, setDispatchCache] = useState<Map<string, DispatchData>>(new Map());
   const pendingWorkstreamChildrenFetchesRef = useRef<Set<string>>(new Set());
   // Mirrors `workstreamChildrenCache` so the workstream-children fetch
   // effect below can read the current cache without putting it in deps
@@ -1417,6 +1431,14 @@ const SessionHistoryComponent: React.FC = () => {
         return `blitz:${blitzParentId}`;
       }
 
+      // Dispatch group
+      const dispatchParentId = allSessions.find(
+        s => s.worktreeId === activeSession.worktreeId && s.parentSessionId && dispatchCache.has(s.parentSessionId)
+      )?.parentSessionId;
+      if (dispatchParentId) {
+        return `dispatch:${dispatchParentId}`;
+      }
+
       // Super loop
       const superLoop = superLoops.find(l => l.worktreeId === activeSession.worktreeId);
       if (superLoop) {
@@ -1452,7 +1474,7 @@ const SessionHistoryComponent: React.FC = () => {
     }
 
     return null;
-  }, [activeSessionId, allSessions, blitzCache, superLoops, sessions]);
+  }, [activeSessionId, allSessions, blitzCache, dispatchCache, superLoops, sessions]);
 
   // Handle Cmd+click on group headers (blitz, worktree, workstream, superloop)
   const handleGroupMultiSelect = useCallback((groupKey: string) => {
@@ -2167,6 +2189,8 @@ const SessionHistoryComponent: React.FC = () => {
     for (const session of sessions) {
       // Skip blitz sessions - they're rendered via BlitzGroup, not as individual items
       if (session.sessionType === 'blitz') continue;
+      // Skip dispatch sessions - they're rendered via DispatchGroup
+      if (session.sessionType === 'dispatch') continue;
       // Skip meta-agent sessions and their children - they're rendered via MetaAgentGroup
       if (metaAgentSessionIds.has(session.id) || metaAgentChildSessionIds.has(session.id)) continue;
 
@@ -2216,6 +2240,7 @@ const SessionHistoryComponent: React.FC = () => {
 
     // Group blitz worktrees by blitz parent session ID, keep standalone worktrees separate
     const blitzWorktrees = new Map<string, { worktreeId: string; sessions: SessionItem[] }[]>();
+    const dispatchChildren = new Map<string, SessionItem[]>();
     const standaloneWorktrees: [string, { sessions: SessionItem[]; timestamp: number }][] = [];
 
     for (const [worktreeId, data] of worktreeGroupsData) {
@@ -2232,18 +2257,26 @@ const SessionHistoryComponent: React.FC = () => {
       // Check if any session in this worktree has a parentSessionId pointing to a blitz session
       const blitzParentId = data.sessions.find(s => s.parentSessionId && blitzCache.has(s.parentSessionId))?.parentSessionId;
       if (blitzParentId) {
-        // This worktree belongs to a blitz
         const existing = blitzWorktrees.get(blitzParentId) || [];
         existing.push({ worktreeId, sessions: data.sessions });
         blitzWorktrees.set(blitzParentId, existing);
       } else {
-        standaloneWorktrees.push([worktreeId, data]);
+        // Check if any session belongs to a dispatch
+        const dispatchParentId = data.sessions.find(s => s.parentSessionId && dispatchCache.has(s.parentSessionId))?.parentSessionId;
+        if (dispatchParentId) {
+          const existing = dispatchChildren.get(dispatchParentId) || [];
+          existing.push(...data.sessions);
+          dispatchChildren.set(dispatchParentId, existing);
+        } else {
+          standaloneWorktrees.push([worktreeId, data]);
+        }
       }
     }
 
     // Also pick up blitz children that have no worktreeId (e.g., analysis sessions)
     for (const session of sessions) {
       if (session.sessionType === 'blitz') continue; // Skip blitz parent
+      if (session.sessionType === 'dispatch') continue; // Skip dispatch parent
       if (session.worktreeId) continue; // Already handled via worktreeGroupsData
       if (!session.parentSessionId) continue;
       if (!blitzCache.has(session.parentSessionId)) continue;
@@ -2285,6 +2318,30 @@ const SessionHistoryComponent: React.FC = () => {
       } else {
         items.push(item);
       }
+    }
+
+    // Add dispatch groups
+    for (const [dispatchId, childSessions] of dispatchChildren) {
+      const dispatchData = dispatchCache.get(dispatchId);
+      if (!showArchived && dispatchData?.isArchived) continue;
+
+      childSessions.sort((a, b) => a.createdAt - b.createdAt);
+
+      let timestamp = Math.max(...childSessions.map(s =>
+        timestampField === 'updatedAt' ? getDisplayedOrderTimestamp(s) : s.createdAt
+      ));
+      if (sortBy === 'created' && dispatchData?.createdAt) {
+        timestamp = dispatchData.createdAt;
+      }
+
+      const rank = Math.min(...childSessions.map(s => getDisplayedOrderRank(s.id)));
+      items.push({
+        type: 'dispatch' as const,
+        dispatchId,
+        childSessions,
+        timestamp,
+        rank,
+      });
     }
 
     // Add standalone worktree groups as single items (only if they have 2+ sessions)
@@ -2388,7 +2445,7 @@ const SessionHistoryComponent: React.FC = () => {
     }
 
     return result as Record<TimeGroupKey | 'Pinned' | 'Meta Agent', UnifiedListItem[]>;
-  }, [sessions, worktreeGroupsData, sortBy, worktreeCache, workstreamChildrenCache, blitzCache, superLoops, showArchived, isMetaAgentEnabled, getDisplayedOrderRank, getDisplayedOrderTimestamp, compareSessionOrder, compareUnifiedItems]);
+  }, [sessions, worktreeGroupsData, sortBy, worktreeCache, workstreamChildrenCache, blitzCache, dispatchCache, superLoops, showArchived, isMetaAgentEnabled, getDisplayedOrderRank, getDisplayedOrderTimestamp, compareSessionOrder, compareUnifiedItems]);
 
   const groupKeys = Object.keys(groupedItems) as (TimeGroupKey | 'Pinned' | 'Meta Agent')[];
 
@@ -2533,6 +2590,46 @@ const SessionHistoryComponent: React.FC = () => {
     if (!blitzCreated || blitzCreated.payload.workspacePath !== workspacePath) return;
     fetchBlitzes();
   }, [blitzCreated, workspacePath, fetchBlitzes]);
+
+  // Fetch dispatch sessions for this workspace
+  const fetchDispatches = useCallback(async () => {
+    if (!workspacePath) return;
+    try {
+      const result = await window.electronAPI.invoke('agent-work-os:dispatch-list', workspacePath);
+      if (result.success && result.dispatches) {
+        setDispatchCache(prev => {
+          const updated = new Map(prev);
+          for (const d of result.dispatches) {
+            updated.set(d.id, {
+              id: d.id,
+              title: d.title,
+              tasks: d.tasks,
+              mergeStrategy: d.mergeStrategy,
+              isArchived: d.isArchived,
+              createdAt: d.createdAt,
+            });
+          }
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('[SessionHistory] Failed to fetch dispatches:', err);
+    }
+  }, [workspacePath]);
+
+  useEffect(() => {
+    if (!workspacePath) return;
+    fetchDispatches();
+  }, [workspacePath, fetchDispatches]);
+
+  const dispatchCreated = useAtomValue(dispatchCreatedAtom);
+  const initialDispatchCreatedRef = useRef(dispatchCreated);
+  useEffect(() => {
+    if (!workspacePath) return;
+    if (dispatchCreated === initialDispatchCreatedRef.current) return;
+    if (!dispatchCreated || dispatchCreated.payload.workspacePath !== workspacePath) return;
+    fetchDispatches();
+  }, [dispatchCreated, workspacePath, fetchDispatches]);
 
   // Fetch children for expanded workstreams.
   //
@@ -3563,6 +3660,30 @@ const SessionHistoryComponent: React.FC = () => {
                       onWorktreeArchive={handleArchiveWorktree}
                       onWorktreeCleanGitignored={handleCleanGitignored}
                       onSessionRename={onSessionRename}
+                    />
+                  );
+                }
+                if (item.type === 'dispatch') {
+                  const dispatchData = dispatchCache.get(item.dispatchId);
+                  const isDispatchExpanded = !collapsedGroups.includes(`dispatch:${item.dispatchId}`);
+                  const isDispatchActive = item.childSessions.some(s => s.id === activeSessionId);
+
+                  return (
+                    <DispatchGroup
+                      dispatchId={item.dispatchId}
+                      title={dispatchData?.displayName || dispatchData?.title || '加载中...'}
+                      isExpanded={isDispatchExpanded}
+                      isActive={isDispatchActive}
+                      isArchived={dispatchData?.isArchived}
+                      isSelected={selectedGroupIds.has(`dispatch:${item.dispatchId}`)}
+                      onToggle={() => handleToggleGroup(`dispatch:${item.dispatchId}`)}
+                      onMultiSelect={() => handleGroupMultiSelect(`dispatch:${item.dispatchId}`)}
+                      tasks={item.childSessions.map(s => ({
+                        session: s,
+                        worktreeBranch: worktreeCache.get(s.worktreeId || '')?.branch,
+                      }))}
+                      activeSessionId={activeSessionId}
+                      onSessionSelect={handleSessionClick}
                     />
                   );
                 }

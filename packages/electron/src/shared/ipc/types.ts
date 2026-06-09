@@ -34,3 +34,53 @@ export interface BlitzCreateResult {
   errors?: string[];
   error?: string;
 }
+
+/**
+ * Individual task result within a dispatch batch
+ */
+export interface DispatchTaskResult {
+  title: string;
+  sessionId: string;
+  worktreeId: string;
+  worktreePath: string;
+  worktreeBranch: string;
+  provider: string;
+  workPacketId?: string;
+  status: 'queued' | 'failed';
+  error?: string;
+}
+
+/**
+ * Response from agent-work-os:dispatch IPC handler
+ */
+export interface DispatchResult {
+  success: boolean;
+  dispatchId: string;
+  tasks: DispatchTaskResult[];
+  error?: string;
+}
+
+/**
+ * Payload for agent-work-os:dispatch-selective-merge IPC
+ */
+export interface SelectiveMergePayload {
+  dispatchId: string;
+  selectedWorktreeIds: string[];
+  newBranchName: string;
+  baseBranch?: string;
+  workspacePath: string;
+}
+
+/**
+ * Response from agent-work-os:dispatch-selective-merge IPC
+ */
+export interface SelectiveMergeResult {
+  success: boolean;
+  branchName?: string;
+  mergedCount?: number;
+  totalCount?: number;
+  commitCount?: number;
+  conflictedWorktree?: string;
+  conflictedFiles?: string[];
+  error?: string;
+}

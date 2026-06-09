@@ -122,7 +122,7 @@ interface SessionListItemProps {
   provider?: string;
   model?: string;
   messageCount?: number;
-  sessionType?: 'session' | 'workstream' | 'blitz' | 'voice'; // Structural type of session
+  sessionType?: 'session' | 'workstream' | 'blitz' | 'dispatch' | 'voice';
   isWorkstream?: boolean; // Whether this session is a workstream (has children)
   isWorktreeSession?: boolean; // Whether this session belongs to a worktree (shows worktree icon)
   parentSessionId?: string | null; // Parent session ID for hierarchical workstreams

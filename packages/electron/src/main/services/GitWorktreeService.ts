@@ -2538,6 +2538,97 @@ ${newLines.map(line => '+' + line).join('\n')}`;
       return toRemove;
     });
   }
+
+  /**
+   * Merge selected worktree branches onto a new branch.
+   * Creates the branch from baseBranch HEAD, then sequentially merges each worktree branch.
+   * Stops on first conflict.
+   */
+  async selectiveMergeToBranch(
+    mainRepoPath: string,
+    worktreeBranches: string[],
+    newBranchName: string,
+    baseBranch?: string,
+  ): Promise<{
+    success: boolean;
+    branchName?: string;
+    mergedCount: number;
+    totalCount: number;
+    commitCount: number;
+    conflictedWorktree?: string;
+    conflictedFiles?: string[];
+    error?: string;
+  }> {
+    return gitOperationLock.withLock(mainRepoPath, 'selectiveMerge', async () => {
+      const git: SimpleGit = simpleGit(mainRepoPath);
+
+      const resolvedBase = baseBranch || await this.inferBaseBranch(git);
+      const originalBranch = await git.revparse(['--abbrev-ref', 'HEAD']);
+
+      let mergedCount = 0;
+      let commitCount = 0;
+
+      try {
+        // Ensure clean state
+        const state = await this.checkGitState(mainRepoPath);
+        if (!state.isClean) {
+          return {
+            success: false, mergedCount: 0, totalCount: worktreeBranches.length, commitCount: 0,
+            error: 'Main repository has an unfinished git operation. Resolve it first.',
+          };
+        }
+
+        // Create new branch from base
+        await git.checkout([resolvedBase]);
+        await git.checkoutBranch(newBranchName, resolvedBase);
+
+        // Count commits on the new branch before merging
+        const baseSha = await git.revparse(['HEAD']);
+
+        for (const branch of worktreeBranches) {
+          try {
+            await git.merge([branch, '--no-ff', '-m', `Merge ${branch} into ${newBranchName}`]);
+            mergedCount++;
+
+            // Count new commits
+            const log = await git.log({ from: baseSha, to: 'HEAD' });
+            commitCount = log.total;
+          } catch (mergeError: any) {
+            // Merge conflict — get conflicted files and abort
+            const status = await git.status();
+            const conflicted = status.conflicted || [];
+            await git.merge(['--abort']);
+
+            return {
+              success: false,
+              branchName: newBranchName,
+              mergedCount,
+              totalCount: worktreeBranches.length,
+              commitCount,
+              conflictedWorktree: branch,
+              conflictedFiles: conflicted,
+              error: `Merge conflict in ${branch}`,
+            };
+          }
+        }
+
+        // Return to original branch (leave the merge branch intact)
+        await git.checkout([originalBranch]);
+
+        return {
+          success: true,
+          branchName: newBranchName,
+          mergedCount,
+          totalCount: worktreeBranches.length,
+          commitCount,
+        };
+      } catch (error) {
+        // Clean up: try to return to original branch
+        try { await git.checkout([originalBranch]); } catch { /* ignore */ }
+        throw error;
+      }
+    });
+  }
 }
 
 // Export singleton instance

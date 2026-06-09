@@ -65,6 +65,12 @@ import {
   feedbackToolSchemas,
 } from "./tools/feedbackToolHandlers";
 import { handleExtensionTool } from "./tools/extensionToolHandler";
+import {
+  handleAgentWorkOSDispatch,
+  handleAgentWorkOSDispatchStatus,
+  handleAgentWorkOSDispatchMerge,
+  agentWorkOSToolSchemas,
+} from "./tools/agentWorkOSToolHandlers";
 
 // Re-export functions that don't need transport state
 export {
@@ -313,6 +319,7 @@ function createSharedMcpServer(
       ...getInteractiveToolSchemas(sessionId),
       ...trackerToolSchemas,
       ...feedbackToolSchemas,
+      ...agentWorkOSToolSchemas,
     ];
 
     // Get extension tools for the current workspace/file
@@ -437,6 +444,15 @@ function createSharedMcpServer(
 
         case "feedback_open_github_issue":
           return await handleFeedbackOpenGithubIssue(args);
+
+        case "agent_work_os_dispatch":
+          return handleAgentWorkOSDispatch(args, workspacePath, sessionId);
+
+        case "agent_work_os_dispatch_status":
+          return handleAgentWorkOSDispatchStatus(args);
+
+        case "agent_work_os_dispatch_merge":
+          return handleAgentWorkOSDispatchMerge(args, workspacePath);
 
         default:
           return handleExtensionTool(toolName, name, args, sessionId, workspacePath);
