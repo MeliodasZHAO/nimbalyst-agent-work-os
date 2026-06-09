@@ -1,0 +1,160 @@
+<resources>
+    <!-- Common -->
+    <string name="action_ok">确定</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_remove">移除</string>
+    <string name="action_send">发送</string>
+    <string name="action_sending">发送中…</string>
+    <string name="cd_back">返回</string>
+    <string name="cd_settings">设置</string>
+    <string name="cd_new_session">新建会话</string>
+    <string name="cd_desktop_connection">桌面端连接</string>
+    <string name="cd_collapse">收起</string>
+    <string name="cd_expand">展开</string>
+
+    <!-- Login -->
+    <string name="login_title">登录</string>
+    <string name="login_subtitle_paired">以 %1$s 登录，与桌面端同步。</string>
+    <string name="login_subtitle_unpaired">登录以与桌面端同步会话。</string>
+    <string name="login_check_email_title">查收邮件</string>
+    <string name="login_check_email_body">我们已向 %1$s 发送了登录链接。点击邮件中的链接以继续。</string>
+    <string name="login_chrome_hint">重要：请在 Chrome 中打开链接，不要使用邮箱 App 内置的浏览器。</string>
+    <string name="login_resend">重新发送或换一种方式</string>
+    <string name="login_email_link">使用邮箱链接登录</string>
+    <string name="login_google">使用 Google 登录</string>
+    <string name="login_unpair">解除设备配对</string>
+    <string name="login_error_send_failed">发送登录链接失败（HTTP %1$d）</string>
+    <string name="login_error_network">网络错误：%1$s</string>
+
+    <!-- Pairing -->
+    <string name="pairing_onboarding_title">配对 Android 与桌面端</string>
+    <string name="pairing_onboarding_subtitle">扫描桌面端的配对二维码，或手动输入凭据以连接此设备。</string>
+    <string name="pairing_scan_hide">隐藏二维码扫描</string>
+    <string name="pairing_scan_show">扫描配对二维码</string>
+    <string name="pairing_qr_invalid">无效的配对二维码。</string>
+    <string name="pairing_qr_scanned">已扫描配对信息。</string>
+    <string name="pairing_title">与 Nimbalyst 配对</string>
+    <string name="pairing_subtitle">在桌面端打开 Nimbalyst，进入设置，扫描配对二维码。</string>
+    <string name="pairing_scan_button">扫描二维码</string>
+    <string name="pairing_qr_invalid_retry">无效的配对二维码，请重试。</string>
+
+    <!-- QR scanner -->
+    <string name="scanner_title">扫描配对二维码</string>
+    <string name="scanner_hint">将摄像头对准桌面端的配对二维码。Android 会导入与 iOS 相同格式的配对信息。</string>
+    <string name="scanner_camera_required">需要摄像头权限才能扫描配对二维码。</string>
+    <string name="scanner_allow_camera">允许使用摄像头</string>
+    <string name="scanner_cancel">取消</string>
+
+    <!-- Pairing form -->
+    <string name="form_server_url">服务器地址</string>
+    <string name="form_encryption_seed">加密种子</string>
+    <string name="form_paired_account">配对账号邮箱或用户 ID</string>
+    <string name="form_auth_org_id">Auth 组织 ID</string>
+    <string name="form_auth_user_id">Auth 用户 ID</string>
+    <string name="form_personal_org_override">个人组织 ID 覆盖</string>
+    <string name="form_personal_user_override">个人用户 ID 覆盖</string>
+    <string name="form_session_jwt">会话 JWT</string>
+    <string name="form_save_pairing">保存配对</string>
+
+    <!-- Projects -->
+    <string name="projects_empty">暂无项目。从桌面端同步后，项目会显示在这里。</string>
+    <string name="sync_button">同步</string>
+    <plurals name="session_count">
+        <item quantity="other">%d 个会话</item>
+    </plurals>
+
+    <!-- Sessions list -->
+    <string name="sessions_empty">暂无会话。从桌面端开始一个会话，或点击 + 新建。</string>
+    <string name="sessions_new">新建会话</string>
+    <string name="sessions_workstreams">工作流</string>
+    <string name="session_untitled">未命名会话</string>
+    <string name="session_untitled_workstream">未命名工作流</string>
+    <string name="session_untitled_short">未命名</string>
+
+    <!-- Time groups -->
+    <string name="time_today">今天</string>
+    <string name="time_yesterday">昨天</string>
+    <string name="time_this_week">本周</string>
+    <string name="time_last_week">上周</string>
+    <string name="time_this_month">本月</string>
+    <string name="time_older">更早</string>
+
+    <!-- Relative time -->
+    <string name="time_now">刚刚</string>
+    <string name="time_minutes_ago">%d 分钟前</string>
+    <string name="time_hours_ago">%d 小时前</string>
+    <string name="time_days_ago">%d 天前</string>
+
+    <!-- Session detail -->
+    <string name="delivery_warning_title">发送提醒</string>
+    <string name="delivery_warning_body">你的提示词已发送，但桌面端尚未开始处理。请确认桌面端 App 正在运行并已连接。</string>
+    <plurals name="prompt_queued">
+        <item quantity="other">%d 条提示词排队中</item>
+    </plurals>
+    <string name="compose_placeholder">向桌面端发送提示词</string>
+    <string name="attachment_photo">照片</string>
+    <string name="attachment_camera">拍照</string>
+    <string name="status_image_load_failed">无法加载所选图片。</string>
+    <string name="status_photo_added">已添加照片附件。</string>
+    <string name="status_camera_captured">已添加拍照附件。</string>
+    <string name="status_prompt_queued">提示词已在桌面端排队。</string>
+    <string name="status_prompt_failed">提示词排队失败。</string>
+    <string name="status_interactive_invalid">转录视图发送了无效的交互响应。</string>
+    <string name="status_interactive_sent">交互响应已发送到桌面端。</string>
+    <string name="status_interactive_failed">发送交互响应失败。</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_account">账户</string>
+    <string name="settings_server">服务器：%1$s</string>
+    <string name="settings_sync">同步：%1$s</string>
+    <string name="settings_connected_devices">已连接设备</string>
+    <string name="settings_device_entry">%1$s（%2$s）</string>
+    <string name="settings_agent_work_os">Agent Work OS</string>
+    <string name="settings_agent_work_os_desc">控制此 Android 设备在桌面端会话运行时可以处理哪些审批。</string>
+    <string name="perm_plan_title">计划审批</string>
+    <string name="perm_plan_desc">允许在 Android 上批准低风险的计划。</string>
+    <string name="perm_tool_title">工具权限</string>
+    <string name="perm_tool_desc">允许在 Android 上处理低风险的工具权限请求。</string>
+    <string name="perm_commit_title">提交审批</string>
+    <string name="perm_commit_desc">允许在 Android 上批准低风险的提交。</string>
+    <string name="perm_database_title">数据库风险</string>
+    <string name="perm_database_desc">允许在 Android 上批准涉及数据库影响的操作。</string>
+    <string name="perm_security_title">安全风险</string>
+    <string name="perm_security_desc">允许在 Android 上批准认证、权限、密钥或令牌相关的操作。</string>
+    <string name="perm_destructive_title">破坏性风险</string>
+    <string name="perm_destructive_desc">允许在 Android 上批准破坏性命令或数据变更。</string>
+    <string name="perm_shipped_title">交付状态需桌面端确认</string>
+    <string name="perm_shipped_desc">最终 Work Packet 晋级前需要桌面端审核。</string>
+    <string name="perm_custom_hint">选择“自定义”以单独调整各项审批开关。</string>
+    <string name="perm_mode_strict">严格</string>
+    <string name="perm_mode_balanced">均衡</string>
+    <string name="perm_mode_flexible">灵活</string>
+    <string name="perm_mode_custom">自定义</string>
+    <string name="settings_analytics">使用分析</string>
+    <string name="settings_analytics_toggle">发送匿名使用数据</string>
+    <string name="settings_analytics_desc">通过匿名分析帮助改进 Nimbalyst。不会收集任何会话内容。</string>
+    <string name="settings_sign_out">退出登录</string>
+    <string name="settings_unpair">解除设备配对</string>
+    <string name="settings_version">Nimbalyst v%1$s</string>
+
+    <!-- Sync status -->
+    <string name="sync_status_connecting">连接中</string>
+    <string name="sync_status_session">已连接（会话）</string>
+    <string name="sync_status_index">已连接（索引）</string>
+    <string name="sync_status_error">已断开（出错）</string>
+    <string name="sync_status_disconnected">已断开</string>
+
+    <!-- Developer -->
+    <string name="dev_title">开发者</string>
+    <string name="dev_force_sync">强制全量同步</string>
+    <string name="dev_qr_payload_label">二维码内容或 nimbalyst://pair 链接</string>
+    <string name="dev_qr_invalid">无效的二维码内容。</string>
+    <string name="dev_import_payload">导入配对信息</string>
+    <string name="dev_imported">已导入配对信息。</string>
+    <string name="dev_scanned">已扫描配对信息。</string>
+
+    <!-- Notifications -->
+    <string name="notif_firebase_not_configured">Android 尚未配置 Firebase。添加 google-services.json 以启用推送。</string>
+    <string name="notif_fcm_failed">获取 FCM 令牌失败。</string>
+</resources>

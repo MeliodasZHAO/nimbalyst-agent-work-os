@@ -9,7 +9,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nimbalyst.app.R
 
 data class PairingFormState(
     val serverUrl: String = "",
@@ -28,7 +30,7 @@ fun PairingCredentialsForm(
     onStateChange: (PairingFormState) -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
-    saveLabel: String = "Save pairing",
+    saveLabel: String? = null,
     message: String? = null,
 ) {
     Column(
@@ -39,56 +41,56 @@ fun PairingCredentialsForm(
             value = state.serverUrl,
             onValueChange = { onStateChange(state.copy(serverUrl = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Server URL") },
+            label = { Text(stringResource(R.string.form_server_url)) },
             singleLine = true
         )
         OutlinedTextField(
             value = state.encryptionSeed,
             onValueChange = { onStateChange(state.copy(encryptionSeed = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Encryption seed") },
+            label = { Text(stringResource(R.string.form_encryption_seed)) },
             minLines = 2
         )
         OutlinedTextField(
             value = state.pairedUserId,
             onValueChange = { onStateChange(state.copy(pairedUserId = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Paired account email or user ID") },
+            label = { Text(stringResource(R.string.form_paired_account)) },
             singleLine = true
         )
         OutlinedTextField(
             value = state.authOrgId,
             onValueChange = { onStateChange(state.copy(authOrgId = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Auth org ID") },
+            label = { Text(stringResource(R.string.form_auth_org_id)) },
             singleLine = true
         )
         OutlinedTextField(
             value = state.authUserId,
             onValueChange = { onStateChange(state.copy(authUserId = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Auth user ID") },
+            label = { Text(stringResource(R.string.form_auth_user_id)) },
             singleLine = true
         )
         OutlinedTextField(
             value = state.orgId,
             onValueChange = { onStateChange(state.copy(orgId = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Personal org ID override") },
+            label = { Text(stringResource(R.string.form_personal_org_override)) },
             singleLine = true
         )
         OutlinedTextField(
             value = state.personalUserId,
             onValueChange = { onStateChange(state.copy(personalUserId = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Personal user ID override") },
+            label = { Text(stringResource(R.string.form_personal_user_override)) },
             singleLine = true
         )
         OutlinedTextField(
             value = state.authJwt,
             onValueChange = { onStateChange(state.copy(authJwt = it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Session JWT") },
+            label = { Text(stringResource(R.string.form_session_jwt)) },
             minLines = 3
         )
         message?.let {
@@ -102,7 +104,7 @@ fun PairingCredentialsForm(
             onClick = onSave,
             enabled = state.serverUrl.isNotBlank() && state.encryptionSeed.isNotBlank()
         ) {
-            Text(saveLabel)
+            Text(saveLabel ?: stringResource(R.string.form_save_pairing))
         }
     }
 }

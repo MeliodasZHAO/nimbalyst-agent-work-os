@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.browser.customtabs.CustomTabsIntent
+import android.content.Context
 import android.net.Uri
+import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -77,7 +80,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Sign In",
+            text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
         )
@@ -86,20 +89,14 @@ fun LoginScreen(
 
         if (!pairedEmail.isNullOrBlank()) {
             Text(
-                text = buildAnnotatedString {
-                    append("Sign in as ")
-                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append(pairedEmail)
-                    }
-                    append(" to sync with your desktop.")
-                },
+                text = stringResource(R.string.login_subtitle_paired, pairedEmail),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         } else {
             Text(
-                text = "Sign in to sync sessions with your desktop.",
+                text = stringResource(R.string.login_subtitle_unpaired),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -111,26 +108,20 @@ fun LoginScreen(
         if (magicLinkSent && !pairedEmail.isNullOrBlank()) {
             // Magic link sent state
             Text(
-                text = "Check your email",
+                text = stringResource(R.string.login_check_email_title),
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = buildAnnotatedString {
-                    append("We sent a sign-in link to ")
-                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append(pairedEmail)
-                    }
-                    append(". Tap the link in your email to continue.")
-                },
+                text = stringResource(R.string.login_check_email_body, pairedEmail),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Important: Please open the link in Chrome, not in your email app's built-in browser.",
+                text = stringResource(R.string.login_chrome_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
@@ -144,7 +135,7 @@ fun LoginScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Resend or try another method")
+                Text(stringResource(R.string.login_resend))
             }
         } else {
             // Sign-in buttons
@@ -156,7 +147,7 @@ fun LoginScreen(
                         isLoading = true
                         errorMessage = null
                         coroutineScope.launch {
-                            val result = sendMagicLink(baseUrl, pairedEmail)
+                            val result = sendMagicLink(context, baseUrl, pairedEmail)
                             isLoading = false
                             if (result == null) {
                                 magicLinkSent = true
@@ -176,7 +167,7 @@ fun LoginScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Sign in with email link")
+                        Text(stringResource(R.string.login_email_link))
                     }
                 }
 
@@ -196,7 +187,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
                 ) {
-                    Text("Sign in with Google")
+                    Text(stringResource(R.string.login_google))
                 }
             } else {
                 // No paired email — Google is the only option
@@ -210,7 +201,7 @@ fun LoginScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Sign in with Google")
+                    Text(stringResource(R.string.login_google))
                 }
             }
         }
@@ -234,14 +225,14 @@ fun LoginScreen(
             onUnpair()
         }) {
             Text(
-                text = "Unpair Device",
+                text = stringResource(R.string.login_unpair),
                 color = MaterialTheme.colorScheme.error
             )
         }
     }
 }
 
-private suspend fun sendMagicLink(baseUrl: String, email: String): String? {
+private suspend fun sendMagicLink(context: Context, baseUrl: String, email: String): String? {
     return withContext(Dispatchers.IO) {
         try {
             val url = URL("$baseUrl/api/auth/magic-link")
@@ -262,10 +253,10 @@ private suspend fun sendMagicLink(baseUrl: String, email: String): String? {
             } else {
                 val errorBody = conn.errorStream?.bufferedReader()?.readText() ?: ""
                 val errorJson = runCatching { JSONObject(errorBody) }.getOrNull()
-                errorJson?.optString("error") ?: "Failed to send magic link (HTTP $code)"
+                errorJson?.optString("error") ?: context.getString(R.string.login_error_send_failed, code)
             }
         } catch (e: Exception) {
-            "Network error: ${e.localizedMessage}"
+            context.getString(R.string.login_error_network, e.localizedMessage)
         }
     }
 }

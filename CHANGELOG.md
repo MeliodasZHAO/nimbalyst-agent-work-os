@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Agent Work OS interaction skills: `/agent-os`, `/agent-os-create`, `/agent-os-gate`, `/agent-os-launch`, `/agent-os-hotfix`, `/agent-os-tweak` for CC agent-side Work Packet management
 - i18n: Chinese translations for dialogs, settings panels, session history, keyboard shortcuts, and update toasts
+- Android: Chinese localization across all in-app screens (follows system language) with a custom app launcher icon
 - README rewritten in Chinese with Agent Work OS feature overview
 
 ### Changed
 - Project tab bar resized to browser-like proportions (taller tabs, larger text, accent-color active indicator)
 - iOS: all "your Mac" references replaced with "your desktop" for cross-platform correctness
+- Android: app display name unified to "Nimbalyst"; project list now has an explicit sync button
 
 ### Fixed
 - Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)

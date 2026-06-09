@@ -21,8 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import com.nimbalyst.app.pairing.PairingCredentials
 import com.nimbalyst.app.pairing.QRPairingData
@@ -33,13 +35,14 @@ fun PairingScreen(
 ) {
     var showQrScanner by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val msgInvalidRetry = stringResource(R.string.pairing_qr_invalid_retry)
 
     if (showQrScanner) {
         PairingQrScanner(
             onScanned = { rawValue ->
                 val parsed = QRPairingData.parse(rawValue)
                 if (parsed == null) {
-                    errorMessage = "Invalid pairing QR code. Try again."
+                    errorMessage = msgInvalidRetry
                     showQrScanner = false
                 } else {
                     AnalyticsManager.setDistinctIdFromPairing(parsed.analyticsId)
@@ -77,7 +80,7 @@ fun PairingScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Pair with Nimbalyst",
+            text = stringResource(R.string.pairing_title),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
         )
@@ -85,7 +88,7 @@ fun PairingScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Open Nimbalyst on your desktop, go to Settings, and scan the pairing QR code.",
+            text = stringResource(R.string.pairing_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -97,7 +100,7 @@ fun PairingScreen(
             onClick = { showQrScanner = true },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Scan QR Code")
+            Text(stringResource(R.string.pairing_scan_button))
         }
 
         errorMessage?.let { error ->

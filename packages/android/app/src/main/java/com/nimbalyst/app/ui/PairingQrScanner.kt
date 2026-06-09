@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -36,6 +37,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.nimbalyst.app.R
 
 @Composable
 fun PairingQrScanner(
@@ -68,11 +70,11 @@ fun PairingQrScanner(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Scan pairing QR",
+                text = stringResource(R.string.scanner_title),
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "Point the camera at the desktop pairing code. Android will import the same payload shape used by iOS.",
+                text = stringResource(R.string.scanner_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -85,16 +87,16 @@ fun PairingQrScanner(
                 )
             } else {
                 Text(
-                    text = "Camera access is required to scan the pairing QR code.",
+                    text = stringResource(R.string.scanner_camera_required),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                    Text("Allow camera")
+                    Text(stringResource(R.string.scanner_allow_camera))
                 }
             }
             OutlinedButton(onClick = onCancel) {
-                Text("Cancel")
+                Text(stringResource(R.string.scanner_cancel))
             }
         }
     }

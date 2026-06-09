@@ -17,7 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import com.nimbalyst.app.pairing.PairingCredentials
 
@@ -30,6 +32,8 @@ fun OnboardingScreen(
     var formState by remember {
         mutableStateOf(PairingFormState(serverUrl = "https://sync.nimbalyst.local"))
     }
+    val msgQrInvalid = stringResource(R.string.pairing_qr_invalid)
+    val msgQrScanned = stringResource(R.string.pairing_qr_scanned)
 
     Column(
         modifier = Modifier
@@ -39,11 +43,11 @@ fun OnboardingScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Pair Android with Desktop",
+            text = stringResource(R.string.pairing_onboarding_title),
             style = MaterialTheme.typography.headlineMedium
         )
         Text(
-            text = "Scan the desktop pairing QR code or enter credentials manually to connect this device.",
+            text = stringResource(R.string.pairing_onboarding_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -51,7 +55,7 @@ fun OnboardingScreen(
         Button(
             onClick = { showQrScanner = !showQrScanner }
         ) {
-            Text(if (showQrScanner) "Hide QR scanner" else "Scan pairing QR")
+            Text(if (showQrScanner) stringResource(R.string.pairing_scan_hide) else stringResource(R.string.pairing_scan_show))
         }
 
         if (showQrScanner) {
@@ -59,7 +63,7 @@ fun OnboardingScreen(
                 onScanned = { rawValue ->
                     val parsed = com.nimbalyst.app.pairing.QRPairingData.parse(rawValue)
                     if (parsed == null) {
-                        editorMessage = "Invalid pairing QR code."
+                        editorMessage = msgQrInvalid
                     } else {
                         AnalyticsManager.setDistinctIdFromPairing(parsed.analyticsId)
                         formState = formState.copy(
@@ -69,7 +73,7 @@ fun OnboardingScreen(
                             orgId = parsed.personalOrgId.orEmpty(),
                             personalUserId = parsed.personalUserId.orEmpty()
                         )
-                        editorMessage = "Scanned pairing payload."
+                        editorMessage = msgQrScanned
                         showQrScanner = false
                     }
                 },

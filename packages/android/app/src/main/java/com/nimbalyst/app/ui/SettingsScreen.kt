@@ -39,13 +39,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.nimbalyst.app.NimbalystApplication
+import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import com.nimbalyst.app.data.AgentWorkOSDefaults
 import com.nimbalyst.app.data.MobilePermissionPolicy
 import com.nimbalyst.app.data.MobilePermissionPolicyMode
 import com.nimbalyst.app.pairing.QRPairingData
+import com.nimbalyst.app.sync.SyncConnectionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -75,16 +78,21 @@ fun SettingsScreen(
     var qrPayload by remember { mutableStateOf("") }
     var devMessage by remember { mutableStateOf<String?>(null) }
 
+    val msgDevQrInvalid = stringResource(R.string.dev_qr_invalid)
+    val msgDevImported = stringResource(R.string.dev_imported)
+    val msgDevPairInvalid = stringResource(R.string.pairing_qr_invalid)
+    val msgDevScanned = stringResource(R.string.dev_scanned)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
         TopAppBar(
-            title = { Text("Settings") },
+            title = { Text(stringResource(R.string.settings_title)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                 }
             }
         )
@@ -100,7 +108,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Account",
+                    text = stringResource(R.string.settings_account),
                     style = MaterialTheme.typography.titleMedium
                 )
 
@@ -112,14 +120,14 @@ fun SettingsScreen(
                         )
                     }
                     Text(
-                        text = "Server: ${credentials.serverUrl}",
+                        text = stringResource(R.string.settings_server, credentials.serverUrl),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Text(
-                    text = "Sync: ${syncState.statusLabel}",
+                    text = stringResource(R.string.settings_sync, syncStatusText(syncState)),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 syncState.lastError?.let { error ->
@@ -144,12 +152,12 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Connected Devices",
+                        text = stringResource(R.string.settings_connected_devices),
                         style = MaterialTheme.typography.titleMedium
                     )
                     connectedDevices.forEach { device ->
                         Text(
-                            text = "${device.name} (${device.platform})",
+                            text = stringResource(R.string.settings_device_entry, device.name, device.platform),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -168,11 +176,11 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Agent Work OS",
+                    text = stringResource(R.string.settings_agent_work_os),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "Control which approvals this Android device can handle while desktop sessions are running.",
+                    text = stringResource(R.string.settings_agent_work_os_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -188,7 +196,7 @@ fun SettingsScreen(
                                 onClick = {},
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(mode.label)
+                                Text(modeLabel(mode))
                             }
                         } else {
                             OutlinedButton(
@@ -203,15 +211,15 @@ fun SettingsScreen(
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(mode.label)
+                                Text(modeLabel(mode))
                             }
                         }
                     }
                 }
 
                 PermissionSwitchRow(
-                    title = "Plan approvals",
-                    description = "Allow approving low-risk plans from Android.",
+                    title = stringResource(R.string.perm_plan_title),
+                    description = stringResource(R.string.perm_plan_desc),
                     checked = mobilePolicy.allowPlanApproval,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -227,8 +235,8 @@ fun SettingsScreen(
                     }
                 )
                 PermissionSwitchRow(
-                    title = "Tool permissions",
-                    description = "Allow non-risky tool permission prompts from Android.",
+                    title = stringResource(R.string.perm_tool_title),
+                    description = stringResource(R.string.perm_tool_desc),
                     checked = mobilePolicy.allowToolPermissionApproval,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -244,8 +252,8 @@ fun SettingsScreen(
                     }
                 )
                 PermissionSwitchRow(
-                    title = "Commit approvals",
-                    description = "Allow low-risk commit prompts from Android.",
+                    title = stringResource(R.string.perm_commit_title),
+                    description = stringResource(R.string.perm_commit_desc),
                     checked = mobilePolicy.allowCommitApproval,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -261,8 +269,8 @@ fun SettingsScreen(
                     }
                 )
                 PermissionSwitchRow(
-                    title = "Database risk",
-                    description = "Allow database-impact approvals from Android.",
+                    title = stringResource(R.string.perm_database_title),
+                    description = stringResource(R.string.perm_database_desc),
                     checked = mobilePolicy.allowDatabaseRiskApproval,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -278,8 +286,8 @@ fun SettingsScreen(
                     }
                 )
                 PermissionSwitchRow(
-                    title = "Security risk",
-                    description = "Allow auth, permission, secret, or token approvals from Android.",
+                    title = stringResource(R.string.perm_security_title),
+                    description = stringResource(R.string.perm_security_desc),
                     checked = mobilePolicy.allowSecurityRiskApproval,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -295,8 +303,8 @@ fun SettingsScreen(
                     }
                 )
                 PermissionSwitchRow(
-                    title = "Destructive risk",
-                    description = "Allow destructive command or data-change approvals from Android.",
+                    title = stringResource(R.string.perm_destructive_title),
+                    description = stringResource(R.string.perm_destructive_desc),
                     checked = mobilePolicy.allowDestructiveRiskApproval,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -312,8 +320,8 @@ fun SettingsScreen(
                     }
                 )
                 PermissionSwitchRow(
-                    title = "Desktop for shipped state",
-                    description = "Require desktop review before final Work Packet promotion.",
+                    title = stringResource(R.string.perm_shipped_title),
+                    description = stringResource(R.string.perm_shipped_desc),
                     checked = mobilePolicy.requireDesktopForShipped,
                     enabled = mobilePolicy.mode == MobilePermissionPolicyMode.Custom,
                     onCheckedChange = { checked ->
@@ -331,7 +339,7 @@ fun SettingsScreen(
 
                 if (mobilePolicy.mode != MobilePermissionPolicyMode.Custom) {
                     Text(
-                        text = "Choose Custom to adjust individual approval switches.",
+                        text = stringResource(R.string.perm_custom_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -350,7 +358,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Analytics",
+                    text = stringResource(R.string.settings_analytics),
                     style = MaterialTheme.typography.titleMedium
                 )
                 var analyticsEnabled by remember { mutableStateOf(AnalyticsManager.isEnabled) }
@@ -361,11 +369,11 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Send anonymous usage data",
+                            text = stringResource(R.string.settings_analytics_toggle),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "Help improve Nimbalyst with anonymous analytics. No session content is collected.",
+                            text = stringResource(R.string.settings_analytics_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -395,7 +403,7 @@ fun SettingsScreen(
                     onClick = onSignOut,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Sign Out")
+                    Text(stringResource(R.string.settings_sign_out))
                 }
 
                 Button(
@@ -405,7 +413,7 @@ fun SettingsScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Unpair Device")
+                    Text(stringResource(R.string.settings_unpair))
                 }
             }
         }
@@ -417,7 +425,7 @@ fun SettingsScreen(
             }.getOrNull()
         }
         Text(
-            text = "Nimbalyst Android v${packageInfo?.versionName ?: "dev"}",
+            text = stringResource(R.string.settings_version, packageInfo?.versionName ?: "dev"),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -444,7 +452,7 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Developer",
+                        text = stringResource(R.string.dev_title),
                         style = MaterialTheme.typography.titleMedium
                     )
 
@@ -452,21 +460,21 @@ fun SettingsScreen(
                         onClick = { app.syncManager.requestFullSync() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Force Full Sync")
+                        Text(stringResource(R.string.dev_force_sync))
                     }
 
                     OutlinedTextField(
                         value = qrPayload,
                         onValueChange = { qrPayload = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("QR payload or nimbalyst://pair link") },
+                        label = { Text(stringResource(R.string.dev_qr_payload_label)) },
                         minLines = 3
                     )
                     OutlinedButton(
                         onClick = {
                             val parsed = QRPairingData.parse(qrPayload)
                             if (parsed == null) {
-                                devMessage = "Invalid QR payload."
+                                devMessage = msgDevQrInvalid
                             } else {
                                 AnalyticsManager.setDistinctIdFromPairing(parsed.analyticsId)
                                 val existing = pairingState.credentials
@@ -481,19 +489,19 @@ fun SettingsScreen(
                                         )
                                     )
                                 }
-                                devMessage = "Imported pairing payload."
+                                devMessage = msgDevImported
                             }
                         },
                         enabled = qrPayload.isNotBlank(),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Import pairing payload")
+                        Text(stringResource(R.string.dev_import_payload))
                     }
                     OutlinedButton(
                         onClick = { showQrScanner = !showQrScanner },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (showQrScanner) "Hide QR scanner" else "Scan pairing QR")
+                        Text(if (showQrScanner) stringResource(R.string.pairing_scan_hide) else stringResource(R.string.pairing_scan_show))
                     }
 
                     if (showQrScanner) {
@@ -501,10 +509,10 @@ fun SettingsScreen(
                             onScanned = { rawValue ->
                                 val parsed = QRPairingData.parse(rawValue)
                                 if (parsed == null) {
-                                    devMessage = "Invalid pairing QR code."
+                                    devMessage = msgDevPairInvalid
                                 } else {
                                     AnalyticsManager.setDistinctIdFromPairing(parsed.analyticsId)
-                                    devMessage = "Scanned pairing payload."
+                                    devMessage = msgDevScanned
                                     showQrScanner = false
                                 }
                             },
@@ -557,4 +565,21 @@ private fun PermissionSwitchRow(
             onCheckedChange = onCheckedChange
         )
     }
+}
+
+@Composable
+private fun modeLabel(mode: MobilePermissionPolicyMode): String = when (mode) {
+    MobilePermissionPolicyMode.Strict -> stringResource(R.string.perm_mode_strict)
+    MobilePermissionPolicyMode.Balanced -> stringResource(R.string.perm_mode_balanced)
+    MobilePermissionPolicyMode.Flexible -> stringResource(R.string.perm_mode_flexible)
+    MobilePermissionPolicyMode.Custom -> stringResource(R.string.perm_mode_custom)
+}
+
+@Composable
+private fun syncStatusText(state: SyncConnectionState): String = when {
+    state.isConnecting -> stringResource(R.string.sync_status_connecting)
+    state.sessionConnected -> stringResource(R.string.sync_status_session)
+    state.indexConnected -> stringResource(R.string.sync_status_index)
+    state.lastError != null -> stringResource(R.string.sync_status_error)
+    else -> stringResource(R.string.sync_status_disconnected)
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,9 +31,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.nimbalyst.app.NimbalystApplication
+import com.nimbalyst.app.R
 import com.nimbalyst.app.ui.components.ConnectionIndicator
 import com.nimbalyst.app.utils.RelativeTimestamp
 import kotlinx.coroutines.delay
@@ -43,7 +47,8 @@ import java.nio.charset.StandardCharsets
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectListScreen(navController: NavController) {
-    val app = LocalContext.current.applicationContext as NimbalystApplication
+    val context = LocalContext.current
+    val app = context.applicationContext as NimbalystApplication
     val projects by app.repository.observeProjects().collectAsState(initial = emptyList())
     val syncState by app.syncManager.state.collectAsState()
     val connectedDevices by app.syncManager.connectedDevices.collectAsState()
@@ -52,13 +57,23 @@ fun ProjectListScreen(navController: NavController) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Nimbalyst") },
+            title = { Text(stringResource(R.string.app_name)) },
             navigationIcon = {
                 IconButton(onClick = { navController.navigate("settings") }) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_settings))
                 }
             },
             actions = {
+                IconButton(onClick = {
+                    isRefreshing = true
+                    app.syncManager.requestFullSync()
+                    coroutineScope.launch {
+                        delay(1000)
+                        isRefreshing = false
+                    }
+                }) {
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.sync_button))
+                }
                 ConnectionIndicator(
                     syncState = syncState,
                     connectedDevices = connectedDevices,
@@ -87,7 +102,7 @@ fun ProjectListScreen(navController: NavController) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No projects yet. Projects will appear once synced from your desktop.",
+                        text = stringResource(R.string.projects_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -122,7 +137,7 @@ fun ProjectListScreen(navController: NavController) {
                                     )
                                     if (project.sessionCount > 0) {
                                         Text(
-                                            text = "${project.sessionCount} session${if (project.sessionCount != 1) "s" else ""}",
+                                            text = pluralStringResource(R.plurals.session_count, project.sessionCount, project.sessionCount),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.padding(top = 4.dp)
@@ -131,7 +146,7 @@ fun ProjectListScreen(navController: NavController) {
                                 }
                                 project.lastUpdatedAt?.let { ts ->
                                     Text(
-                                        text = RelativeTimestamp.format(ts),
+                                        text = RelativeTimestamp.format(context, ts),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
