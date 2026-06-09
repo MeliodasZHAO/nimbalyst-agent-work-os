@@ -85,7 +85,7 @@ fun PairingScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Open Nimbalyst on your Mac, go to Settings, and scan the pairing QR code.",
+            text = "Open Nimbalyst on your desktop, go to Settings, and scan the pairing QR code.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

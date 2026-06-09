@@ -68,7 +68,7 @@ fun LoginScreen(
                     withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
                         append(pairedEmail)
                     }
-                    append(" to sync with your Mac.")
+                    append(" to sync with your desktop.")
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -76,7 +76,7 @@ fun LoginScreen(
             )
         } else {
             Text(
-                text = "Sign in to sync sessions with your Mac.",
+                text = "Sign in to sync sessions with your desktop.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

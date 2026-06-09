@@ -87,7 +87,7 @@ fun ProjectListScreen(navController: NavController) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No projects yet. Projects will appear once synced from your Mac.",
+                        text = "No projects yet. Projects will appear once synced from your desktop.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

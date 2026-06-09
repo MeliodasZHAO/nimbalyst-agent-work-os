@@ -139,7 +139,7 @@ fun SessionListScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No sessions yet. Start a session from your Mac, or tap + to create one.",
+                        text = "No sessions yet. Start a session from your desktop, or tap + to create one.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
