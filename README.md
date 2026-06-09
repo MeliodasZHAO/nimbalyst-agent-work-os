@@ -55,6 +55,22 @@ npm run dev
 
 启动后会打开 Nimbalyst 桌面应用，首次使用会触发中文快速入门引导。
 
+### 代码改动如何生效
+
+**如果你在用 dev server（`npm run dev`）**：改动会自动热重载，保存文件后几秒内就能看到效果。渲染进程（UI）改动立即生效，主进程改动需要按 `Ctrl+R` 刷新或重启 dev server。
+
+**如果你在用桌面快捷方式（打包版）**：代码改动不会生效。你需要重新构建：
+
+```bash
+# Windows 免安装目录（最快，适合测试）
+npm run agent-work-os:desktop:win-dir
+
+# 构建完成后运行
+packages/electron/release/win-unpacked/Nimbalyst.exe
+```
+
+**建议**：日常开发用 `npm run dev`，测试打包行为时才用 `build:win:dir-local`。dev server 支持热重载，效率高很多。
+
 ## 打包构建
 
 所有打包命令在仓库根目录执行。
