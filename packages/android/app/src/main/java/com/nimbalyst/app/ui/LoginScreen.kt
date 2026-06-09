@@ -128,6 +128,14 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Important: Please open the link in Chrome, not in your email app's built-in browser.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Medium
+            )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
                 onClick = {
