@@ -2000,7 +2000,8 @@ export default function App() {
     <WalkthroughProvider currentMode={activeMode}>
     <TipProvider currentMode={activeMode} workspacePath={workspacePath || undefined}>
     <div data-layout="app-shell" className="h-screen flex flex-col">
-    <WindowTitleBar />
+    {/* ProjectTabBar includes window controls when visible; otherwise fall back to standalone WindowTitleBar */}
+    {!isMultiProjectMode && <WindowTitleBar />}
     <ProjectTabBar />
     <div data-layout="root-container" className="flex-1 flex flex-row overflow-hidden">
       {/* Left: Navigation Gutter - full height */}

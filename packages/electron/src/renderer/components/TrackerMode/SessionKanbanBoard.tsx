@@ -436,7 +436,7 @@ interface SessionKanbanCardProps {
   onPeekToggle?: () => void;
 }
 
-function SessionKanbanCard({ session, onSelect, onArchive, onRename, phaseColor, isFocused, isSelected, selectedCount = 1, showPeekOverride, onPeekToggle }: SessionKanbanCardProps) {
+const SessionKanbanCard = React.memo(function SessionKanbanCard({ session, onSelect, onArchive, onRename, phaseColor, isFocused, isSelected, selectedCount = 1, showPeekOverride, onPeekToggle }: SessionKanbanCardProps) {
   const cardType = useMemo(() => getCardType(session), [session]);
   const cardState = useCardState(session.id, cardType);
   const stateStyle = CARD_STATE_STYLES[cardState.state];
@@ -1024,7 +1024,7 @@ function UnphasedColumn({ sessions, onSelect, onArchive, onRename, onDropToPhase
       </div>
     </div>
   );
-}
+});
 
 // ============================================================
 // DispatchDropdownItem - single entry in the dispatch filter dropdown

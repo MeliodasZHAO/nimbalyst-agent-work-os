@@ -591,18 +591,26 @@ export const AgentMode = forwardRef<AgentModeRef, AgentModeProps>(function Agent
 
   const viewMode = useAtomValue(viewModeAtom);
 
-  const kanbanContent = (
-    <SessionKanbanBoard
-      onSessionSelect={dispatchSelectSession}
-      onSessionOpen={dispatchSelectSession}
-    />
+  // Both views stay mounted; CSS toggles visibility to avoid expensive unmount/remount
+  const combinedRightPanel = (
+    <>
+      <div className={viewMode === 'kanban' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
+        <SessionKanbanBoard
+          onSessionSelect={dispatchSelectSession}
+          onSessionOpen={dispatchSelectSession}
+        />
+      </div>
+      <div className={viewMode === 'kanban' ? 'hidden' : 'flex flex-col flex-1 min-h-0'}>
+        {rightContent}
+      </div>
+    </>
   );
 
   return (
     <div className="agent-mode flex flex-row h-full w-full overflow-hidden">
       <ResizablePanel
         leftPanel={leftContent}
-        rightPanel={viewMode === 'kanban' ? kanbanContent : rightContent}
+        rightPanel={combinedRightPanel}
         leftWidth={historyWidth}
         minWidth={200}
         maxWidth={500}

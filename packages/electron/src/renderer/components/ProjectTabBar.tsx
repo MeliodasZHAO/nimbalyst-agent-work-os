@@ -34,6 +34,56 @@ import {
 } from '../store/atoms/sessionActivity';
 import { MaterialSymbol } from '@nimbalyst/runtime';
 
+const isWindows = navigator.userAgent.includes('Windows');
+
+function WindowControlButtons() {
+  const [isMaximized, setIsMaximized] = React.useState(false);
+
+  React.useEffect(() => {
+    window.electronAPI.windowIsMaximized().then(setIsMaximized);
+    const cleanup = window.electronAPI.onWindowMaximizeChange(setIsMaximized);
+    return cleanup;
+  }, []);
+
+  return (
+    <div className="window-controls flex items-stretch h-full [-webkit-app-region:no-drag] ml-auto">
+      <button
+        className="flex items-center justify-center w-[46px] h-full border-none bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] transition-colors duration-100 cursor-default"
+        onClick={() => window.electronAPI.windowMinimize()}
+        tabIndex={-1}
+      >
+        <svg width="10" height="1" viewBox="0 0 10 1"><rect fill="currentColor" width="10" height="1" /></svg>
+      </button>
+      <button
+        className="flex items-center justify-center w-[46px] h-full border-none bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] transition-colors duration-100 cursor-default"
+        onClick={() => window.electronAPI.windowMaximizeToggle()}
+        tabIndex={-1}
+      >
+        {isMaximized ? (
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <rect fill="none" stroke="currentColor" strokeWidth="1" x="2.5" y="0.5" width="7" height="7" />
+            <polyline fill="none" stroke="currentColor" strokeWidth="1" points="0.5,2.5 0.5,9.5 7.5,9.5 7.5,2.5" />
+          </svg>
+        ) : (
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <rect fill="none" stroke="currentColor" strokeWidth="1" x="0.5" y="0.5" width="9" height="9" />
+          </svg>
+        )}
+      </button>
+      <button
+        className="flex items-center justify-center w-[46px] h-full border-none bg-transparent text-[var(--nim-text-muted)] hover:bg-[#e81123] hover:text-white transition-colors duration-100 cursor-default"
+        onClick={() => window.electronAPI.windowClose()}
+        tabIndex={-1}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <line stroke="currentColor" strokeWidth="1.2" x1="0" y1="0" x2="10" y2="10" />
+          <line stroke="currentColor" strokeWidth="1.2" x1="10" y1="0" x2="0" y2="10" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 function projectDisplayName(project: OpenProject): string {
   return project.name || project.path.split(/[/\\]/).filter(Boolean).pop() || project.path;
 }
@@ -278,6 +328,9 @@ export function ProjectTabBar() {
 
         {/* Spacer for window dragging */}
         <span className="flex-1" />
+
+        {/* Window controls — integrated into tab bar on Windows (browser-style) */}
+        {isWindows && <WindowControlButtons />}
       </div>
 
       {/* Add project dropdown */}
