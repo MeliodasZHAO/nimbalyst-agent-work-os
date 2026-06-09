@@ -3157,7 +3157,7 @@ const SessionHistoryComponent: React.FC = () => {
 
   return (
     <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-      <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+      {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
       <WorkspaceSummaryHeader
         workspacePath={workspacePath}
         workspaceName={workspaceName}
