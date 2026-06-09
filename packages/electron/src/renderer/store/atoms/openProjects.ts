@@ -181,8 +181,8 @@ export async function initOpenProjects(): Promise<void> {
       window.electronAPI.invoke('app:get-active-project-path') as Promise<string | null>,
     ]);
 
-    store.set(multiProjectModeAtom, !!mode);
-    store.set(restorePreviousProjectsAtom, !!restorePrev);
+    store.set(multiProjectModeAtom, true);
+    store.set(restorePreviousProjectsAtom, true);
 
     // Only rehydrate the rail when the user opted in. Otherwise the rail
     // starts empty and is seeded by the project the user picks from the
