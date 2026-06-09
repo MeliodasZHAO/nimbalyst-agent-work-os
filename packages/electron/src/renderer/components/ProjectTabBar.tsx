@@ -202,7 +202,7 @@ export function ProjectTabBar() {
       });
       if (result?.filePaths?.[0]) {
         await window.electronAPI?.invoke?.('workspace:register-additional', { workspacePath: result.filePaths[0] });
-        addProject({ path: result.filePaths[0], name: result.filePaths[0].split(/[/\\]/).pop() || result.filePaths[0] });
+        addProject({ path: result.filePaths[0], name: result.filePaths[0].split(/[/\\]/).pop() || result.filePaths[0], openedAt: Date.now() });
       }
     } catch (err) {
       console.error('[ProjectTabBar] open folder failed:', err);
@@ -213,7 +213,7 @@ export function ProjectTabBar() {
     setAddMenuOpen(false);
     try {
       await window.electronAPI?.invoke?.('workspace:register-additional', { workspacePath: path });
-      addProject({ path, name });
+      addProject({ path, name, openedAt: Date.now() });
     } catch (err) {
       console.error('[ProjectTabBar] open recent failed:', err);
     }
