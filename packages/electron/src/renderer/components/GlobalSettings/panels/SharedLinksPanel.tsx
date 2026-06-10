@@ -97,26 +97,26 @@ export const SharedLinksPanel: React.FC = () => {
   };
 
   const formatExpiry = (expiresAt: string | null) => {
-    if (!expiresAt) return 'No expiration';
+    if (!expiresAt) return '无过期时间';
     const expires = new Date(expiresAt);
     const now = new Date();
     const diffMs = expires.getTime() - now.getTime();
-    if (diffMs <= 0) return 'Expired';
+    if (diffMs <= 0) return '已过期';
     const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    if (days === 1) return 'Expires tomorrow';
-    return `Expires in ${days}d`;
+    if (days === 1) return '明天过期';
+    return `${days} 天后过期`;
   };
 
   const getShareKindLabel = (share: SharedLink) =>
-    typeof share.sessionId === 'string' && share.sessionId.startsWith('file:') ? 'File' : 'Session';
+    typeof share.sessionId === 'string' && share.sessionId.startsWith('file:') ? '文件' : '会话';
 
   return (
     <div className="provider-panel max-w-2xl">
       <div className="provider-panel-header flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--nim-text)] m-0">Shared Links</h3>
+          <h3 className="text-lg font-semibold text-[var(--nim-text)] m-0">共享链接</h3>
           <p className="text-[0.8125rem] text-[var(--nim-text-muted)] mt-1 mb-0">
-            Manage links you've shared for files and sessions. Anyone with a link can view the content.
+            管理你为文件和会话分享的链接。任何拥有链接的人都可以查看内容。
           </p>
         </div>
         {state === 'loaded' && shares.length > 0 && (
@@ -125,7 +125,7 @@ export const SharedLinksPanel: React.FC = () => {
             onClick={fetchShares}
           >
             <MaterialSymbol icon="refresh" size={14} />
-            Refresh
+            刷新
           </button>
         )}
       </div>
@@ -134,7 +134,7 @@ export const SharedLinksPanel: React.FC = () => {
       {state === 'loading' && (
         <div className="flex items-center justify-center py-12 text-[var(--nim-text-muted)]">
           <MaterialSymbol icon="progress_activity" size={20} className="animate-spin mr-2" />
-          Loading shared links...
+          加载共享链接中...
         </div>
       )}
 
@@ -143,10 +143,10 @@ export const SharedLinksPanel: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <MaterialSymbol icon="account_circle" size={32} className="text-[var(--nim-text-faint)] mb-3" />
           <p className="text-[0.8125rem] text-[var(--nim-text-muted)] mb-2">
-            Sign in to share files and sessions.
+            登录以分享文件和会话。
           </p>
           <p className="text-[0.75rem] text-[var(--nim-text-faint)]">
-            Go to Account & Sync to set up your account.
+            前往"账户与同步"设置你的账户。
           </p>
         </div>
       )}
@@ -163,7 +163,7 @@ export const SharedLinksPanel: React.FC = () => {
             onClick={fetchShares}
           >
             <MaterialSymbol icon="refresh" size={14} />
-            Retry
+            重试
           </button>
         </div>
       )}
@@ -173,10 +173,10 @@ export const SharedLinksPanel: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <MaterialSymbol icon="link" size={32} className="text-[var(--nim-text-faint)] mb-3" />
           <p className="text-[0.8125rem] text-[var(--nim-text-muted)] mb-1">
-            No shared links yet.
+            暂无共享链接。
           </p>
           <p className="text-[0.75rem] text-[var(--nim-text-faint)]">
-            Right-click a file or session and select "Share link" to create one.
+            右键点击文件或会话，选择"分享链接"即可创建。
           </p>
         </div>
       )}
@@ -192,13 +192,13 @@ export const SharedLinksPanel: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[0.8125rem] font-medium text-[var(--nim-text)] truncate">
-                    {share.title || 'Untitled'}
+                    {share.title || '无标题'}
                   </span>
                   <span className="shrink-0 px-1.5 py-0.5 rounded bg-[var(--nim-bg-hover)] text-[0.625rem] uppercase tracking-[0.04em] text-[var(--nim-text-faint)]">
                     {getShareKindLabel(share)}
                   </span>
                   <span className="shrink-0 text-[0.6875rem] text-[var(--nim-text-faint)]">
-                    {share.viewCount} {share.viewCount === 1 ? 'view' : 'views'}
+                    {share.viewCount} 次查看
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-[0.6875rem] text-[var(--nim-text-faint)]">
@@ -206,7 +206,7 @@ export const SharedLinksPanel: React.FC = () => {
                   <span>{formatDate(share.createdAt)}</span>
                   <span>{formatSize(share.sizeBytes)}</span>
                   {formatExpiry(share.expiresAt) && (
-                    <span className={formatExpiry(share.expiresAt) === 'Expired' ? 'text-[var(--nim-error)]' : ''}>
+                    <span className={formatExpiry(share.expiresAt) === '已过期' ? 'text-[var(--nim-error)]' : ''}>
                       {formatExpiry(share.expiresAt)}
                     </span>
                   )}
@@ -215,14 +215,14 @@ export const SharedLinksPanel: React.FC = () => {
               <div className="shrink-0 flex items-center gap-1">
                 <button
                   className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border-none text-[var(--nim-text-faint)] cursor-pointer transition-colors duration-150 hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
-                  title="Copy link"
+                  title="复制链接"
                   onClick={() => handleCopyLink(share)}
                 >
                   <MaterialSymbol icon={copiedId === share.shareId ? 'check' : 'content_copy'} size={14} />
                 </button>
                 <button
                   className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border-none text-[var(--nim-text-faint)] cursor-pointer transition-colors duration-150 hover:text-[var(--nim-error)] hover:bg-[var(--nim-bg-hover)] disabled:opacity-50 disabled:cursor-default"
-                  title="Delete shared link"
+                  title="删除共享链接"
                   onClick={() => handleDelete(share)}
                   disabled={deletingId === share.shareId}
                 >

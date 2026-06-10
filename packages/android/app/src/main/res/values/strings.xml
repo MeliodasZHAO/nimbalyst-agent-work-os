@@ -1,4 +1,164 @@
 <resources>
-    <string name="app_name">Nimbalyst Android</string>
-</resources>
+    <string name="app_name">Nimbalyst</string>
 
+    <!-- Common -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_send">Send</string>
+    <string name="action_sending">Sending…</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_new_session">New session</string>
+    <string name="cd_desktop_connection">Desktop connection</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="cd_expand">Expand</string>
+
+    <!-- Login -->
+    <string name="login_title">Sign In</string>
+    <string name="login_subtitle_paired">Sign in as %1$s to sync with your desktop.</string>
+    <string name="login_subtitle_unpaired">Sign in to sync sessions with your desktop.</string>
+    <string name="login_check_email_title">Check your email</string>
+    <string name="login_check_email_body">We sent a sign-in link to %1$s. Tap the link in your email to continue.</string>
+    <string name="login_chrome_hint">Important: Please open the link in Chrome, not in your email app\'s built-in browser.</string>
+    <string name="login_resend">Resend or try another method</string>
+    <string name="login_email_link">Sign in with email link</string>
+    <string name="login_google">Sign in with Google</string>
+    <string name="login_unpair">Unpair Device</string>
+    <string name="login_error_send_failed">Failed to send magic link (HTTP %1$d)</string>
+    <string name="login_error_network">Network error: %1$s</string>
+
+    <!-- Pairing -->
+    <string name="pairing_onboarding_title">Pair Android with Desktop</string>
+    <string name="pairing_onboarding_subtitle">Scan the desktop pairing QR code or enter credentials manually to connect this device.</string>
+    <string name="pairing_scan_hide">Hide QR scanner</string>
+    <string name="pairing_scan_show">Scan pairing QR</string>
+    <string name="pairing_qr_invalid">Invalid pairing QR code.</string>
+    <string name="pairing_qr_scanned">Scanned pairing payload.</string>
+    <string name="pairing_title">Pair with Nimbalyst</string>
+    <string name="pairing_subtitle">Open Nimbalyst on your desktop, go to Settings, and scan the pairing QR code.</string>
+    <string name="pairing_scan_button">Scan QR Code</string>
+    <string name="pairing_qr_invalid_retry">Invalid pairing QR code. Try again.</string>
+
+    <!-- QR scanner -->
+    <string name="scanner_title">Scan pairing QR</string>
+    <string name="scanner_hint">Point the camera at the desktop pairing code. Android will import the same payload shape used by iOS.</string>
+    <string name="scanner_camera_required">Camera access is required to scan the pairing QR code.</string>
+    <string name="scanner_allow_camera">Allow camera</string>
+    <string name="scanner_cancel">Cancel</string>
+
+    <!-- Pairing form -->
+    <string name="form_server_url">Server URL</string>
+    <string name="form_encryption_seed">Encryption seed</string>
+    <string name="form_paired_account">Paired account email or user ID</string>
+    <string name="form_auth_org_id">Auth org ID</string>
+    <string name="form_auth_user_id">Auth user ID</string>
+    <string name="form_personal_org_override">Personal org ID override</string>
+    <string name="form_personal_user_override">Personal user ID override</string>
+    <string name="form_session_jwt">Session JWT</string>
+    <string name="form_save_pairing">Save pairing</string>
+
+    <!-- Projects -->
+    <string name="projects_empty">No projects yet. Projects will appear once synced from your desktop.</string>
+    <string name="sync_button">Sync</string>
+    <plurals name="session_count">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
+
+    <!-- Sessions list -->
+    <string name="sessions_empty">No sessions yet. Start a session from your desktop, or tap + to create one.</string>
+    <string name="sessions_new">New Session</string>
+    <string name="sessions_workstreams">Workstreams</string>
+    <string name="session_untitled">Untitled session</string>
+    <string name="session_untitled_workstream">Untitled workstream</string>
+    <string name="session_untitled_short">Untitled</string>
+
+    <!-- Time groups -->
+    <string name="time_today">Today</string>
+    <string name="time_yesterday">Yesterday</string>
+    <string name="time_this_week">This Week</string>
+    <string name="time_last_week">Last Week</string>
+    <string name="time_this_month">This Month</string>
+    <string name="time_older">Older</string>
+
+    <!-- Relative time -->
+    <string name="time_now">now</string>
+    <string name="time_minutes_ago">%dm ago</string>
+    <string name="time_hours_ago">%dh ago</string>
+    <string name="time_days_ago">%dd ago</string>
+
+    <!-- Session detail -->
+    <string name="delivery_warning_title">Delivery Warning</string>
+    <string name="delivery_warning_body">Your prompt was sent but the desktop hasn\'t started processing it. Make sure the desktop app is running and connected.</string>
+    <plurals name="prompt_queued">
+        <item quantity="one">%d prompt queued</item>
+        <item quantity="other">%d prompts queued</item>
+    </plurals>
+    <string name="compose_placeholder">Send prompt to desktop</string>
+    <string name="attachment_photo">Photo</string>
+    <string name="attachment_camera">Camera</string>
+    <string name="status_image_load_failed">Failed to load the selected image.</string>
+    <string name="status_photo_added">Added photo attachment.</string>
+    <string name="status_camera_captured">Captured camera attachment.</string>
+    <string name="status_prompt_queued">Prompt queued on desktop.</string>
+    <string name="status_prompt_failed">Failed to queue prompt.</string>
+    <string name="status_interactive_invalid">Transcript sent an invalid interactive response.</string>
+    <string name="status_interactive_sent">Interactive response sent to desktop.</string>
+    <string name="status_interactive_failed">Failed to send interactive response.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_server">Server: %1$s</string>
+    <string name="settings_sync">Sync: %1$s</string>
+    <string name="settings_connected_devices">Connected Devices</string>
+    <string name="settings_device_entry">%1$s (%2$s)</string>
+    <string name="settings_agent_work_os">Agent Work OS</string>
+    <string name="settings_agent_work_os_desc">Control which approvals this Android device can handle while desktop sessions are running.</string>
+    <string name="perm_plan_title">Plan approvals</string>
+    <string name="perm_plan_desc">Allow approving low-risk plans from Android.</string>
+    <string name="perm_tool_title">Tool permissions</string>
+    <string name="perm_tool_desc">Allow non-risky tool permission prompts from Android.</string>
+    <string name="perm_commit_title">Commit approvals</string>
+    <string name="perm_commit_desc">Allow low-risk commit prompts from Android.</string>
+    <string name="perm_database_title">Database risk</string>
+    <string name="perm_database_desc">Allow database-impact approvals from Android.</string>
+    <string name="perm_security_title">Security risk</string>
+    <string name="perm_security_desc">Allow auth, permission, secret, or token approvals from Android.</string>
+    <string name="perm_destructive_title">Destructive risk</string>
+    <string name="perm_destructive_desc">Allow destructive command or data-change approvals from Android.</string>
+    <string name="perm_shipped_title">Desktop for shipped state</string>
+    <string name="perm_shipped_desc">Require desktop review before final Work Packet promotion.</string>
+    <string name="perm_custom_hint">Choose Custom to adjust individual approval switches.</string>
+    <string name="perm_mode_strict">Strict</string>
+    <string name="perm_mode_balanced">Balanced</string>
+    <string name="perm_mode_flexible">Flexible</string>
+    <string name="perm_mode_custom">Custom</string>
+    <string name="settings_analytics">Analytics</string>
+    <string name="settings_analytics_toggle">Send anonymous usage data</string>
+    <string name="settings_analytics_desc">Help improve Nimbalyst with anonymous analytics. No session content is collected.</string>
+    <string name="settings_sign_out">Sign Out</string>
+    <string name="settings_unpair">Unpair Device</string>
+    <string name="settings_version">Nimbalyst v%1$s</string>
+
+    <!-- Sync status -->
+    <string name="sync_status_connecting">Connecting</string>
+    <string name="sync_status_session">Connected (session)</string>
+    <string name="sync_status_index">Connected (index)</string>
+    <string name="sync_status_error">Disconnected with error</string>
+    <string name="sync_status_disconnected">Disconnected</string>
+
+    <!-- Developer -->
+    <string name="dev_title">Developer</string>
+    <string name="dev_force_sync">Force Full Sync</string>
+    <string name="dev_qr_payload_label">QR payload or nimbalyst://pair link</string>
+    <string name="dev_qr_invalid">Invalid QR payload.</string>
+    <string name="dev_import_payload">Import pairing payload</string>
+    <string name="dev_imported">Imported pairing payload.</string>
+    <string name="dev_scanned">Scanned pairing payload.</string>
+
+    <!-- Notifications -->
+    <string name="notif_firebase_not_configured">Firebase is not configured for Android. Add google-services.json to enable push.</string>
+    <string name="notif_fcm_failed">Failed to get FCM token.</string>
+</resources>

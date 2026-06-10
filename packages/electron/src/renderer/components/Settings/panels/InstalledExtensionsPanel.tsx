@@ -279,7 +279,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
   }, [posthog]);
 
   const handleUninstall = useCallback(async (extensionId: string) => {
-    if (!window.confirm('Uninstall this extension? This will remove its files and settings.')) return;
+    if (!window.confirm('卸载此扩展？这将删除其文件和设置。')) return;
     setProcessingId(extensionId);
     setError(null);
     try {
@@ -310,10 +310,10 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
 
   const sourceLabel = (s: ExtensionSource) => {
     switch (s) {
-      case 'marketplace': return 'Marketplace';
+      case 'marketplace': return '商店';
       case 'github': return 'GitHub';
-      case 'local': return 'Local';
-      case 'built-in': return 'Built-in';
+      case 'local': return '本地';
+      case 'built-in': return '内置';
     }
   };
 
@@ -334,7 +334,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
         data-component="InstalledExtensionsPanel"
       >
         <div className="flex items-center justify-center py-12 text-[var(--nim-text-muted)]">
-          <p>Loading extensions...</p>
+          <p>正在加载扩展...</p>
         </div>
       </div>
     );
@@ -349,7 +349,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
     >
       {/* Header */}
       <div className="provider-panel-header mb-5 pb-4 border-b border-[var(--nim-border)] flex-shrink-0">
-        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">Installed Extensions</h3>
+        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">已安装扩展</h3>
 
       </div>
 
@@ -363,10 +363,9 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
       {totalCount === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center text-[var(--nim-text-muted)]">
           <MaterialSymbol icon="extension" size={48} />
-          <h3 className="mt-4 mb-2 text-lg font-medium text-[var(--nim-text)]">No Extensions Installed</h3>
+          <h3 className="mt-4 mb-2 text-lg font-medium text-[var(--nim-text)]">未安装扩展</h3>
           <p className="text-sm">
-            Extensions are installed in the extensions folder. Check the documentation for
-            instructions on how to install extensions.
+            扩展安装在扩展文件夹中。请查看文档了解如何安装扩展。
           </p>
         </div>
       ) : (
@@ -375,11 +374,11 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
           {/* Left: Extension list */}
           <div className="w-[260px] flex-shrink-0 flex flex-col bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded-lg overflow-hidden">
             <div className="px-3 py-2.5 border-b border-[var(--nim-border)] flex items-center justify-between flex-shrink-0">
-              <span className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide">Extensions</span>
+              <span className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide">扩展</span>
               <span className="text-xs text-[var(--nim-text-faint)]">
                 {enabledCount}/{totalCount}
                 {updateCount > 0 && (
-                  <span className="ml-2 text-[var(--nim-primary)]">{updateCount} update{updateCount > 1 ? 's' : ''}</span>
+                  <span className="ml-2 text-[var(--nim-primary)]">{updateCount} 个更新</span>
                 )}
               </span>
             </div>
@@ -405,7 +404,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                       <span className={`inline-flex items-center px-1.5 py-0 rounded text-[0.625rem] font-semibold uppercase tracking-tight ${sourcePillClasses(ext.source)}`}>
                         {sourceLabel(ext.source)}
                       </span>
-                      <span className="text-xs text-[var(--nim-text-faint)] truncate">{ext.manifest.author || 'Unknown'}</span>
+                      <span className="text-xs text-[var(--nim-text-faint)] truncate">{ext.manifest.author || '未知'}</span>
                     </div>
                   </div>
                   <span className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -428,11 +427,11 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                 <div className="p-4 border-b border-[var(--nim-border)] flex-shrink-0">
                   <div className="text-base font-semibold text-[var(--nim-text)]">{selectedExtension.manifest.name}</div>
                   <div className="text-xs text-[var(--nim-text-muted)]">
-                    by {selectedExtension.manifest.author || 'Unknown'}
+                    by {selectedExtension.manifest.author || '未知'}
                     <span className="text-[var(--nim-text-faint)] ml-2">v{selectedExtension.manifest.version}</span>
                   </div>
                   <div className="text-sm text-[var(--nim-text-muted)] mt-2 leading-relaxed">
-                    {selectedExtension.manifest.description || 'No description provided'}
+                    {selectedExtension.manifest.description || '暂无描述'}
                   </div>
                 </div>
 
@@ -445,7 +444,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                         {sourceLabel(selectedExtension.source)}
                       </span>
                       {selectedExtension.installedAt && (
-                        <span>Installed {new Date(selectedExtension.installedAt).toLocaleDateString()}</span>
+                        <span>安装于 {new Date(selectedExtension.installedAt).toLocaleDateString()}</span>
                       )}
                       {selectedExtension.availableUpdate && (
                         <span className="text-[var(--nim-primary)]">
@@ -461,7 +460,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                           disabled={processingId === selectedExtension.id}
                           data-testid={`installed-update-${selectedExtension.id}`}
                         >
-                          {processingId === selectedExtension.id ? 'Updating...' : `Update to v${selectedExtension.availableUpdate.availableVersion}`}
+                          {processingId === selectedExtension.id ? '更新中...' : `更新至 v${selectedExtension.availableUpdate.availableVersion}`}
                         </button>
                       )}
                       {(selectedExtension.manifest.marketplace?.repositoryUrl || selectedExtension.registryEntry?.repositoryUrl) && (
@@ -472,7 +471,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                             if (url) window.electronAPI.openExternal(url);
                           }}
                         >
-                          Repository
+                          仓库
                         </button>
                       )}
                       <button
@@ -480,7 +479,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                         onClick={() => handleReveal(selectedExtension.path)}
                         data-testid={`installed-reveal-${selectedExtension.id}`}
                       >
-                        Reveal
+                        在文件管理器中显示
                       </button>
                       {selectedExtension.source !== 'built-in' && (
                         <button
@@ -489,7 +488,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                           disabled={processingId === selectedExtension.id}
                           data-testid={`installed-uninstall-${selectedExtension.id}`}
                         >
-                          Uninstall
+                          卸载
                         </button>
                       )}
                     </div>
@@ -520,12 +519,12 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                   {/* Claude Plugin */}
                   {selectedExtension.manifest.contributions?.claudePlugin && (
                     <div className="mb-5">
-                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Claude Agent Plugin</div>
+                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Claude Agent 插件</div>
                       <div className="bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--nim-text)]">
                             <span className="material-symbols-outlined text-base text-[var(--nim-primary)]">smart_toy</span>
-                            {selectedExtension.manifest.contributions.claudePlugin.displayName || 'Claude Plugin'}
+                            {selectedExtension.manifest.contributions.claudePlugin.displayName || 'Claude 插件'}
                           </div>
                           <ToggleSwitch
                             checked={selectedExtension.claudePluginEnabled ?? true}
@@ -534,7 +533,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                           />
                         </div>
                         <div className="text-xs text-[var(--nim-text-muted)] mb-2.5">
-                          {selectedExtension.manifest.contributions.claudePlugin.description || 'No description'}
+                          {selectedExtension.manifest.contributions.claudePlugin.description || '暂无描述'}
                         </div>
                         {selectedExtension.manifest.contributions.claudePlugin.commands && selectedExtension.manifest.contributions.claudePlugin.commands.length > 0 && (
                           <div className="flex flex-wrap gap-1">
@@ -547,7 +546,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                         )}
                         {!selectedExtension.enabled && (
                           <div className="mt-2 text-xs text-[var(--nim-text-faint)] italic">
-                            Enable the extension to use this plugin
+                            启用扩展以使用此插件
                           </div>
                         )}
                       </div>
@@ -556,12 +555,12 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
 
                   {selectedExtension.manifest.contributions?.agentWorkflows && (
                     <div className="mb-5">
-                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Agent Workflows</div>
+                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Agent 工作流</div>
                       <div className="bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--nim-text)]">
                             <span className="material-symbols-outlined text-base text-[var(--nim-primary)]">hub</span>
-                            {selectedExtension.manifest.contributions.agentWorkflows.displayName || 'Agent Workflows'}
+                            {selectedExtension.manifest.contributions.agentWorkflows.displayName || 'Agent 工作流'}
                           </div>
                           <ToggleSwitch
                             checked={selectedExtension.agentWorkflowsEnabled ?? true}
@@ -570,11 +569,11 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                           />
                         </div>
                         <div className="text-xs text-[var(--nim-text-muted)]">
-                          {selectedExtension.manifest.contributions.agentWorkflows.description || 'Provider-neutral workflows exported to Claude Code and Codex.'}
+                          {selectedExtension.manifest.contributions.agentWorkflows.description || '导出到 Claude Code 和 Codex 的通用工作流。'}
                         </div>
                         {!selectedExtension.enabled && (
                           <div className="mt-2 text-xs text-[var(--nim-text-faint)] italic">
-                            Enable the extension to use these workflows
+                            启用扩展以使用这些工作流
                           </div>
                         )}
                       </div>
@@ -583,14 +582,14 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
 
                   {/* Extension Info */}
                   <div className="mb-5">
-                    <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Extension Info</div>
+                    <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">扩展信息</div>
                     <div className="space-y-1.5">
                       <div className="flex gap-2">
                         <span className="text-xs text-[var(--nim-text-faint)] w-10">ID</span>
                         <span className="text-xs text-[var(--nim-text-muted)] font-mono">{selectedExtension.id}</span>
                       </div>
                       <div className="flex gap-2">
-                        <span className="text-xs text-[var(--nim-text-faint)] w-10">Path</span>
+                        <span className="text-xs text-[var(--nim-text-faint)] w-10">路径</span>
                         <span className="text-xs text-[var(--nim-text-muted)] font-mono truncate" title={selectedExtension.path}>
                           {selectedExtension.path.replace(/^.*?\/extensions\//, '~/extensions/')}
                         </span>
@@ -601,7 +600,7 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                   {/* Contributions */}
                   {selectedExtension.manifest.contributions && (
                     <div className="mb-5">
-                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Contributions</div>
+                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">贡献项</div>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedExtension.manifest.contributions.customEditors?.map((editor, idx) => (
                           <span key={`editor-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">
@@ -642,24 +641,24 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
                   {/* Permissions */}
                   {selectedExtension.manifest.permissions && (
                     <div className="mb-5">
-                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">Permissions</div>
+                      <div className="text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide mb-2.5">权限</div>
                       <div className="flex flex-wrap gap-2">
                         {selectedExtension.manifest.permissions.filesystem && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">
                             <span className="material-symbols-outlined text-sm">folder</span>
-                            File System
+                            文件系统
                           </span>
                         )}
                         {selectedExtension.manifest.permissions.ai && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">
                             <span className="material-symbols-outlined text-sm">psychology</span>
-                            AI Tools
+                            AI 工具
                           </span>
                         )}
                         {selectedExtension.manifest.permissions.network && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">
                             <span className="material-symbols-outlined text-sm">cloud</span>
-                            Network
+                            网络
                           </span>
                         )}
                       </div>
@@ -681,8 +680,8 @@ export const InstalledExtensionsPanel: React.FC<InstalledExtensionsPanelProps> =
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-[var(--nim-text-muted)] text-center p-5">
                 <span className="material-symbols-outlined text-5xl opacity-50 mb-3">extension</span>
-                <div className="text-sm font-medium text-[var(--nim-text)]">No Extension Selected</div>
-                <div className="text-xs">Select an extension from the list to view details</div>
+                <div className="text-sm font-medium text-[var(--nim-text)]">未选择扩展</div>
+                <div className="text-xs">从列表中选择一个扩展来查看详情</div>
               </div>
             )}
           </div>

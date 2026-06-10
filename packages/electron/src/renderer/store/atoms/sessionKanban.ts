@@ -43,11 +43,11 @@ export interface ChildRunStateSummary {
 // ============================================================
 
 export const SESSION_PHASE_COLUMNS: { value: SessionPhase; label: string; color: string }[] = [
-  { value: 'backlog', label: 'Backlog', color: '#6b7280' },
-  { value: 'planning', label: 'Planning', color: '#60a5fa' },
-  { value: 'implementing', label: 'Implementing', color: '#eab308' },
-  { value: 'validating', label: 'Validating', color: '#a78bfa' },
-  { value: 'complete', label: 'Complete', color: '#4ade80' },
+  { value: 'backlog', label: '待处理', color: '#6b7280' },
+  { value: 'planning', label: '规划中', color: '#60a5fa' },
+  { value: 'implementing', label: '实现中', color: '#eab308' },
+  { value: 'validating', label: '验证中', color: '#a78bfa' },
+  { value: 'complete', label: '已完成', color: '#4ade80' },
 ];
 
 const VALID_PHASES = new Set<string>(SESSION_PHASE_COLUMNS.map(c => c.value));
@@ -74,21 +74,21 @@ export function getCardType(meta: SessionMeta | undefined): KanbanCardType {
 }
 
 /**
- * Derive the effective phase for a workstream parent from its children's phases.
- * Returns the "most active" child phase (implementing > validating > planning > backlog > complete).
- * Returns undefined if no children have a phase.
+ * Derive the effective phase for a workstream parent using a pre-built index.
  */
-function derivePhaseFromChildren(parentId: string, registry: Map<string, SessionMeta>): string | undefined {
+function derivePhaseFromIndex(parentId: string, childIndex: Map<string, SessionMeta[]>): string | undefined {
+  const children = childIndex.get(parentId);
+  if (!children) return undefined;
+
   let bestPhase: string | undefined;
   let bestPriority = Infinity;
 
-  for (const [_id, meta] of registry) {
-    if (meta.parentSessionId !== parentId) continue;
-    if (meta.phase && VALID_PHASES.has(meta.phase)) {
-      const priority = PHASE_PRIORITY[meta.phase] ?? Infinity;
+  for (const child of children) {
+    if (child.phase && VALID_PHASES.has(child.phase)) {
+      const priority = PHASE_PRIORITY[child.phase] ?? Infinity;
       if (priority < bestPriority) {
         bestPriority = priority;
-        bestPhase = meta.phase;
+        bestPhase = child.phase;
       }
     }
   }
@@ -104,6 +104,7 @@ export interface SessionKanbanFilter {
   search: string;
   tags: string[];
   showComplete: boolean;
+  dispatchId: string | null;
 }
 
 /** Filter state for the kanban board */
@@ -111,6 +112,7 @@ export const sessionKanbanFilterAtom = atom<SessionKanbanFilter>({
   search: '',
   tags: [],
   showComplete: true,
+  dispatchId: null,
 });
 
 // ============================================================
@@ -125,6 +127,16 @@ export const sessionsByPhaseAtom = atom((get) => {
   const registry = get(sessionRegistryAtom);
   const filter = get(sessionKanbanFilterAtom);
 
+  // Pre-build parent → children index in O(N) to avoid O(N²) child phase derivation
+  const childIndex = new Map<string, SessionMeta[]>();
+  for (const [_id, meta] of registry) {
+    if (meta.parentSessionId) {
+      const list = childIndex.get(meta.parentSessionId);
+      if (list) list.push(meta);
+      else childIndex.set(meta.parentSessionId, [meta]);
+    }
+  }
+
   const grouped = new Map<SessionPhaseKey, SessionMeta[]>();
   grouped.set('unphased', []);
   for (const col of SESSION_PHASE_COLUMNS) {
@@ -132,12 +144,17 @@ export const sessionsByPhaseAtom = atom((get) => {
   }
 
   for (const [_id, meta] of registry) {
-    // Only show root sessions (not children of workstreams)
-    if (meta.parentSessionId) continue;
+    // Dispatch filter mode: only show children of the selected dispatch
+    if (filter.dispatchId) {
+      if (meta.parentSessionId !== filter.dispatchId) continue;
+    } else {
+      // Normal mode: only show root sessions (not children of workstreams)
+      if (meta.parentSessionId) continue;
+    }
 
     // For workstream parents without an explicit phase, derive from children
     const phase = meta.phase
-      ?? (meta.childCount > 0 ? derivePhaseFromChildren(meta.id, registry) : undefined);
+      ?? (meta.childCount > 0 ? derivePhaseFromIndex(meta.id, childIndex) : undefined);
 
     // Skip complete if filter says hide
     if (!filter.showComplete && phase === 'complete') continue;
@@ -182,13 +199,18 @@ export const sessionKanbanTotalCountAtom = atom((get) => {
   return total;
 });
 
-/** Derived: all unique tags from root sessions (with counts) */
+/** Derived: all unique tags from visible sessions (with counts) */
 export const sessionKanbanTagsAtom = atom((get) => {
   const registry = get(sessionRegistryAtom);
+  const filter = get(sessionKanbanFilterAtom);
   const tagCounts = new Map<string, number>();
 
   for (const [_id, meta] of registry) {
-    if (meta.parentSessionId) continue;
+    if (filter.dispatchId) {
+      if (meta.parentSessionId !== filter.dispatchId) continue;
+    } else {
+      if (meta.parentSessionId) continue;
+    }
     if (meta.tags) {
       for (const tag of meta.tags) {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
@@ -205,17 +227,30 @@ export const sessionKanbanTagsAtom = atom((get) => {
 // Child Run State Atoms
 // ============================================================
 
+/** Pre-computed child session IDs per parent — avoids O(N) scan per card */
+export const childSessionIdsAtom = atomFamily((parentId: string) =>
+  atom((get) => {
+    const registry = get(sessionRegistryAtom);
+    const ids: string[] = [];
+    for (const [_id, meta] of registry) {
+      if (meta.parentSessionId === parentId) ids.push(meta.id);
+    }
+    return ids;
+  })
+);
+
 /** Derive child run state summary for a workstream/worktree card */
 export const childRunStatesAtom = atomFamily((sessionId: string) =>
   atom((get): ChildRunStateSummary => {
+    const childIds = get(childSessionIdsAtom(sessionId));
     const registry = get(sessionRegistryAtom);
     const summary: ChildRunStateSummary = {
-      running: 0, waiting: 0, review: 0, idle: 0, done: 0, total: 0,
+      running: 0, waiting: 0, review: 0, idle: 0, done: 0, total: childIds.length,
     };
 
-    for (const [_id, meta] of registry) {
-      if (meta.parentSessionId !== sessionId) continue;
-      summary.total++;
+    for (const childId of childIds) {
+      const meta = registry.get(childId);
+      if (!meta) continue;
 
       const isProcessing = get(sessionProcessingAtom(meta.id));
       const hasPendingPrompt = get(sessionHasPendingInteractivePromptAtom(meta.id));
@@ -296,4 +331,34 @@ export const setSessionTagsAtom = atom(
       }
     }
   }
+);
+
+// ============================================================
+// Dispatch Atoms
+// ============================================================
+
+/** Derived: list of active dispatch sessions (for the dispatch filter dropdown) */
+export const dispatchSessionsAtom = atom((get) => {
+  const registry = get(sessionRegistryAtom);
+  const dispatches: SessionMeta[] = [];
+
+  for (const [_id, meta] of registry) {
+    if (meta.sessionType === 'dispatch' && !meta.isArchived) {
+      dispatches.push(meta);
+    }
+  }
+
+  return dispatches.sort((a, b) => b.createdAt - a.createdAt);
+});
+
+/** Derived: child count for a specific dispatch (used in filter dropdown) */
+export const dispatchChildCountAtom = atomFamily((dispatchId: string) =>
+  atom((get) => {
+    const registry = get(sessionRegistryAtom);
+    let count = 0;
+    for (const [_id, meta] of registry) {
+      if (meta.parentSessionId === dispatchId) count++;
+    }
+    return count;
+  })
 );

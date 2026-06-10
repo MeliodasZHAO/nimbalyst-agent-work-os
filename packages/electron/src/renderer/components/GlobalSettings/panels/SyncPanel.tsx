@@ -19,22 +19,22 @@ function formatRelativeTime(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
 
   if (seconds < 60) {
-    return 'just now';
+    return '刚刚';
   }
 
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
-    return `${minutes}m ago`;
+    return `${minutes}分钟前`;
   }
 
   const hours = Math.floor(minutes / 60);
   if (hours < 24) {
-    return `${hours}h ago`;
+    return `${hours}小时前`;
   }
 
   const days = Math.floor(hours / 24);
   if (days < 7) {
-    return `${days}d ago`;
+    return `${days}天前`;
   }
 
   return new Date(timestamp).toLocaleDateString();
@@ -84,28 +84,28 @@ function SharingCallout() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[13px] font-semibold text-[var(--nim-text)]">
-                Sharing Sessions & Documents
+                分享会话和文档
               </span>
               <button
                 className="inline-flex items-center justify-center w-[18px] h-[18px] p-0 border-none rounded-full bg-[var(--nim-bg-tertiary)] cursor-pointer hover:bg-[var(--nim-bg-active)] transition-colors"
                 onClick={() => setExpanded(!expanded)}
-                title={expanded ? 'Hide details' : 'How does sharing work?'}
+                title={expanded ? '隐藏详情' : '分享是如何工作的？'}
               >
                 <MaterialSymbol icon={expanded ? 'expand_less' : 'help'} size={14} className="text-[var(--nim-text-muted)]" />
               </button>
             </div>
             <p className="m-0 text-[12px] text-[var(--nim-text-muted)] leading-relaxed">
-              Right-click any session or document to create an encrypted share link for collaborators.
+              右键点击任何会话或文档，创建加密分享链接分享给协作者。
             </p>
           </div>
         </div>
         {expanded && (
           <div className="mt-3 pt-3 border-t border-nim-primary/15">
             <ul className="m-0 pl-5 text-[12px] text-[var(--nim-text-muted)] leading-7 list-disc">
-              <li>In <strong className="text-[var(--nim-text)]">Agent mode</strong>, right-click a session in the sidebar and select &quot;Share link&quot;</li>
-              <li>In <strong className="text-[var(--nim-text)]">Files mode</strong>, right-click a document in the file tree and select &quot;Share Link&quot;</li>
-              <li>Links are end-to-end encrypted and you choose the expiration (1, 7, or 30 days)</li>
-              <li>View and manage all your shared links under <strong className="text-[var(--nim-text)]">Shared Links</strong> in settings</li>
+              <li>在 <strong className="text-[var(--nim-text)]">Agent 模式</strong>中，右键点击侧边栏中的会话并选择"分享链接"</li>
+              <li>在 <strong className="text-[var(--nim-text)]">文件模式</strong>中，右键点击文件树中的文档并选择"分享链接"</li>
+              <li>链接采用端到端加密，你可以选择过期时间（1、7 或 30 天）</li>
+              <li>在设置中的 <strong className="text-[var(--nim-text)]">分享链接</strong> 中查看和管理所有分享链接</li>
             </ul>
           </div>
         )}
@@ -420,7 +420,7 @@ export function SyncPanel() {
     e.preventDefault();
     if (!window.electronAPI?.stytch) return;
     if (!email) {
-      setAuthError('Email is required');
+      setAuthError('请输入邮箱地址');
       return;
     }
 
@@ -505,24 +505,24 @@ export function SyncPanel() {
     <div className="provider-panel flex flex-col">
       {/* Header */}
       <div className="provider-panel-header mb-5 pb-4 border-b border-[var(--nim-border)]">
-        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-1.5 text-[var(--nim-text)]">Account & Sync</h3>
+        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-1.5 text-[var(--nim-text)]">账户与同步</h3>
         <p className="provider-panel-description text-[13px] leading-relaxed text-[var(--nim-text-muted)]">
-          Access and control Nimbalyst from the mobile app.
-          Share sessions and documents via encrypted share links.
-          All data is end-to-end encrypted.
+          通过移动应用访问和控制 Nimbalyst。
+          通过加密分享链接分享会话和文档。
+          所有数据均采用端到端加密。
         </p>
       </div>
 
       {/* Team Collaboration (alpha) */}
       <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)]">
         <div className="flex items-center gap-2 mb-2">
-          <h4 className="provider-panel-section-title text-base font-semibold text-[var(--nim-text)] m-0">Team Collaboration</h4>
+          <h4 className="provider-panel-section-title text-base font-semibold text-[var(--nim-text)] m-0">团队协作</h4>
           <AlphaBadge size="sm" tooltip={SETTINGS_ALPHA_TOOLTIP} />
         </div>
         <SettingsToggle
           variant="enable"
-          name="Enable team collaboration"
-          description="Adds shared trackers and team management. Reveals Team and Trackers settings panels."
+          name="启用团队协作"
+          description="添加共享追踪器和团队管理功能。会显示团队和追踪器设置面板。"
           checked={collaborationEnabled}
           onChange={(checked) => {
             updateAdvancedSettings({
@@ -595,7 +595,7 @@ export function SyncPanel() {
                         {acct.email || 'Unknown'}
                       </div>
                       <div className="text-[11px] text-nim-faint">
-                        {isSyncAccount ? 'Sync account' : (
+                        {isSyncAccount ? '同步账户' : (
                           <button
                             onClick={async () => {
                               try {
@@ -610,7 +610,7 @@ export function SyncPanel() {
                             }}
                             className="text-nim-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-[11px]"
                           >
-                            Use for sync
+                            用于同步
                           </button>
                         )}
                       </div>
@@ -619,7 +619,7 @@ export function SyncPanel() {
                       onClick={() => handleRemoveAccount(acct.personalOrgId)}
                       className="px-3 py-1.5 text-xs bg-transparent border border-nim rounded text-nim-muted cursor-pointer hover:bg-nim-hover shrink-0"
                     >
-                      Sign Out
+                      退出登录
                     </button>
                   </div>
                 );
@@ -643,7 +643,7 @@ export function SyncPanel() {
                   onClick={handleSignOut}
                   className="px-3 py-1.5 text-xs bg-transparent border border-nim rounded text-nim-muted cursor-pointer hover:bg-nim-hover"
                 >
-                  Sign Out
+                  退出登录
                 </button>
               </div>
             )}
@@ -656,7 +656,7 @@ export function SyncPanel() {
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              Add Account
+              添加账户
             </button>
           </div>
         ) : showAuthForm ? (
@@ -671,10 +671,10 @@ export function SyncPanel() {
                   </svg>
                 </div>
                 <h4 className="m-0 mb-2 text-nim text-[15px]">
-                  Check your email
+                  请检查你的邮箱
                 </h4>
                 <p className="m-0 mb-4 text-nim-muted text-[13px]">
-                  We sent a sign-in link to <strong>{email}</strong>
+                  我们已向 <strong>{email}</strong> 发送了登录链接
                 </p>
                 <button
                   onClick={() => {
@@ -684,7 +684,7 @@ export function SyncPanel() {
                   }}
                   className="px-4 py-2 bg-transparent border border-nim rounded-md text-nim-muted text-[13px] cursor-pointer hover:bg-nim-hover"
                 >
-                  Done
+                  完成
                 </button>
               </div>
             ) : (
@@ -703,12 +703,12 @@ export function SyncPanel() {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  Continue with Google
+                  使用 Google 继续
                 </button>
 
                 <div className="flex items-center gap-3 my-4 text-nim-faint text-xs">
                   <div className="flex-1 h-px bg-nim" />
-                  or
+                  或
                   <div className="flex-1 h-px bg-nim" />
                 </div>
 
@@ -718,7 +718,7 @@ export function SyncPanel() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="输入你的邮箱"
                     disabled={!isStytchAvailable || authLoading}
                     className="w-full px-3 py-2 mb-3 border border-nim rounded-md bg-nim text-nim text-[13px]"
                   />
@@ -729,7 +729,7 @@ export function SyncPanel() {
                       authLoading ? 'cursor-wait' : 'cursor-pointer'
                     } ${(authLoading || !email) ? 'opacity-70' : 'opacity-100'}`}
                   >
-                    {authLoading ? 'Sending...' : 'Send Sign-In Link'}
+                    {authLoading ? '发送中...' : '发送登录链接'}
                   </button>
                 </form>
 
@@ -747,7 +747,7 @@ export function SyncPanel() {
                   }}
                   className="block w-full mt-3 bg-transparent border-none text-nim-faint cursor-pointer text-xs hover:text-nim-muted"
                 >
-                  Cancel
+                  取消
                 </button>
               </>
             )}
@@ -755,7 +755,7 @@ export function SyncPanel() {
         ) : (
           <div className="p-4 bg-nim-secondary rounded-lg text-center">
             <p className="text-[13px] text-nim-muted m-0 mb-3">
-              Sign in to sync sessions across all your devices.
+              登录以在所有设备间同步会话。
             </p>
             <button
               onClick={() => setShowAuthForm(true)}
@@ -764,11 +764,11 @@ export function SyncPanel() {
                 isStytchAvailable ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-50'
               }`}
             >
-              Sign In or Create Account
+              登录或创建账户
             </button>
             {!isStytchAvailable && (
               <p className="text-[11px] text-nim-faint mt-2 mb-0">
-                Restart the app to enable authentication.
+                请重启应用以启用身份验证。
               </p>
             )}
           </div>
@@ -784,7 +784,7 @@ export function SyncPanel() {
       {/* Mobile App - compact card combining app info + QR pairing */}
       {stytchAuth.isAuthenticated && (
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-[15px] font-semibold mb-3 text-[var(--nim-text)]">Mobile App</h4>
+            <h4 className="provider-panel-section-title text-[15px] font-semibold mb-3 text-[var(--nim-text)]">移动应用</h4>
             <div className="flex gap-3.5 p-3.5 bg-nim-secondary rounded-lg">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
@@ -794,10 +794,10 @@ export function SyncPanel() {
               </div>
               <div className="flex-1">
                 <div className="text-[13px] font-semibold text-nim mb-0.5">
-                  Nimbalyst for iOS
+                  Nimbalyst 移动端
                 </div>
                 <div className="text-[11px] text-nim-faint mb-2">
-                  View and respond to AI sessions from your phone
+                  在手机上查看和回复 AI 会话
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -816,7 +816,7 @@ export function SyncPanel() {
                   className="self-center flex flex-col items-center gap-1.5 px-4 py-2.5 bg-nim-primary border-none rounded-lg text-nim-on-primary text-[14px] font-medium cursor-pointer hover:bg-nim-primary-hover disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   onClick={() => {
                     if (enabledProjectCount === 0) {
-                      setPairError('Enable at least one project to sync before pairing your device.');
+                      setPairError('请先启用至少一个项目的同步再配对设备。');
                       return;
                     }
                     setPairError(null);
@@ -834,7 +834,7 @@ export function SyncPanel() {
                   <rect x="14" y="18" width="3" height="3" />
                   <rect x="18" y="18" width="3" height="3" />
                 </svg>
-                Pair Device
+                配对设备
               </button>
             </div>
           </div>
@@ -850,9 +850,9 @@ export function SyncPanel() {
         <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
           <div className="flex items-center justify-between">
             <div className="flex-1 mr-3">
-              <h4 className="text-[13px] font-medium text-nim m-0">Prevent sleep while syncing</h4>
+              <h4 className="text-[13px] font-medium text-nim m-0">同步时防止休眠</h4>
               <p className="text-[11px] text-nim-muted mt-0.5 mb-0">
-                Keeps your computer awake so you can send prompts from your phone. Display can still turn off.
+                保持电脑唤醒状态，以便你从手机发送提示。屏幕仍可关闭。
               </p>
             </div>
             <select
@@ -864,9 +864,9 @@ export function SyncPanel() {
               }}
               className="bg-nim-secondary border border-nim rounded px-2 py-1 text-[12px] text-nim cursor-pointer shrink-0"
             >
-              <option value="off">Off</option>
-              <option value="always">Always</option>
-              <option value="pluggedIn">When plugged in</option>
+              <option value="off">关闭</option>
+              <option value="always">始终</option>
+              <option value="pluggedIn">充电时</option>
             </select>
           </div>
           {(config.preventSleepMode ?? (config.preventSleepWhenSyncing ? 'always' : 'off')) === 'off' && enabledProjectCount > 0 && (
@@ -874,7 +874,7 @@ export function SyncPanel() {
               <svg className="shrink-0" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 5a1 1 0 112 0v3a1 1 0 11-2 0V5zm1 7a1 1 0 100-2 1 1 0 000 2z" />
               </svg>
-              <span>Your computer may sleep and disconnect from sync. Enable sleep prevention to keep the connection alive.</span>
+              <span>你的电脑可能会休眠并断开同步连接。启用防休眠以保持连接。</span>
             </div>
           )}
         </div>
@@ -883,7 +883,7 @@ export function SyncPanel() {
       {/* Synced Projects */}
       <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="provider-panel-section-title text-[15px] font-semibold text-[var(--nim-text)] m-0">Projects accessible on mobile</h4>
+          <h4 className="provider-panel-section-title text-[15px] font-semibold text-[var(--nim-text)] m-0">可在移动端访问的项目</h4>
           {availableProjects.length > 0 && !showAddProject && (
             <button
               onClick={() => setShowAddProject(true)}
@@ -906,7 +906,7 @@ export function SyncPanel() {
             }`}
           >
             <MaterialSymbol icon="add" size={16} />
-            Add a project to sync
+            添加要同步的项目
           </button>
         ) : (
           <div className="bg-nim-secondary rounded-lg overflow-hidden">
@@ -916,7 +916,7 @@ export function SyncPanel() {
                 <div key={project.path} className="flex items-center gap-2 px-2.5 py-1.5 border-b border-[var(--nim-border)] last:border-b-0 group">
                   <span className="text-[13px] text-nim truncate flex-1">{project.name}</span>
                   {isAlpha && (
-                    <label className="flex items-center gap-1 cursor-pointer shrink-0" title="Sync .md files to mobile">
+                    <label className="flex items-center gap-1 cursor-pointer shrink-0" title="同步 .md 文件到移动端">
                       <input
                         type="checkbox"
                         checked={docSyncEnabled}
@@ -929,7 +929,7 @@ export function SyncPanel() {
                   <button
                     onClick={() => handleRemoveProject(project.path)}
                     className="opacity-0 group-hover:opacity-100 p-0.5 bg-transparent border-none text-nim-faint cursor-pointer hover:text-nim-muted shrink-0"
-                    title="Remove from sync"
+                    title="从同步中移除"
                   >
                     <MaterialSymbol icon="close" size={14} />
                   </button>
@@ -951,7 +951,7 @@ export function SyncPanel() {
                 onClick={() => setShowAddProject(false)}
                 className="w-full py-1 text-[11px] text-nim-faint bg-transparent border-none border-t border-[var(--nim-border)] cursor-pointer hover:bg-nim-hover"
               >
-                Done
+                完成
               </button>
             )}
           </div>
@@ -959,7 +959,7 @@ export function SyncPanel() {
 
         {/* Idle timeout */}
         <div className="flex items-center justify-between mt-2">
-          <span className="text-[11px] text-nim-faint">Push notification delay</span>
+          <span className="text-[11px] text-nim-faint">推送通知延迟</span>
           <select
             value={config.idleTimeoutMinutes ?? 5}
             onChange={(e) => handleFieldChange('idleTimeoutMinutes', Number(e.target.value))}
@@ -978,7 +978,7 @@ export function SyncPanel() {
       {/* Paired Devices */}
       <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
         <h4 className="provider-panel-section-title text-[15px] font-semibold mb-3 text-[var(--nim-text)]">
-          Devices
+          设备
           <button
             onClick={loadDevices}
             disabled={devicesLoading}
@@ -986,13 +986,13 @@ export function SyncPanel() {
               devicesLoading ? 'cursor-wait' : 'cursor-pointer hover:bg-nim-hover'
             }`}
           >
-            Refresh
+            刷新
           </button>
         </h4>
         <div className="mt-2">
           {connectedDevices.length === 0 && !devicesLoading && (
             <div className="text-[12px] text-nim-faint px-2.5 py-2">
-              No paired devices. Use &quot;Pair Device&quot; to connect a mobile device.
+              暂无配对设备。点击"配对设备"连接移动设备。
             </div>
           )}
           {connectedDevices.map((device) => (
@@ -1008,9 +1008,9 @@ export function SyncPanel() {
                 <div className="text-[11px] text-nim-faint">
                   {device.platform}
                   {device.isOnline
-                    ? ` - connected ${formatRelativeTime(device.connectedAt)}`
+                    ? ` - 已连接 ${formatRelativeTime(device.connectedAt)}`
                     : device.lastSeenAt
-                      ? ` - last seen ${formatRelativeTime(device.lastSeenAt)}`
+                      ? ` - 最后在线 ${formatRelativeTime(device.lastSeenAt)}`
                       : ''}
                 </div>
               </div>
@@ -1028,16 +1028,16 @@ export function SyncPanel() {
               <path d="M7 11V7a5 5 0 0110 0v4" />
             </svg>
             <span className="text-[13px] font-semibold text-nim-success">
-              End-to-End Encryption
+              端到端加密
             </span>
           </div>
           <p className="m-0 mb-2 text-[12px] text-nim-muted leading-relaxed">
-            The QR code securely transfers your encryption key directly between devices.
+            二维码在设备之间安全地直接传输你的加密密钥。
           </p>
           <ul className="m-0 pl-5 text-[12px] text-nim leading-7">
-            <li>Your encryption keys never touch our servers</li>
-            <li>Only your devices can decrypt your data</li>
-            <li>Sign in with the same account on both devices</li>
+            <li>你的加密密钥永远不会经过我们的服务器</li>
+            <li>只有你的设备可以解密你的数据</li>
+            <li>在两台设备上使用同一账户登录</li>
           </ul>
         </div>
       </div>
@@ -1045,7 +1045,7 @@ export function SyncPanel() {
       {/* Delete Account */}
       {stytchAuth.isAuthenticated && (
         <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-          <h4 className="provider-panel-section-title text-[15px] font-semibold mb-2 text-[var(--nim-text)]">Danger Zone</h4>
+          <h4 className="provider-panel-section-title text-[15px] font-semibold mb-2 text-[var(--nim-text)]">危险区域</h4>
           {!showDeleteConfirm ? (
             <button
               onClick={() => {
@@ -1055,15 +1055,15 @@ export function SyncPanel() {
               }}
               className="px-4 py-2 text-[13px] bg-transparent border border-red-500/40 rounded-md text-red-500 cursor-pointer hover:bg-red-500/10"
             >
-              Delete Account
+              删除账户
             </button>
           ) : (
             <div className="p-4 bg-nim-secondary rounded-lg border border-red-500/30">
               <p className="text-[13px] text-nim-muted m-0 mb-3">
-                This will permanently delete your account and all synced data, including sessions, shared links, and device pairings. This cannot be undone.
+                此操作将永久删除你的账户和所有同步数据，包括会话、分享链接和设备配对信息。此操作不可撤销。
               </p>
               <p className="text-[12px] text-nim-faint m-0 mb-2">
-                Type <strong className="text-nim">DELETE</strong> to confirm:
+                输入 <strong className="text-nim">DELETE</strong> 以确认：
               </p>
               <input
                 type="text"
@@ -1087,7 +1087,7 @@ export function SyncPanel() {
                       : 'bg-red-600/40 cursor-not-allowed'
                   }`}
                 >
-                  {deleteLoading ? 'Deleting...' : 'Delete Account'}
+                  {deleteLoading ? '删除中...' : '删除账户'}
                 </button>
                 <button
                   onClick={() => {
@@ -1098,7 +1098,7 @@ export function SyncPanel() {
                   disabled={deleteLoading}
                   className="px-4 py-2 text-[13px] bg-transparent border border-nim rounded-md text-nim-muted cursor-pointer hover:bg-nim-hover"
                 >
-                  Cancel
+                  取消
                 </button>
               </div>
             </div>

@@ -10,7 +10,9 @@
 
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import type { TipDefinition } from './types';
+import { resolveTipActionLabel, resolveTipBody, resolveTipTitle } from './tipText';
 
 /**
  * Parse basic markdown in tip body text.
@@ -93,6 +95,7 @@ export function TipCard({
 }: TipCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isFloating = variant === 'floating';
+  const { t } = useTranslation('agent');
 
   // Handle Escape key for the floating variant only -- inline cards live
   // inside a transcript and shouldn't capture Escape globally.
@@ -118,7 +121,11 @@ export function TipCard({
     onSecondaryAction?.();
   }, [onSecondaryAction]);
 
-  const renderedBody = useMemo(() => parseMarkdownBody(tip.content.body), [tip.content.body]);
+  const renderedBody = useMemo(
+    () => parseMarkdownBody(resolveTipBody(tip.content, t)),
+    [tip.content, t]
+  );
+  const title = resolveTipTitle(tip.content, t);
 
   const floatingClasses =
     'tip-card fixed bottom-5 left-[50px] w-[340px] bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-[10px] z-[10000] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.35),0_2px_8px_rgba(0,0,0,0.2)] motion-safe:animate-[tip-slide-in_0.3s_ease-out_forwards]';
@@ -166,7 +173,7 @@ export function TipCard({
         )}
         <div className="flex-1 min-w-0">
           <div id="tip-title" className={titleClasses}>
-            {tip.content.title}
+            {title}
           </div>
         </div>
         {isFloating && (
@@ -202,7 +209,7 @@ export function TipCard({
               className={primaryButtonClasses}
               onClick={handleActionClick}
             >
-              {tip.content.action.label}
+              {resolveTipActionLabel(tip.content.action, t)}
             </button>
           )}
           {tip.content.secondaryAction && (
@@ -210,7 +217,7 @@ export function TipCard({
               className={secondaryButtonClasses}
               onClick={handleSecondaryClick}
             >
-              {tip.content.secondaryAction.label}
+              {resolveTipActionLabel(tip.content.secondaryAction, t)}
             </button>
           )}
           {!isFloating && inlineFooterExtras && (

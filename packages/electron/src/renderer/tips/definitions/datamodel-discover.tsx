@@ -26,7 +26,7 @@ export const datamodelDiscoverTip: TipDefinition = {
   },
   content: {
     icon: SchemaIcon,
-    title: 'Design schemas visually with DataModelLM',
-    body: 'A **.datamodel** file is a Prisma-style schema with a live ER diagram. The agent can edit it like any source file, and you get the diagram for free.',
+    title: '用 DataModelLM 可视化设计数据模型',
+    body: '**.datamodel** 文件是带有实时 ER 图的 Prisma 风格 Schema。Agent 可以像编辑普通源文件一样修改它，你还能免费获得 ER 图。',
   },
 };

@@ -22,10 +22,10 @@ export const trackerModeTip: TipDefinition = {
   },
   content: {
     icon: TrackerIcon,
-    title: 'Track work alongside your sessions',
-    body: 'You have been using AI sessions heavily, but **Tracker Mode** gives you a durable place to manage bugs, tasks, and decisions across those sessions.',
+    title: '在会话旁追踪工作进度',
+    body: '你一直在大量使用 AI 会话，**Tracker 模式**为你提供一个持久化的地方来管理跨会话的 Bug、任务和决策。',
     action: {
-      label: 'Open Tracker',
+      label: '打开 Tracker',
       onClick: () => {
         store.set(setWindowModeAtom, 'tracker');
       },

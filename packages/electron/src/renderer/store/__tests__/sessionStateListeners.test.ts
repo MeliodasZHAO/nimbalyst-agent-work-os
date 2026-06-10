@@ -27,6 +27,14 @@ import {
   globalSessionTurnActivityAtom,
 } from '../atoms/sessionActivity';
 
+const showWarningMock = vi.fn();
+
+vi.mock('../../services/ErrorNotificationService', () => ({
+  errorNotificationService: {
+    showWarning: showWarningMock,
+  },
+}));
+
 function seedRegistry(entries: Array<Partial<SessionMeta> & { id: string }>): void {
   const map = new Map(store.get(sessionRegistryAtom));
   const now = Date.now();
@@ -89,6 +97,7 @@ const WS = '/ws/test-project';
 
 beforeEach(async () => {
   handlers = new Map();
+  showWarningMock.mockReset();
   vi.stubGlobal('window', { electronAPI: makeApi() });
   // initSessionStateListeners is the entry point that wires up handlers.
   // Imported lazily so vi.stubGlobal('window', ...) is in effect when the
@@ -450,5 +459,25 @@ describe('contract: per-message events must not bump turn activity', () => {
     const turnsForWs = store.get(globalSessionTurnActivityAtom).get(WS);
     expect(turnsForWs?.get(childId)).toBeUndefined();
     expect(turnsForWs?.get(parentId)).toBeUndefined();
+  });
+});
+
+describe('mobile Work Packet guard', () => {
+  it('shows a warning when a mobile approval is blocked by Work Packet gates', () => {
+    const handler = handlers.get('ai:mobileWorkPacketGuardBlocked');
+    expect(handler).toBeTypeOf('function');
+
+    handler!({
+      sessionId: 'session-1',
+      promptId: 'prompt-1',
+      promptType: 'tool_permission',
+      warningText: 'Work Packet guardrail: desktop review required.',
+    });
+
+    expect(showWarningMock).toHaveBeenCalledWith(
+      'Mobile approval blocked',
+      'Work Packet guardrail: desktop review required.',
+      { duration: 9000 },
+    );
   });
 });

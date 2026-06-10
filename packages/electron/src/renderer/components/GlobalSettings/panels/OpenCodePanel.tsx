@@ -128,7 +128,7 @@ export function OpenCodePanel({
         setOpenCodeConfig(response.config ?? null);
         setConfigError(null);
       } else {
-        setConfigError(response.error ?? 'Failed to read OpenCode config');
+      setConfigError(response.error ?? '读取 OpenCode 配置失败');
       }
     } catch (err) {
       setConfigError(err instanceof Error ? err.message : String(err));
@@ -160,7 +160,7 @@ export function OpenCodePanel({
         setConfigError(null);
         return true;
       }
-      setConfigError(response.error ?? 'Failed to update OpenCode config');
+      setConfigError(response.error ?? '更新 OpenCode 配置失败');
       return false;
     } catch (err) {
       setConfigError(err instanceof Error ? err.message : String(err));
@@ -196,10 +196,10 @@ export function OpenCodePanel({
         setOpenCodeConfig(response.config);
         setLmStudioStatus('success');
         const count = response.modelIds?.length ?? 0;
-        setLmStudioMessage(`Configured ${count} ${count === 1 ? 'model' : 'models'} from LM Studio.`);
+        setLmStudioMessage(`已从 LM Studio 配置 ${count} 个模型。`);
       } else {
         setLmStudioStatus('error');
-        setLmStudioMessage(response.error ?? 'Failed to configure LM Studio bridge');
+        setLmStudioMessage(response.error ?? '配置 LM Studio 桥接失败');
       }
     } catch (err) {
       setLmStudioStatus('error');
@@ -217,7 +217,7 @@ export function OpenCodePanel({
         setLmStudioMessage(null);
       } else {
         setLmStudioStatus('error');
-        setLmStudioMessage(response.error ?? 'Failed to remove LM Studio bridge');
+        setLmStudioMessage(response.error ?? '移除 LM Studio 桥接失败');
       }
     } catch (err) {
       setLmStudioStatus('error');
@@ -241,8 +241,8 @@ export function OpenCodePanel({
           <AlphaBadge size="sm" tooltip={SETTINGS_ALPHA_TOOLTIP} />
         </h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Open source coding agent with multi-model support. Works with Claude, OpenAI, Gemini,
-          and local models through a unified interface.
+          开源编程 Agent，支持多模型。可通过统一接口与 Claude、OpenAI、Gemini
+          及本地模型配合使用。
         </p>
       </div>
 
@@ -250,14 +250,14 @@ export function OpenCodePanel({
         <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">OpenCode CLI</h4>
 
         {cliStatus === 'checking' && (
-          <p className="text-[13px] text-[var(--nim-text-muted)]">Checking for OpenCode CLI...</p>
+          <p className="text-[13px] text-[var(--nim-text-muted)]">正在检查 OpenCode CLI...</p>
         )}
 
         {cliStatus === 'installed' && (
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--nim-success)] shrink-0" />
             <span className="text-[13px] text-[var(--nim-text)]">
-              Installed{cliVersion ? ` (${cliVersion})` : ''}
+              已安装{cliVersion ? ` (${cliVersion})` : ''}
             </span>
           </div>
         )}
@@ -265,19 +265,19 @@ export function OpenCodePanel({
         {(cliStatus === 'not-installed' || cliStatus === 'install-error') && (
           <div>
             <p className="text-[13px] text-[var(--nim-text-muted)] mb-3 leading-relaxed">
-              The OpenCode CLI is required to run the agent.
+              运行 Agent 需要安装 OpenCode CLI。
             </p>
             <button
               className="inline-flex items-center justify-center py-2 px-4 rounded-md text-sm font-medium cursor-pointer transition-all bg-[var(--nim-primary)] text-white border border-[var(--nim-primary)] hover:opacity-90"
               onClick={handleInstall}
             >
-              Install OpenCode CLI
+              安装 OpenCode CLI
             </button>
             {installError && (
               <div className="text-xs mt-2 text-[var(--nim-error)]">
                 {installError}
                 <p className="mt-1 text-[var(--nim-text-muted)]">
-                  Try running manually: <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">npm i -g opencode-ai</code>
+                  尝试手动运行：<code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">npm i -g opencode-ai</code>
                 </p>
               </div>
             )}
@@ -286,27 +286,27 @@ export function OpenCodePanel({
 
         {cliStatus === 'installing' && (
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[var(--nim-text-muted)]">Installing OpenCode CLI...</span>
+            <span className="text-[13px] text-[var(--nim-text-muted)]">正在安装 OpenCode CLI...</span>
           </div>
         )}
 
         <p className="text-[13px] text-[var(--nim-text-muted)] mt-3 leading-relaxed">
-          See the{' '}
+          查看{' '}
           <a
             href="https://github.com/sst/opencode"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--nim-primary)] hover:underline"
           >
-            OpenCode documentation
+            OpenCode 文档
           </a>
-          {' '}for more details.
+          {' '}了解更多详情。
         </p>
       </div>
 
       <SettingsToggle
         variant="enable"
-        name="Enable OpenCode"
+        name="启用 OpenCode"
         checked={config.enabled || false}
         onChange={onToggle}
       />
@@ -314,10 +314,9 @@ export function OpenCodePanel({
       {config.enabled && (
         <>
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)]">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Default model</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">默认模型</h4>
             <p className="text-[13px] text-[var(--nim-text-muted)] mb-3 leading-relaxed">
-              Choose which model OpenCode uses by default. This writes the <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">model</code> field
-              of your <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">~/.config/opencode/opencode.json</code>.
+              选择 OpenCode 默认使用的模型。此操作会写入你的 <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">~/.config/opencode/opencode.json</code> 中的 <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">model</code> 字段。
             </p>
             <select
               data-testid="opencode-model-select"
@@ -325,21 +324,21 @@ export function OpenCodePanel({
               onChange={(e) => handleModelChange(e.target.value)}
               className="w-full py-2 px-3 rounded-md bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text)] outline-none focus:border-[var(--nim-primary)]"
             >
-              <option value="">OpenCode default</option>
-              <optgroup label="Hosted">
+              <option value="">OpenCode 默认</option>
+              <optgroup label="云端托管">
                 {modelOptions.filter((m) => m.group === 'preset').map((m) => (
                   <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
               </optgroup>
               {modelOptions.some((m) => m.group === 'lmstudio') && (
-                <optgroup label="LM Studio (local)">
+                <optgroup label="LM Studio (本地)">
                   {modelOptions.filter((m) => m.group === 'lmstudio').map((m) => (
                     <option key={m.id} value={m.id}>{m.label}</option>
                   ))}
                 </optgroup>
               )}
               {modelOptions.some((m) => m.group === 'custom') && (
-                <optgroup label="Custom providers">
+                <optgroup label="自定义提供商">
                   {modelOptions.filter((m) => m.group === 'custom').map((m) => (
                     <option key={m.id} value={m.id}>{m.label}</option>
                   ))}
@@ -347,16 +346,16 @@ export function OpenCodePanel({
               )}
             </select>
             <p className="text-xs text-[var(--nim-text-muted)] mt-2">
-              Picking a hosted model requires the matching API key to be set up in OpenCode's own config.
+              选择云端模型需要在 OpenCode 自身配置中设置对应的 API Key。
             </p>
           </div>
 
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)]">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">LM Studio integration</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">LM Studio 集成</h4>
             <p className="text-[13px] text-[var(--nim-text-muted)] mb-3 leading-relaxed">
-              Point at a running LM Studio server and Nimbalyst will query <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">/v1/models</code>,
-              then write a <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">provider.lmstudio</code> block into your <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">opencode.json</code>.
-              You don't need to enable LM Studio as a separate Nimbalyst chat provider.
+              指向正在运行的 LM Studio 服务器，Nimbalyst 会查询 <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">/v1/models</code>，
+              然后将 <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">provider.lmstudio</code> 块写入你的 <code className="text-[var(--nim-code-text)] bg-[var(--nim-code-bg)] px-1 rounded">opencode.json</code>。
+              无需将 LM Studio 作为单独的 Nimbalyst 聊天提供商启用。
             </p>
             <div className="flex items-center gap-2 flex-wrap mb-2">
               <input
@@ -374,7 +373,7 @@ export function OpenCodePanel({
                 onClick={handleConnectLMStudio}
                 disabled={lmStudioStatus === 'configuring' || !lmStudioBaseUrl.trim()}
               >
-                {lmStudioStatus === 'configuring' ? 'Configuring...' : (lmStudioBridgeConfigured ? 'Refresh' : 'Connect')}
+                {lmStudioStatus === 'configuring' ? '配置中...' : (lmStudioBridgeConfigured ? '刷新' : '连接')}
               </button>
               {lmStudioBridgeConfigured && (
                 <button
@@ -383,13 +382,13 @@ export function OpenCodePanel({
                   onClick={handleDisconnectLMStudio}
                   disabled={lmStudioStatus === 'configuring'}
                 >
-                  Remove
+                  移除
                 </button>
               )}
             </div>
             {lmStudioBridgeConfigured && (
               <p className="text-xs text-[var(--nim-text-muted)]">
-                Bridge active with {lmStudioBridgeModelCount} {lmStudioBridgeModelCount === 1 ? 'model' : 'models'}. Select one above to use it as the default.
+                桥接已激活，包含 {lmStudioBridgeModelCount} 个模型。在上方选择一个作为默认模型。
               </p>
             )}
             {lmStudioMessage && (
@@ -400,24 +399,23 @@ export function OpenCodePanel({
           </div>
 
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)]">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Updates</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">更新</h4>
             <SettingsToggle
               variant="enable"
-              name="Disable OpenCode auto-update"
+              name="禁用 OpenCode 自动更新"
               checked={autoUpdateOptedOut}
               onChange={(checked) => handleAutoUpdateToggle(!checked)}
             />
             <p className="text-xs text-[var(--nim-text-muted)] mt-2 leading-relaxed">
-              When on, OpenCode will not auto-upgrade itself between sessions. Useful if you want
-              version stability while debugging.
+              开启后，OpenCode 不会在会话之间自动升级。适用于调试时需要版本稳定的场景。
             </p>
           </div>
 
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">API Configuration <span className="text-xs font-normal text-[var(--nim-text-muted)]">(optional)</span></h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">API 配置 <span className="text-xs font-normal text-[var(--nim-text-muted)]">(可选)</span></h4>
             <p className="text-[13px] text-[var(--nim-text-muted)] mb-3 leading-relaxed">
-              OpenCode reads provider API keys from its own config and from environment variables.
-              Setting a key here is optional and is only used by Nimbalyst's connection test.
+              OpenCode 从自身配置和环境变量中读取提供商 API Key。
+              此处设置 Key 是可选的，仅用于 Nimbalyst 的连接测试。
             </p>
             <div className="api-key-section mt-4">
               <div className="api-key-row flex gap-2 items-center">
@@ -426,7 +424,7 @@ export function OpenCodePanel({
                   value={apiKeys['opencode'] || ''}
                   onChange={(e) => onApiKeyChange('opencode', e.target.value)}
                   onFocus={(e) => e.target.select()}
-                  placeholder="API key (optional)"
+                  placeholder="API Key (可选)"
                   className="api-key-input flex-1 py-2 px-3 rounded-md bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text)] outline-none font-mono focus:border-[var(--nim-primary)]"
                 />
                 <button
@@ -438,9 +436,9 @@ export function OpenCodePanel({
                   onClick={onTestConnection}
                   disabled={config.testStatus === 'testing'}
                 >
-                  {config.testStatus === 'testing' ? 'Testing...' :
-                   config.testStatus === 'success' ? 'Connected' :
-                   config.testStatus === 'error' ? 'Failed' : 'Test'}
+                  {config.testStatus === 'testing' ? '测试中...' :
+                   config.testStatus === 'success' ? '已连接' :
+                   config.testStatus === 'error' ? '失败' : '测试'}
                 </button>
               </div>
               {config.testMessage && config.testStatus === 'error' && (

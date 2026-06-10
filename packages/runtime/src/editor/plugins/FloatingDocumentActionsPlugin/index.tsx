@@ -8,7 +8,7 @@ import { EditorConfig } from '../../EditorConfig';
 import { copyToClipboard } from '../../../utils/clipboard';
 import { useRuntimeSettings } from '../../context/RuntimeSettingsContext';
 import {
-  getBuiltInFullDocumentTrackerTypes,
+  getFullDocumentTrackerTypes,
   getDefaultFrontmatterForType,
   getModelDefaults,
   applyTrackerTypeToMarkdown,
@@ -70,8 +70,18 @@ export default function FloatingDocumentActionsPlugin({
 
   // Load available tracker types
   useEffect(() => {
-    const types = getBuiltInFullDocumentTrackerTypes();
-    setTrackerTypes(types);
+    const loadTypes = () => {
+      const types = getFullDocumentTrackerTypes();
+      setTrackerTypes(types);
+    };
+
+    loadTypes();
+
+    const registry = (window as any).__trackerRegistry || (window as any).trackerRegistry;
+    const unsubscribe = registry?.onChange?.(loadTypes);
+    return () => {
+      unsubscribe?.();
+    };
   }, []);
 
   // Detect current tracker type from editor content

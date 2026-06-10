@@ -44,11 +44,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.nimbalyst.app.NimbalystApplication
+import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import com.nimbalyst.app.data.SessionEntity
 import com.nimbalyst.app.ui.components.ConnectionIndicator
@@ -85,7 +88,7 @@ fun SessionListScreen(
             title = { Text(projectName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                 }
             },
             actions = {
@@ -96,14 +99,14 @@ fun SessionListScreen(
                 )
                 Box {
                     IconButton(onClick = { showCreateMenu = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "New session")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_session))
                     }
                     DropdownMenu(
                         expanded = showCreateMenu,
                         onDismissRequest = { showCreateMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("New Session") },
+                            text = { Text(stringResource(R.string.sessions_new)) },
                             onClick = {
                                 showCreateMenu = false
                                 coroutineScope.launch {
@@ -139,7 +142,7 @@ fun SessionListScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No sessions yet. Start a session from your Mac, or tap + to create one.",
+                        text = stringResource(R.string.sessions_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -166,7 +169,7 @@ fun SessionListScreen(
                     if (workstreamParents.isNotEmpty()) {
                         item(key = "header-workstreams") {
                             Text(
-                                text = "Workstreams",
+                                text = stringResource(R.string.sessions_workstreams),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
@@ -185,10 +188,10 @@ fun SessionListScreen(
 
                     // Standalone sessions grouped by time
                     val timeGrouped = groupSessionsByTime(standaloneSessions)
-                    timeGrouped.forEach { (label, groupSessions) ->
-                        item(key = "header-$label") {
+                    timeGrouped.forEach { (labelRes, groupSessions) ->
+                        item(key = "header-$labelRes") {
                             Text(
-                                text = label,
+                                text = stringResource(labelRes),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
@@ -214,6 +217,7 @@ private fun SessionRow(
     session: SessionEntity,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val hasUnread = session.lastMessageAt != null &&
         (session.lastReadAt == null || session.lastMessageAt > session.lastReadAt)
 
@@ -237,7 +241,7 @@ private fun SessionRow(
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = session.titleDecrypted ?: "Untitled session",
+                    text = session.titleDecrypted ?: stringResource(R.string.session_untitled),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = if (hasUnread) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 2,
@@ -265,7 +269,7 @@ private fun SessionRow(
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = RelativeTimestamp.format(session.updatedAt),
+                    text = RelativeTimestamp.format(context, session.updatedAt),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -311,20 +315,20 @@ private fun WorkstreamGroup(
                         .padding(horizontal = 12.dp)
                 ) {
                     Text(
-                        text = parent.titleDecrypted ?: "Untitled workstream",
+                        text = parent.titleDecrypted ?: stringResource(R.string.session_untitled_workstream),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "${children.size} sessions",
+                        text = pluralStringResource(R.plurals.session_count, children.size, children.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded) "Collapse" else "Expand"
+                    contentDescription = if (expanded) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand)
                 )
             }
 
@@ -353,7 +357,7 @@ private fun WorkstreamGroup(
                                     )
                                 }
                                 Text(
-                                    text = child.titleDecrypted ?: "Untitled",
+                                    text = child.titleDecrypted ?: stringResource(R.string.session_untitled_short),
                                     style = MaterialTheme.typography.bodyMedium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -376,7 +380,7 @@ private fun WorkstreamGroup(
     }
 }
 
-private fun groupSessionsByTime(sessions: List<SessionEntity>): List<Pair<String, List<SessionEntity>>> {
+private fun groupSessionsByTime(sessions: List<SessionEntity>): List<Pair<Int, List<SessionEntity>>> {
     val today = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
@@ -388,16 +392,16 @@ private fun groupSessionsByTime(sessions: List<SessionEntity>): List<Pair<String
     val lastWeek = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -14) }
     val thisMonth = (today.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
 
-    val groups = linkedMapOf<String, MutableList<SessionEntity>>()
+    val groups = linkedMapOf<Int, MutableList<SessionEntity>>()
 
     sessions.sortedByDescending { it.updatedAt }.forEach { session ->
         val label = when {
-            session.updatedAt >= today.timeInMillis -> "Today"
-            session.updatedAt >= yesterday.timeInMillis -> "Yesterday"
-            session.updatedAt >= thisWeek.timeInMillis -> "This Week"
-            session.updatedAt >= lastWeek.timeInMillis -> "Last Week"
-            session.updatedAt >= thisMonth.timeInMillis -> "This Month"
-            else -> "Older"
+            session.updatedAt >= today.timeInMillis -> R.string.time_today
+            session.updatedAt >= yesterday.timeInMillis -> R.string.time_yesterday
+            session.updatedAt >= thisWeek.timeInMillis -> R.string.time_this_week
+            session.updatedAt >= lastWeek.timeInMillis -> R.string.time_last_week
+            session.updatedAt >= thisMonth.timeInMillis -> R.string.time_this_month
+            else -> R.string.time_older
         }
         groups.getOrPut(label) { mutableListOf() }.add(session)
     }

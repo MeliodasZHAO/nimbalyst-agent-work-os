@@ -25,7 +25,7 @@ export const docHistoryTip: TipDefinition = {
   },
   content: {
     icon: HistoryIcon,
-    title: 'Cmd+Y to scrub document history',
-    body: 'Every save snapshots the file. **Cmd+Y** opens the history dialog with diffs against any earlier version -- click to restore. Hidden safety net for big edits.',
+    title: 'Cmd+Y 浏览文档历史',
+    body: '每次保存都会创建快照。**Cmd+Y** 打开历史对话框，可以与任意历史版本对比差异——点击即可恢复。大幅编辑时的隐藏安全网。',
   },
 };

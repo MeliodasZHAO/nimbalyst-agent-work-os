@@ -23,6 +23,8 @@ interface ResolveImmediateToolDecisionDeps {
   ) => Promise<ToolDecision>;
   setCurrentMode: (mode: 'planning' | 'agent') => void;
   logSecurity: (message: string, data?: Record<string, unknown>) => void;
+  /** When set, returns the resolved mobile permission policy for auto-approval */
+  mobilePermissionPolicyResolver?: () => { allowToolPermissionApproval: boolean } | null;
 }
 
 interface ResolveImmediateToolDecisionParams {
@@ -96,6 +98,15 @@ export async function resolveImmediateToolDecision(
       deps.logSecurity('[canUseTool] Allow-all mode, auto-approving file tool:', { toolName });
       return { behavior: 'allow', updatedInput: input };
     }
+  }
+
+  // Auto-approve when the Agent Work OS mobile permission policy allows tool approval.
+  // This prevents interactive prompts from being created for sessions where the operator
+  // has already granted standing approval, matching the intent of flexible/custom modes.
+  const mobilePolicy = deps.mobilePermissionPolicyResolver?.();
+  if (mobilePolicy?.allowToolPermissionApproval) {
+    deps.logSecurity('[canUseTool] Auto-approving via mobile permission policy:', { toolName });
+    return { behavior: 'allow', updatedInput: input };
   }
 
   return null;

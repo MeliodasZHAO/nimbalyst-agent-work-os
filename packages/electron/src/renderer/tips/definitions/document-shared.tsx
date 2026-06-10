@@ -27,10 +27,10 @@ export const documentSharedTip: TipDefinition = {
   },
   content: {
     icon: LinkIcon,
-    title: 'Share documents with one link',
-    body: 'Right-click a file and pick **Share** to publish an end-to-end-encrypted link. Recipients open it in a browser -- no Nimbalyst account needed.',
+    title: '一个链接分享文档',
+    body: '右键点击文件并选择 **分享**，即可发布一个端到端加密的链接。接收者在浏览器中打开即可查看——无需 Nimbalyst 账户。',
     action: {
-      label: 'Manage Shared Links',
+      label: '管理共享链接',
       onClick: () => {
         store.set(openSettingsCommandAtom, { category: 'shared-links', timestamp: Date.now() });
       },

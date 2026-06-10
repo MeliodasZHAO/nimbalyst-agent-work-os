@@ -74,11 +74,11 @@ const SessionStatusIndicator = memo<{ sessionId: string; messageCount?: number }
 });
 
 const PHASE_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  backlog: { label: 'Backlog', color: 'var(--nim-text-faint)', bg: 'rgba(128,128,128,0.12)' },
-  planning: { label: 'Planning', color: 'var(--nim-primary)', bg: 'rgba(96,165,250,0.12)' },
-  implementing: { label: 'Implementing', color: 'var(--nim-warning)', bg: 'rgba(251,191,36,0.12)' },
-  validating: { label: 'Validating', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
-  complete: { label: 'Complete', color: 'var(--nim-success)', bg: 'rgba(74,222,128,0.12)' },
+  backlog: { label: '待处理', color: 'var(--nim-text-faint)', bg: 'rgba(128,128,128,0.12)' },
+  planning: { label: '规划中', color: 'var(--nim-primary)', bg: 'rgba(96,165,250,0.12)' },
+  implementing: { label: '实现中', color: 'var(--nim-warning)', bg: 'rgba(251,191,36,0.12)' },
+  validating: { label: '验证中', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+  complete: { label: '已完成', color: 'var(--nim-success)', bg: 'rgba(74,222,128,0.12)' },
 };
 
 const SessionPhaseBadge = memo<{ phase: string }>(({ phase }) => {
@@ -122,7 +122,7 @@ interface SessionListItemProps {
   provider?: string;
   model?: string;
   messageCount?: number;
-  sessionType?: 'session' | 'workstream' | 'blitz' | 'voice'; // Structural type of session
+  sessionType?: 'session' | 'workstream' | 'blitz' | 'dispatch' | 'voice';
   isWorkstream?: boolean; // Whether this session is a workstream (has children)
   isWorktreeSession?: boolean; // Whether this session belongs to a worktree (shows worktree icon)
   parentSessionId?: string | null; // Parent session ID for hierarchical workstreams
@@ -383,7 +383,7 @@ export const SessionListItem = memo<SessionListItemProps>(({
   }, [isRenaming]);
 
   // Get the first line of the title (truncate if too long)
-  const displayTitle = title || 'Untitled Session';
+  const displayTitle = title || '未命名会话';
   const truncatedTitle = displayTitle.length > 40
     ? displayTitle.substring(0, 40) + '...'
     : displayTitle;

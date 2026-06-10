@@ -82,7 +82,7 @@ function createWindowListMenu(): any[] {
 
         // Check for special windows first
         if (isWorkspaceManagerWindow(window)) {
-            title = 'Project Manager';
+            title = 'Nimbalyst 工作台';
             category = 'other';
         } else if (isAboutWindow(window)) {
             title = 'About';
@@ -1877,5 +1877,5 @@ function isWorkspaceManagerWindow(window: BrowserWindow): boolean {
         return false;
     }
     // Check if this is the workspace manager window by checking the title
-    return window.getTitle() === 'Project Manager - Nimbalyst';
+    return window.getTitle() === 'Project Manager - Nimbalyst' || window.getTitle() === 'Nimbalyst 工作台';
 }

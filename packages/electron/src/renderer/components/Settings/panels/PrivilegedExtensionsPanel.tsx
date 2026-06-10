@@ -103,7 +103,7 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
     return (
       <div className="privileged-extensions-panel max-w-4xl">
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] p-4 text-sm text-[var(--nim-text-muted)]">
-          Privileged capabilities API not loaded yet. Restart Nimbalyst to view privileged extensions.
+          特权能力 API 尚未加载。请重启 Nimbalyst 以查看特权扩展。
         </div>
       </div>
     );
@@ -113,12 +113,11 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
     <div className="privileged-extensions-panel max-w-4xl">
       <div className="mb-5">
         <h2 className="text-base font-semibold text-[var(--nim-text)] m-0">
-          Privileged Capabilities
+          特权能力
         </h2>
         <p className="m-0 mt-1 text-xs text-[var(--nim-text-muted)] leading-relaxed">
-          Extensions that have been granted permission to run code outside the renderer
-          (e.g., spawning processes, opening network connections). Revoke anything you
-          do not recognize.
+          已被授权在渲染进程之外运行代码的扩展
+          （如启动进程、打开网络连接）。如果发现不认识的扩展，请撤销其权限。
         </p>
       </div>
 
@@ -130,7 +129,7 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
 
       {enabledModules.length === 0 ? (
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] p-4 text-sm text-[var(--nim-text-muted)]">
-          No extensions currently hold privileged grants.
+          当前没有扩展持有特权授权。
         </div>
       ) : (
         <div className="flex flex-col gap-3 mb-6">
@@ -168,10 +167,10 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
                 </div>
                 <div className="flex items-center gap-3 mb-2 text-xs text-[var(--nim-text-muted)]">
                   <span>
-                    Calls: <span className="text-[var(--nim-text)]">{totalCalls}</span>
+                    调用次数: <span className="text-[var(--nim-text)]">{totalCalls}</span>
                   </span>
                   {totalDenied > 0 && (
-                    <span className="text-[var(--nim-error)]">denied: {totalDenied}</span>
+                    <span className="text-[var(--nim-error)]">拒绝: {totalDenied}</span>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -185,7 +184,7 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
                       }
                       onClick={() => handleRevoke(row.extensionId, row.moduleId, 'workspace')}
                     >
-                      Revoke (this workspace)
+                      撤销（当前工作区）
                     </button>
                   )}
                   {row.scopes.includes('global') && (
@@ -195,7 +194,7 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
                       disabled={busy === `${row.extensionId}::${row.moduleId}::global`}
                       onClick={() => handleRevoke(row.extensionId, row.moduleId, 'global')}
                     >
-                      Revoke (all workspaces)
+                      撤销（所有工作区）
                     </button>
                   )}
                 </div>
@@ -225,11 +224,11 @@ export const PrivilegedExtensionsPanel: React.FC<PrivilegedExtensionsPanelProps>
       )}
 
       <div className="mb-2 text-xs font-semibold text-[var(--nim-text-muted)] uppercase tracking-wide">
-        Recent activity
+        最近活动
       </div>
       {recent.length === 0 ? (
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] p-3 text-xs text-[var(--nim-text-muted)]">
-          No privileged-capability calls recorded yet this session.
+          本次会话尚未记录到特权能力调用。
         </div>
       ) : (
         <div className="rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] divide-y divide-[var(--nim-border)]">

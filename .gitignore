@@ -199,8 +199,10 @@ packages/electron/e2e/smoke/screenshots/
 packages/electron/e2e/walkthroughs/screenshots/
 packages/ios/screenshots/
 
-# Auto-generated platform artifacts
-packages/android/app/schemas/
+# Auto-generated platform artifacts (Room schema JSON tracked for migration tests)
+packages/android/app/schemas/**/
+!packages/android/app/schemas/**/
+!packages/android/app/schemas/**/*.json
 packages/marketplace/.wrangler/
 
 # Scratch/working directories at repo root (not source)

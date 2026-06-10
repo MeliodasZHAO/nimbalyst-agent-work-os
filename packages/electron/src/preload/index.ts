@@ -301,6 +301,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window operations
   setDocumentEdited: (edited: boolean) => ipcRenderer.send('set-document-edited', edited),
   setTitle: (title: string) => ipcRenderer.send('set-title', title),
+  // Frameless window controls (Windows only)
+  windowMinimize: () => ipcRenderer.send('window:minimize'),
+  windowMaximizeToggle: () => ipcRenderer.send('window:maximize-toggle'),
+  windowClose: () => ipcRenderer.send('window:close'),
+  windowIsMaximized: () => ipcRenderer.invoke('window:is-maximized') as Promise<boolean>,
+  onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) => {
+    const handler = (_event: any, isMaximized: boolean) => callback(isMaximized);
+    ipcRenderer.on('window:maximize-change', handler);
+    return () => { ipcRenderer.removeListener('window:maximize-change', handler); };
+  },
   /** Report user activity for sync presence awareness */
   reportUserActivity: () => ipcRenderer.send('user-activity'),
   /** Set the idle threshold for sync presence (in milliseconds). For testing, use 10000 (10 seconds). */
@@ -484,7 +494,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // AI operations (new unified interface)
   aiHasApiKey: () => ipcRenderer.invoke('ai:hasApiKey'),
   aiInitialize: (provider?: string, apiKey?: string) => ipcRenderer.invoke('ai:initialize', provider, apiKey),
-  aiCreateSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'opencode' | 'copilot-cli' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) => {
+  aiCreateSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'openai-codex-acp' | 'opencode' | 'copilot-cli' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) => {
     // console.log('[Preload] aiCreateSession called:', { provider, workspacePath, sessionType, worktreeId });
     return ipcRenderer.invoke('ai:createSession', provider, documentContext, workspacePath, modelId, sessionType, worktreeId);
   },
@@ -658,7 +668,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ai: {
     hasApiKey: () => ipcRenderer.invoke('ai:hasApiKey'),
     initialize: (provider?: string, apiKey?: string) => ipcRenderer.invoke('ai:initialize', provider, apiKey),
-    createSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) =>
+    createSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'openai-codex-acp' | 'opencode' | 'copilot-cli' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) =>
       ipcRenderer.invoke('ai:createSession', provider, documentContext, workspacePath, modelId, sessionType, worktreeId),
     sendMessage: (message: string, documentContext?: any, sessionId?: string, workspacePath?: string) =>
       ipcRenderer.invoke('ai:sendMessage', message, documentContext, sessionId, workspacePath),
@@ -1436,6 +1446,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
       codexEnabled?: boolean;
       claudeGeneratedExtensionWorkflowsEnabled?: boolean;
     }) => ipcRenderer.invoke('agentWorkflows:set-export-settings', updates),
+  },
+
+  agentWorkOS: {
+    runVisualCheck: (options: { label?: string; workspacePath?: string }) =>
+      ipcRenderer.invoke('agent-work-os:run-visual-check', options) as Promise<{
+        success: boolean;
+        resultPath?: string;
+        screenshots?: Array<{ viewport: string; width: number; height: number; path: string }>;
+        stdout?: string;
+        stderr?: string;
+        error?: string;
+      }>,
   },
 
   // Extension Development Kit (EDK) API

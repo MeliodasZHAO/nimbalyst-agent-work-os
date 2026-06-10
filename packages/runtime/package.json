@@ -18,6 +18,10 @@
       "import": "./dist/editor/index.js",
       "types": "./dist/editor/index.d.ts"
     },
+    "./agent-work-os": {
+      "import": "./dist/agent-work-os/index.js",
+      "types": "./dist/agent-work-os/index.d.ts"
+    },
     "./plugins/DiffPlugin": {
       "import": "./dist/editor/plugins/DiffPlugin/core/exports.js",
       "types": "./dist/editor/plugins/DiffPlugin/core/exports.d.ts"

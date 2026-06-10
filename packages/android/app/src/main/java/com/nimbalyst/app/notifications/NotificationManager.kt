@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import com.nimbalyst.app.R
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +51,7 @@ class NotificationManager(
         val app = runCatching { FirebaseApp.initializeApp(context) }.getOrNull()
         if (app == null) {
             _state.value = _state.value.copy(
-                lastError = "Firebase is not configured for Android. Add google-services.json to enable push."
+                lastError = context.getString(R.string.notif_firebase_not_configured)
             )
             return
         }
@@ -65,7 +66,7 @@ class NotificationManager(
             }
             .addOnFailureListener { error ->
                 _state.value = _state.value.copy(
-                    lastError = error.message ?: "Failed to get FCM token."
+                    lastError = error.message ?: context.getString(R.string.notif_fcm_failed)
                 )
             }
     }

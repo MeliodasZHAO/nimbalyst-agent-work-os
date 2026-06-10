@@ -26,8 +26,8 @@ export const agentModeIntro: WalkthroughDefinition = {
       target: {
         testId: 'agent-mode-button',
       },
-      title: 'Agent Mode',
-      body: 'A focused coding agent management interface. Manage many running AI agent sessions, track their execution, control their commits and organize them with a Kanban board. Pick your agent, give instructions, and the AI agent will write code, run commands, and make changes across your project.',
+      title: 'Agent 模式',
+      body: '专注的 AI 编程代理管理界面。管理多个运行中的 AI Agent 会话，追踪执行进度，控制提交，并用看板组织它们。选择你的 Agent，给出指令，AI Agent 会编写代码、执行命令并修改整个项目。',
       placement: 'right',
       shortcut: 'Cmd+2',
     },
@@ -52,8 +52,8 @@ export const filesModeIntro: WalkthroughDefinition = {
       target: {
         testId: 'files-mode-button',
       },
-      title: 'Files Mode',
-      body: 'Browse and edit your project files. Open markdown documents, code files, and more. The AI assistant sidebar is available here too.',
+      title: '文件模式',
+      body: '浏览和编辑项目文件。打开 Markdown 文档、代码文件等，这里同样可以使用 AI 助手侧边栏。',
       placement: 'right',
       shortcut: 'Cmd+1',
     },

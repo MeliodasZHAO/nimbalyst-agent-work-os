@@ -38,12 +38,12 @@ export function UpdateReadyToast({
 
         {/* Header */}
         <div className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-1 pr-7">
-          Update ready
+          更新已就绪
         </div>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-4 h-4 border-2 border-[var(--nim-bg-tertiary)] border-t-[var(--nim-primary)] rounded-full animate-spin shrink-0" />
           <div className="update-toast-subtitle text-xs text-[var(--nim-text-muted)] leading-normal">
-            Update will apply when all AI sessions are finished
+            所有 AI 会话完成后将自动应用更新
           </div>
         </div>
 
@@ -54,14 +54,14 @@ export function UpdateReadyToast({
             onClick={onForceRestart}
             data-testid="force-restart-btn"
           >
-            Restart Now
+            立即重启
           </button>
           <button
             className="update-toast-btn update-toast-btn-secondary py-2 px-3.5 border border-[var(--nim-border)] rounded-md text-[13px] font-medium cursor-pointer transition-all duration-200 font-[inherit] whitespace-nowrap bg-[var(--nim-bg-tertiary)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
             onClick={onDoItLater}
             data-testid="do-it-later-btn"
           >
-            Later
+            稍后
           </button>
         </div>
       </div>
@@ -88,10 +88,10 @@ export function UpdateReadyToast({
 
       {/* Header */}
       <div className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-1 pr-7">
-        Nimbalyst update is ready
+        Nimbalyst 更新已就绪
       </div>
       <div className="update-toast-subtitle text-xs text-[var(--nim-text-muted)] leading-normal mb-4">
-        The app needs to be restarted to apply the update
+        需要重启应用以应用更新
       </div>
 
       {/* Action buttons */}
@@ -101,14 +101,14 @@ export function UpdateReadyToast({
           onClick={onRelaunch}
           data-testid="relaunch-btn"
         >
-          Relaunch
+          重新启动
         </button>
         <button
           className="update-toast-btn update-toast-btn-secondary py-2 px-3.5 border border-[var(--nim-border)] rounded-md text-[13px] font-medium cursor-pointer transition-all duration-200 font-[inherit] whitespace-nowrap bg-[var(--nim-bg-tertiary)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
           onClick={onDoItLater}
           data-testid="do-it-later-btn"
         >
-          Later
+          稍后
         </button>
       </div>
     </div>

@@ -78,12 +78,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:trustWorkspace', workspacePath);
       await loadPermissions();
-      setSuccess('Workspace trusted for agent operations');
+      setSuccess('工作区已信任，允许代理操作');
       posthog?.capture('permission_setting_changed', { action: 'trust_workspace' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to trust workspace:', err);
-      setError(err instanceof Error ? err.message : 'Failed to trust workspace');
+      setError(err instanceof Error ? err.message : '信任工作区失败');
     }
   };
 
@@ -91,12 +91,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:revokeWorkspaceTrust', workspacePath);
       await loadPermissions();
-      setSuccess('Workspace trust revoked');
+      setSuccess('已撤销工作区信任');
       posthog?.capture('permission_setting_changed', { action: 'revoke_trust' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to revoke workspace trust:', err);
-      setError(err instanceof Error ? err.message : 'Failed to revoke workspace trust');
+      setError(err instanceof Error ? err.message : '撤销工作区信任失败');
     }
   };
 
@@ -107,7 +107,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       posthog?.capture('permission_setting_changed', { action: 'change_mode', mode });
     } catch (err) {
       console.error('Failed to set permission mode:', err);
-      setError(err instanceof Error ? err.message : 'Failed to set permission mode');
+      setError(err instanceof Error ? err.message : '设置权限模式失败');
     }
   };
 
@@ -115,12 +115,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:removePattern', workspacePath, pattern);
       await loadPermissions();
-      setSuccess(`Pattern removed`);
+      setSuccess(`已移除模式规则`);
       posthog?.capture('permission_setting_changed', { action: 'remove_pattern' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to remove pattern:', err);
-      setError(err instanceof Error ? err.message : 'Failed to remove pattern');
+      setError(err instanceof Error ? err.message : '移除模式规则失败');
     }
   };
 
@@ -128,12 +128,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:resetToDefaults', workspacePath);
       await loadPermissions();
-      setSuccess('Permissions reset to defaults');
+      setSuccess('权限已重置为默认值');
       posthog?.capture('permission_setting_changed', { action: 'reset_to_defaults' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to reset permissions:', err);
-      setError(err instanceof Error ? err.message : 'Failed to reset permissions');
+      setError(err instanceof Error ? err.message : '重置权限失败');
     }
   };
 
@@ -142,21 +142,21 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       // Use Electron's dialog to select a directory
       const result = await window.electronAPI.invoke('dialog:openDirectory', {
-        title: 'Select Additional Directory',
-        buttonLabel: 'Add Directory',
+        title: '选择附加目录',
+        buttonLabel: '添加目录',
       });
 
       if (result && result.filePaths && result.filePaths.length > 0) {
         const dirPath = result.filePaths[0];
         await window.electronAPI.invoke('permissions:addAdditionalDirectory', workspacePath, dirPath, false);
         await loadPermissions();
-        setSuccess('Directory added');
+        setSuccess('已添加目录');
         posthog?.capture('permission_setting_changed', { action: 'add_directory' });
         setTimeout(() => setSuccess(null), 3000);
       }
     } catch (err) {
       console.error('Failed to add directory:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add directory');
+      setError(err instanceof Error ? err.message : '添加目录失败');
     } finally {
       setIsAddingDirectory(false);
     }
@@ -166,12 +166,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:removeAdditionalDirectory', workspacePath, dirPath);
       await loadPermissions();
-      setSuccess('Directory removed');
+      setSuccess('已移除目录');
       posthog?.capture('permission_setting_changed', { action: 'remove_directory' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to remove directory:', err);
-      setError(err instanceof Error ? err.message : 'Failed to remove directory');
+      setError(err instanceof Error ? err.message : '移除目录失败');
     }
   };
 
@@ -189,12 +189,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       setNewUrlPattern('');
       setNewUrlDescription('');
       setIsAddingUrl(false);
-      setSuccess('URL pattern added');
+      setSuccess('已添加 URL 规则');
       posthog?.capture('permission_setting_changed', { action: 'add_url_pattern' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to add URL pattern:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add URL pattern');
+      setError(err instanceof Error ? err.message : '添加 URL 规则失败');
     }
   };
 
@@ -202,12 +202,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:removeAllowedUrlPattern', workspacePath, pattern);
       await loadPermissions();
-      setSuccess('URL pattern removed');
+      setSuccess('已移除 URL 规则');
       posthog?.capture('permission_setting_changed', { action: 'remove_url_pattern' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to remove URL pattern:', err);
-      setError(err instanceof Error ? err.message : 'Failed to remove URL pattern');
+      setError(err instanceof Error ? err.message : '移除 URL 规则失败');
     }
   };
 
@@ -215,12 +215,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:allowAllUrls', workspacePath);
       await loadPermissions();
-      setSuccess('All domains are now allowed');
+      setSuccess('已允许所有域名');
       posthog?.capture('permission_setting_changed', { action: 'allow_all_domains' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to allow all domains:', err);
-      setError(err instanceof Error ? err.message : 'Failed to allow all domains');
+      setError(err instanceof Error ? err.message : '允许所有域名失败');
     }
   };
 
@@ -228,12 +228,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     try {
       await window.electronAPI.invoke('permissions:revokeAllUrlsPermission', workspacePath);
       await loadPermissions();
-      setSuccess('All domains permission revoked');
+      setSuccess('已撤销所有域名权限');
       posthog?.capture('permission_setting_changed', { action: 'revoke_all_domains' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to revoke all domains permission:', err);
-      setError(err instanceof Error ? err.message : 'Failed to revoke all domains permission');
+      setError(err instanceof Error ? err.message : '撤销所有域名权限失败');
     }
   };
 
@@ -244,7 +244,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
     return (
       <div className="settings-panel-content flex flex-col p-6">
         <div className="settings-panel-empty text-center py-12 text-[var(--nim-text-muted)]">
-          <p>Open a workspace to configure agent permissions.</p>
+          <p>打开一个工作区以配置代理权限。</p>
         </div>
       </div>
     );
@@ -253,7 +253,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
   if (loading) {
     return (
       <div className="settings-panel-content flex flex-col p-6">
-        <div className="settings-panel-loading text-center py-12 text-[var(--nim-text-muted)]">Loading permissions...</div>
+        <div className="settings-panel-loading text-center py-12 text-[var(--nim-text-muted)]">加载权限中...</div>
       </div>
     );
   }
@@ -261,10 +261,10 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
   return (
     <div className="settings-panel-content flex flex-col p-6">
       <div className="settings-panel-header mb-6">
-        <h2 className="text-xl font-semibold text-[var(--nim-text)] mb-2">Agent Permissions</h2>
+        <h2 className="text-xl font-semibold text-[var(--nim-text)] mb-2">代理权限</h2>
         <p className="text-sm text-[var(--nim-text-muted)] leading-relaxed">
-          Manage which commands the AI agent can run in this project.
-          Approved patterns are saved to <code className="text-xs bg-[var(--nim-bg-secondary)] px-1 py-0.5 rounded">.claude/settings.local.json</code> and shared with Claude Code CLI.
+          管理 AI 代理在此项目中可执行的命令。
+          批准的规则保存在 <code className="text-xs bg-[var(--nim-bg-secondary)] px-1 py-0.5 rounded">.claude/settings.local.json</code> 中，并与 Claude Code CLI 共享。
         </p>
       </div>
 
@@ -285,7 +285,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       {/* Workspace Trust Section */}
       <div className="permissions-section mb-6">
         <div className="permissions-section-header text-sm font-medium text-[var(--nim-text)] mb-3">
-          <span>Workspace Trust</span>
+          <span>工作区信任</span>
         </div>
         <div className="permissions-trust-card flex items-center justify-between p-4 rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)]">
           <div className="permissions-trust-info flex-1">
@@ -293,23 +293,23 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
               {permissions?.permissionMode !== null ? (
                 <>
                   <span className="material-symbols-outlined permissions-trust-icon trusted text-[var(--nim-success)]">verified</span>
-                  <span className="permissions-trust-label text-sm font-medium text-[var(--nim-text)]">This workspace is trusted</span>
+                  <span className="permissions-trust-label text-sm font-medium text-[var(--nim-text)]">此工作区已受信任</span>
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined permissions-trust-icon untrusted text-[var(--nim-warning)]">gpp_maybe</span>
-                  <span className="permissions-trust-label text-sm font-medium text-[var(--nim-text)]">This workspace is not trusted</span>
+                  <span className="permissions-trust-label text-sm font-medium text-[var(--nim-text)]">此工作区未受信任</span>
                 </>
               )}
             </div>
             <p className="permissions-trust-description text-xs text-[var(--nim-text-muted)]">
               {permissions?.permissionMode !== null
-                ? 'The AI agent can run commands in this workspace.'
-                : 'Trust this workspace to allow the AI agent to run commands.'}
+                ? 'AI 代理可以在此工作区中执行命令。'
+                : '信任此工作区以允许 AI 代理执行命令。'}
             </p>
             {permissions?.trustedAt && (
               <p className="permissions-trust-date text-xs text-[var(--nim-text-faint)] mt-1">
-                Trusted on {new Date(permissions.trustedAt).toLocaleDateString()}
+                信任于 {new Date(permissions.trustedAt).toLocaleDateString()}
               </p>
             )}
           </div>
@@ -319,14 +319,14 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                 className="btn-secondary px-3 py-1.5 rounded text-xs font-medium border border-[var(--nim-border)] bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] cursor-pointer"
                 onClick={handleRevokeWorkspaceTrust}
               >
-                Revoke Trust
+                撤销信任
               </button>
             ) : (
               <button
                 className="btn-primary px-3 py-1.5 rounded text-xs font-medium bg-[var(--nim-primary)] text-white hover:bg-[var(--nim-primary-hover)] cursor-pointer"
                 onClick={handleTrustWorkspace}
               >
-                Trust Workspace
+                信任工作区
               </button>
             )}
           </div>
@@ -337,7 +337,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       {permissions && permissions.permissionMode !== null && (
         <div className="permissions-section mb-6">
           <div className="permissions-section-header text-sm font-medium text-[var(--nim-text)] mb-3">
-            <span>Permission Mode</span>
+            <span>权限模式</span>
           </div>
           <div className="permissions-mode-options flex flex-col gap-2">
             <label className={`permissions-mode-option flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -356,9 +356,9 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
               <div className="permissions-mode-option-content flex items-start gap-3">
                 <span className="material-symbols-outlined text-[var(--nim-text-muted)]">verified_user</span>
                 <div className="permissions-mode-option-text flex flex-col gap-0.5">
-                  <span className="permissions-mode-option-title text-sm font-medium text-[var(--nim-text)]">Ask</span>
+                  <span className="permissions-mode-option-title text-sm font-medium text-[var(--nim-text)]">询问</span>
                   <span className="permissions-mode-option-description text-xs text-[var(--nim-text-muted)]">
-                    Agent asks before running commands. Approvals saved to .claude/settings.local.json.
+                    代理执行命令前先询问。批准的规则保存在 .claude/settings.local.json 中。
                   </span>
                 </div>
               </div>
@@ -379,9 +379,9 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
               <div className="permissions-mode-option-content flex items-start gap-3">
                 <span className="material-symbols-outlined text-[var(--nim-text-muted)]">check_circle</span>
                 <div className="permissions-mode-option-text flex flex-col gap-0.5">
-                  <span className="permissions-mode-option-title text-sm font-medium text-[var(--nim-text)]">Allow Edits</span>
+                  <span className="permissions-mode-option-title text-sm font-medium text-[var(--nim-text)]">允许编辑</span>
                   <span className="permissions-mode-option-description text-xs text-[var(--nim-text-muted)]">
-                    File operations auto-approved. Bash and web requests follow Claude Code settings.
+                    文件操作自动批准。Bash 和网络请求遵循 Claude Code 设置。
                   </span>
                 </div>
               </div>
@@ -402,9 +402,9 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
               <div className="permissions-mode-option-content flex items-start gap-3">
                 <span className="material-symbols-outlined text-[var(--nim-text-muted)]">check_circle</span>
                 <div className="permissions-mode-option-text flex flex-col gap-0.5">
-                  <span className="permissions-mode-option-title text-sm font-medium text-[var(--nim-text)]">Allow All</span>
+                  <span className="permissions-mode-option-title text-sm font-medium text-[var(--nim-text)]">允许全部</span>
                   <span className="permissions-mode-option-description text-xs text-[var(--nim-text-muted)]">
-                    All operations auto-approved without any prompts.
+                    所有操作自动批准，无需任何确认。
                   </span>
                 </div>
               </div>
@@ -417,15 +417,15 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       {permissions?.permissionMode !== null && (
         <div className="permissions-section mb-6">
           <div className="permissions-section-header flex items-center gap-2 text-sm font-medium text-[var(--nim-text)] mb-2">
-            <span>Additional Directories</span>
+            <span>附加目录</span>
             <span className="permissions-section-count text-xs px-1.5 py-0.5 rounded bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">{permissions?.additionalDirectories.length || 0}</span>
           </div>
           <p className="permissions-section-description text-xs text-[var(--nim-text-muted)] mb-3">
-            Allow the agent to access directories outside this project.
+            允许代理访问此项目之外的目录。
           </p>
           {permissions?.additionalDirectories.length === 0 ? (
             <div className="permissions-empty-state text-xs text-[var(--nim-text-faint)] py-4 px-3 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)]">
-              No additional directories. The agent can only access files within this project.
+              暂无附加目录。代理只能访问此项目内的文件。
             </div>
           ) : (
             <div className="permissions-directory-list flex flex-col gap-2 mb-3">
@@ -438,7 +438,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                   <button
                     className="permissions-directory-remove w-6 h-6 flex items-center justify-center rounded text-[var(--nim-text-muted)] hover:text-[var(--nim-error)] hover:bg-[var(--nim-bg-hover)] cursor-pointer bg-transparent border-none"
                     onClick={() => handleRemoveDirectory(dir.path)}
-                    title="Remove directory"
+                    title="移除目录"
                   >
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                       <path d="M2 4h12M6 4V2.5A1.5 1.5 0 017.5 1h1A1.5 1.5 0 0110 2.5V4M5 7v5M8 7v5M11 7v5M3 4v9.5A1.5 1.5 0 004.5 15h7a1.5 1.5 0 001.5-1.5V4"/>
@@ -454,7 +454,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
             disabled={isAddingDirectory}
           >
             <span className="material-symbols-outlined text-base">add</span>
-            Add Directory
+            添加目录
           </button>
         </div>
       )}
@@ -463,12 +463,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       {permissions?.permissionMode !== null && (
         <div className="permissions-section mb-6">
           <div className="permissions-section-header flex items-center gap-2 text-sm font-medium text-[var(--nim-text)] mb-2">
-            <span>Allowed URL Patterns</span>
+            <span>允许的 URL 规则</span>
             <span className="permissions-section-count text-xs px-1.5 py-0.5 rounded bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">{permissions?.allowedUrlPatterns?.length || 0}</span>
           </div>
           <p className="permissions-section-description text-xs text-[var(--nim-text-muted)] mb-3">
-            Allow the agent to fetch or curl specific domains.
-            Use wildcards like <code className="bg-[var(--nim-bg-tertiary)] px-1 py-0.5 rounded">*.github.com</code> to allow all subdomains.
+            允许代理请求或 curl 特定域名。
+            使用通配符如 <code className="bg-[var(--nim-bg-tertiary)] px-1 py-0.5 rounded">*.github.com</code> 来允许所有子域名。
           </p>
 
           {/* All Domains Allowed Card */}
@@ -477,9 +477,9 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
               <div className="permissions-all-domains-info flex items-center gap-3">
                 <span className="material-symbols-outlined permissions-all-domains-icon text-[var(--nim-primary)]">public</span>
                 <div className="permissions-all-domains-text flex flex-col">
-                  <span className="permissions-all-domains-title text-sm font-medium text-[var(--nim-text)]">All domains allowed</span>
+                  <span className="permissions-all-domains-title text-sm font-medium text-[var(--nim-text)]">已允许所有域名</span>
                   <span className="permissions-all-domains-description text-xs text-[var(--nim-text-muted)]">
-                    The agent can fetch from any URL without asking.
+                    代理可以请求任意 URL，无需询问。
                   </span>
                 </div>
               </div>
@@ -487,14 +487,14 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                 className="btn-secondary px-3 py-1.5 rounded text-xs font-medium border border-[var(--nim-border)] bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] cursor-pointer"
                 onClick={handleRevokeAllDomains}
               >
-                Revoke
+                撤销
               </button>
             </div>
           ) : (
             <>
               {(permissions?.allowedUrlPatterns?.length || 0) === 0 && !isAddingUrl ? (
                 <div className="permissions-empty-state text-xs text-[var(--nim-text-faint)] py-4 px-3 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] mb-3">
-                  No URL patterns allowed yet. The agent will ask before making web requests.
+                  暂无允许的 URL 规则。代理发起网络请求时会先询问。
                 </div>
               ) : (
                 <div className="permissions-url-list flex flex-col gap-2 mb-3">
@@ -509,7 +509,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                       <button
                         className="permissions-url-remove w-6 h-6 flex items-center justify-center rounded text-[var(--nim-text-muted)] hover:text-[var(--nim-error)] hover:bg-[var(--nim-bg-hover)] cursor-pointer bg-transparent border-none"
                         onClick={() => handleRemoveUrlPattern(urlPattern.pattern)}
-                        title="Remove URL pattern"
+                        title="移除 URL 规则"
                       >
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                           <path d="M2 4h12M6 4V2.5A1.5 1.5 0 017.5 1h1A1.5 1.5 0 0110 2.5V4M5 7v5M8 7v5M11 7v5M3 4v9.5A1.5 1.5 0 004.5 15h7a1.5 1.5 0 001.5-1.5V4"/>
@@ -524,7 +524,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                   <input
                     type="text"
                     className="permissions-url-input px-3 py-1.5 rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] text-sm placeholder:text-[var(--nim-text-faint)]"
-                    placeholder="URL pattern (e.g., *.github.com)"
+                    placeholder="URL 规则 (例如 *.github.com)"
                     value={newUrlPattern}
                     onChange={(e) => setNewUrlPattern(e.target.value)}
                     autoFocus
@@ -532,7 +532,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                   <input
                     type="text"
                     className="permissions-url-input px-3 py-1.5 rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] text-sm placeholder:text-[var(--nim-text-faint)]"
-                    placeholder="Description (optional)"
+                    placeholder="描述 (可选)"
                     value={newUrlDescription}
                     onChange={(e) => setNewUrlDescription(e.target.value)}
                   />
@@ -545,14 +545,14 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                         setNewUrlDescription('');
                       }}
                     >
-                      Cancel
+                      取消
                     </button>
                     <button
                       className="btn-primary px-3 py-1.5 rounded text-xs font-medium bg-[var(--nim-primary)] text-white hover:bg-[var(--nim-primary-hover)] cursor-pointer disabled:opacity-50"
                       onClick={handleAddUrlPattern}
                       disabled={!newUrlPattern.trim()}
                     >
-                      Add
+                      添加
                     </button>
                   </div>
                 </div>
@@ -563,14 +563,14 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                     onClick={() => setIsAddingUrl(true)}
                   >
                     <span className="material-symbols-outlined text-base">add</span>
-                    Add URL Pattern
+                    添加 URL 规则
                   </button>
                   <button
                     className="btn-secondary permissions-allow-all-btn px-3 py-1.5 rounded text-xs font-medium border border-[var(--nim-border)] bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] cursor-pointer flex items-center gap-1"
                     onClick={handleAllowAllDomains}
                   >
                     <span className="material-symbols-outlined text-base">public</span>
-                    Allow All Domains
+                    允许所有域名
                   </button>
                 </div>
               )}
@@ -583,12 +583,12 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
       {permissions?.permissionMode !== null && (
         <div className="permissions-section mb-6">
           <div className="permissions-section-header flex items-center gap-2 text-sm font-medium text-[var(--nim-text)] mb-2">
-            <span>Allowed Patterns</span>
+            <span>已允许的命令规则</span>
             <span className="permissions-section-count text-xs px-1.5 py-0.5 rounded bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]">{permissions?.allowedPatterns.length || 0}</span>
           </div>
           {permissions?.allowedPatterns.length === 0 ? (
             <div className="permissions-empty-state text-xs text-[var(--nim-text-faint)] py-4 px-3 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)]">
-              No patterns allowed yet. When you approve a command, its pattern will appear here.
+              暂无允许的规则。批准命令后，其规则将显示在此处。
             </div>
           ) : (
             <div className="permissions-pattern-list flex flex-col gap-2">
@@ -598,7 +598,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
                   <button
                     className="permissions-pattern-remove w-6 h-6 flex items-center justify-center rounded text-[var(--nim-text-muted)] hover:text-[var(--nim-error)] hover:bg-[var(--nim-bg-hover)] cursor-pointer bg-transparent border-none"
                     onClick={() => handleRemovePattern(rule.pattern, 'allowed')}
-                    title="Remove pattern"
+                    title="移除规则"
                   >
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                       <path d="M2 4h12M6 4V2.5A1.5 1.5 0 017.5 1h1A1.5 1.5 0 0110 2.5V4M5 7v5M8 7v5M11 7v5M3 4v9.5A1.5 1.5 0 004.5 15h7a1.5 1.5 0 001.5-1.5V4"/>
@@ -623,7 +623,7 @@ export const ProjectPermissionsPanel: React.FC<ProjectPermissionsPanelProps> = (
             className="btn-secondary px-3 py-1.5 rounded text-xs font-medium border border-[var(--nim-border)] bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] cursor-pointer"
             onClick={handleResetToDefaults}
           >
-            Reset to Defaults
+            重置为默认
           </button>
         </div>
       ) : null}

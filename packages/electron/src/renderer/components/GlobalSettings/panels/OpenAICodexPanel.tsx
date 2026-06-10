@@ -67,7 +67,7 @@ export function OpenAICodexPanel({
       if (result.authMode === 'apikey') setSelectedAuthMethod('api-key');
       else if (result.authMode === 'chatgpt') setSelectedAuthMethod('chatgpt');
     } catch (err: any) {
-      setAuthError(err?.message ?? 'Failed to check Codex auth status');
+      setAuthError(err?.message ?? '检查 Codex 认证状态失败');
     } finally {
       setAuthBusy(null);
     }
@@ -90,10 +90,10 @@ export function OpenAICodexPanel({
     try {
       const result = await window.electronAPI.invoke('openai-codex:login-chatgpt') as { success: boolean; error?: string };
       if (!result.success) {
-        setAuthError(result.error ?? 'Login failed');
+        setAuthError(result.error ?? '登录失败');
       }
     } catch (err: any) {
-      setAuthError(err?.message ?? 'Login failed');
+      setAuthError(err?.message ?? '登录失败');
     } finally {
       setAuthBusy(null);
     }
@@ -101,7 +101,7 @@ export function OpenAICodexPanel({
 
   const handleApiKeyLogin = async () => {
     if (!pendingApiKey.trim()) {
-      setAuthError('Enter an API key first');
+      setAuthError('请先输入 API Key');
       return;
     }
     setAuthBusy('apikey');
@@ -109,13 +109,13 @@ export function OpenAICodexPanel({
     try {
       const result = await window.electronAPI.invoke('openai-codex:login-apikey', pendingApiKey.trim()) as { success: boolean; error?: string };
       if (!result.success) {
-        setAuthError(result.error ?? 'Login failed');
+        setAuthError(result.error ?? '登录失败');
       } else {
         setPendingApiKey('');
         await checkStatus();
       }
     } catch (err: any) {
-      setAuthError(err?.message ?? 'Login failed');
+      setAuthError(err?.message ?? '登录失败');
     } finally {
       setAuthBusy(null);
     }
@@ -127,12 +127,12 @@ export function OpenAICodexPanel({
     try {
       const result = await window.electronAPI.invoke('openai-codex:logout') as { success: boolean; error?: string };
       if (!result.success) {
-        setAuthError(result.error ?? 'Logout failed');
+        setAuthError(result.error ?? '退出登录失败');
       } else {
         await checkStatus();
       }
     } catch (err: any) {
-      setAuthError(err?.message ?? 'Logout failed');
+      setAuthError(err?.message ?? '退出登录失败');
     } finally {
       setAuthBusy(null);
     }
@@ -146,22 +146,22 @@ export function OpenAICodexPanel({
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">OpenAI Codex</h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Advanced code generation and completion powered by OpenAI Codex models.
-          Provides intelligent code suggestions and automated programming assistance.
+          基于 OpenAI Codex 模型的高级代码生成与补全功能。
+          提供智能代码建议和自动化编程辅助。
         </p>
       </div>
 
       <SettingsToggle
         variant="enable"
-        name="Enable OpenAI Codex"
+        name="启用 OpenAI Codex"
         checked={config.enabled || false}
         onChange={onToggle}
       />
 
       <SettingsToggle
         variant="enable"
-        name="Show Usage Indicator"
-        description="Display Codex usage limits in the navigation gutter"
+        name="显示用量指示器"
+        description="在导航栏显示 Codex 用量限制"
         checked={usageIndicatorEnabled}
         onChange={setUsageIndicatorEnabled}
       />
@@ -169,16 +169,16 @@ export function OpenAICodexPanel({
       {acpEnabled && (
         <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)]">
           <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">
-            ACP Transport <span className="text-xs font-normal text-[var(--nim-text-muted)]">(legacy)</span>
+            ACP 传输 <span className="text-xs font-normal text-[var(--nim-text-muted)]">(旧版)</span>
           </h4>
           <p className="text-[13px] text-[var(--nim-text-muted)] mb-3 leading-relaxed">
-            <strong>OpenAI Codex (ACP)</strong> is already enabled for this installation, but new Codex
-            sessions now use the app-server transport through the main <strong>OpenAI Codex</strong> provider.
+            <strong>OpenAI Codex (ACP)</strong> 已在此安装中启用，但新的 Codex
+            会话现在通过主 <strong>OpenAI Codex</strong> 提供商使用 app-server 传输。
           </p>
           <SettingsToggle
             variant="enable"
-            name="Enable ACP transport"
-            description="Keeps the separate 'OpenAI Codex (ACP)' legacy provider available"
+            name="启用 ACP 传输"
+            description="保留旧版 'OpenAI Codex (ACP)' 提供商可用"
             checked={acpEnabled}
             onChange={handleAcpToggle}
           />
@@ -187,7 +187,7 @@ export function OpenAICodexPanel({
 
       {config.enabled && (
         <div data-testid="codex-auth-section" className="codex-auth-section provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-          <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Sign In</h4>
+          <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">登录</h4>
 
           {isLoggedIn ? (
             <div className="status-box-success mb-4 py-3.5 px-4 rounded-lg text-[13px] flex items-center gap-3 justify-between bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.2)]">
@@ -195,7 +195,7 @@ export function OpenAICodexPanel({
                 <span className="status-box-icon text-xl leading-none shrink-0 text-[var(--nim-success)]">✓</span>
                 <div className="status-box-content flex flex-col gap-1 flex-1">
                   <span className="status-box-title font-semibold text-sm text-[var(--nim-text)]">
-                    {authStatus?.authMode === 'chatgpt' ? 'Signed in with ChatGPT' : authStatus?.authMode === 'apikey' ? 'Signed in with API key' : 'Signed in'}
+                    {authStatus?.authMode === 'chatgpt' ? '已通过 ChatGPT 登录' : authStatus?.authMode === 'apikey' ? '已通过 API Key 登录' : '已登录'}
                   </span>
                   {(authStatus?.email || authStatus?.planType) && (
                     <span className="status-box-subtitle text-xs text-[var(--nim-text-muted)]">
@@ -210,7 +210,7 @@ export function OpenAICodexPanel({
                   onClick={checkStatus}
                   disabled={authBusy !== null}
                 >
-                  Refresh
+                  刷新
                 </button>
                 <button
                   className="btn-small py-1.5 px-3 rounded text-xs font-medium cursor-pointer transition-all bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
@@ -218,7 +218,7 @@ export function OpenAICodexPanel({
                   disabled={authBusy !== null}
                   data-testid="codex-logout"
                 >
-                  {authBusy === 'logout' ? 'Signing out…' : 'Sign out'}
+                  {authBusy === 'logout' ? '正在退出...' : '退出登录'}
                 </button>
               </div>
             </div>
@@ -234,7 +234,7 @@ export function OpenAICodexPanel({
                   onClick={() => setSelectedAuthMethod('chatgpt')}
                   data-testid="codex-auth-method-chatgpt"
                 >
-                  ChatGPT (Recommended)
+                  ChatGPT (推荐)
                 </button>
                 <button
                   className={`auth-method-button flex-1 py-2.5 px-4 rounded-md text-[13px] font-medium cursor-pointer transition-all border ${
@@ -252,7 +252,7 @@ export function OpenAICodexPanel({
               {selectedAuthMethod === 'chatgpt' && (
                 <div className="mb-4 p-4 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded-lg">
                   <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-3">
-                    Authenticate with your ChatGPT Pro, Plus, or Team subscription. No API credits needed.
+                    使用你的 ChatGPT Pro、Plus 或 Team 订阅进行认证。无需 API 额度。
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -261,18 +261,18 @@ export function OpenAICodexPanel({
                       disabled={authBusy !== null}
                       data-testid="codex-login-chatgpt"
                     >
-                      {authBusy === 'chatgpt' ? 'Opening browser…' : 'Sign in with ChatGPT'}
+                      {authBusy === 'chatgpt' ? '正在打开浏览器...' : '通过 ChatGPT 登录'}
                     </button>
                     <button
                       className="nim-btn-secondary"
                       onClick={checkStatus}
                       disabled={authBusy !== null}
                     >
-                      Refresh
+                      刷新
                     </button>
                   </div>
                   <p className="text-[11px] leading-relaxed text-[var(--nim-text-faint)] mt-2">
-                    Opens your default browser. Complete the OpenAI sign-in flow; Nimbalyst updates automatically when you return.
+                    将打开你的默认浏览器。完成 OpenAI 登录流程后，Nimbalyst 会自动更新。
                   </p>
                 </div>
               )}
@@ -280,7 +280,7 @@ export function OpenAICodexPanel({
               {selectedAuthMethod === 'api-key' && (
                 <div className="mb-4 p-4 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded-lg">
                   <p className="text-xs leading-relaxed text-[var(--nim-text-muted)] mb-3">
-                    Use an OpenAI API key. Pay-per-use with API credits — more expensive than the ChatGPT subscription path.
+                    使用 OpenAI API Key。按用量付费 — 比 ChatGPT 订阅方式更贵。
                   </p>
                   <div className="api-key-row flex gap-2 items-center">
                     <input
@@ -298,11 +298,11 @@ export function OpenAICodexPanel({
                       disabled={authBusy !== null || !pendingApiKey.trim()}
                       data-testid="codex-login-apikey"
                     >
-                      {authBusy === 'apikey' ? 'Saving…' : 'Save'}
+                      {authBusy === 'apikey' ? '保存中...' : '保存'}
                     </button>
                   </div>
                   <p className="text-[11px] leading-relaxed text-[var(--nim-text-faint)] mt-2">
-                    Stored by Codex in <code>~/.codex/auth.json</code>, not in Nimbalyst settings.
+                    由 Codex 存储在 <code>~/.codex/auth.json</code> 中，不在 Nimbalyst 设置里。
                   </p>
                 </div>
               )}

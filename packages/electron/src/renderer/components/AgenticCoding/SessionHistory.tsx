@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { CollapsibleGroup } from './CollapsibleGroup';
@@ -6,6 +7,7 @@ import { WorktreeBaseBranchPicker } from './WorktreeBaseBranchPicker';
 import { SessionListItem } from './SessionListItem';
 import { WorkstreamGroup } from './WorkstreamGroup';
 import { BlitzGroup } from './BlitzGroup';
+import { DispatchGroup } from './DispatchGroup';
 import { SuperLoopGroup } from './SuperLoopGroup';
 import { MetaAgentGroup } from './MetaAgentGroup';
 import { NewSuperLoopDialog } from './NewSuperLoopDialog';
@@ -32,7 +34,7 @@ import {
   type SessionMeta,
 } from '../../store';
 import { alphaFeatureEnabledAtom, worktreesFeatureAvailableAtom } from '../../store/atoms/appSettings';
-import { activeWorkspacePathAtom } from '../../store/atoms/openProjects';
+import { activeWorkspacePathAtom, multiProjectModeAtom } from '../../store/atoms/openProjects';
 import { activeSessionIdAtom as globalActiveSessionIdAtom } from '../../store/atoms/sessions';
 import { collapsedGroupsAtom, sortOrderAtom, setCollapsedGroupsAtom, setSortOrderAtom } from '../../store/atoms/agentMode';
 import {
@@ -52,6 +54,7 @@ import {
 } from '../../store/actions/sessionHistoryActions';
 import { worktreeDisplayNameUpdateAtom } from '../../store/atoms/worktrees';
 import { blitzCreatedAtom, blitzDisplayNameUpdateAtom } from '../../store/atoms/blitz';
+import { dispatchCreatedAtom } from '../../store/atoms/dispatch';
 import { superLoopListAtom, upsertSuperLoopAtom, removeSuperLoopAtom } from '../../store/atoms/superLoop';
 import { useSuperLoopDialog } from '../../hooks/useSuperLoop';
 import { workspaceSessionTurnActivityAtom } from '../../store/atoms/sessionActivity';
@@ -93,6 +96,16 @@ interface BlitzData {
   createdAt?: number;
 }
 
+interface DispatchData {
+  id: string;
+  title: string;
+  displayName?: string;
+  tasks?: Array<{ title: string; provider?: string }>;
+  mergeStrategy?: string;
+  isArchived?: boolean;
+  createdAt?: number;
+}
+
 interface WorktreeWithStatus extends WorktreeData {
   gitStatus?: {
     ahead?: number;
@@ -106,6 +119,7 @@ type UnifiedListItem =
   | { type: 'workstream'; session: SessionItem; sessions: SessionItem[]; timestamp: number; rank: number }
   | { type: 'worktree'; worktreeId: string; sessions: SessionItem[]; timestamp: number; rank: number }
   | { type: 'blitz'; blitzId: string; worktrees: { worktreeId: string; sessions: SessionItem[] }[]; timestamp: number; rank: number }
+  | { type: 'dispatch'; dispatchId: string; childSessions: SessionItem[]; timestamp: number; rank: number }
   | { type: 'superLoop'; loop: SuperLoop; timestamp: number; rank: number }
   | { type: 'metaAgent'; metaSession: SessionItem; childSessions: SessionItem[]; timestamp: number; rank: number };
 
@@ -130,16 +144,16 @@ const DEFAULT_SEARCH_FILTERS: SearchFilters = {
 };
 
 const TIME_RANGE_LABELS: Record<SearchTimeRange, string> = {
-  '7d': 'Last 7 days',
-  '30d': 'Last 30 days',
-  '90d': 'Last 90 days',
-  'all': 'All time',
+  '7d': '最近 7 天',
+  '30d': '最近 30 天',
+  '90d': '最近 90 天',
+  'all': '全部时间',
 };
 
 const DIRECTION_LABELS: Record<SearchDirection, string> = {
-  'all': 'All messages',
-  'input': 'User prompts only',
-  'output': 'Assistant only',
+  'all': '全部消息',
+  'input': '仅用户输入',
+  'output': '仅助手回复',
 };
 
 function getLiveSessionOrderTimestamp(
@@ -201,6 +215,7 @@ function compareNumbersAsc(a: number, b: number): number {
  * now); we keep the constant for code paths that still branch on it.
  */
 const SessionHistoryComponent: React.FC = () => {
+  const { t } = useTranslation('agent');
   const workspacePath = useAtomValue(activeWorkspacePathAtom) ?? '';
   const activeSessionId = useAtomValue(globalActiveSessionIdAtom);
   const collapsedGroups = useAtomValue(collapsedGroupsAtom);
@@ -376,7 +391,7 @@ const SessionHistoryComponent: React.FC = () => {
     for (const s of sessionRegistry.values()) {
       if (s.workspaceId !== workspacePath) continue;
       if (s.isArchived) continue;
-      if (s.sessionType === 'workstream' || s.sessionType === 'blitz') continue;
+      if (s.sessionType === 'workstream' || s.sessionType === 'blitz' || s.sessionType === 'dispatch') continue;
       count++;
     }
     return count;
@@ -403,7 +418,8 @@ const SessionHistoryComponent: React.FC = () => {
   const lastSelectedIdRef = useRef<string | null>(null); // For shift+click range selection
   const [worktreeCache, setWorktreeCache] = useState<Map<string, WorktreeWithStatus>>(new Map()); // Cache worktree data
   const [workstreamChildrenCache, setWorkstreamChildrenCache] = useState<Map<string, SessionItem[]>>(new Map()); // Cache workstream children
-  const [blitzCache, setBlitzCache] = useState<Map<string, BlitzData>>(new Map()); // Cache blitz data
+  const [blitzCache, setBlitzCache] = useState<Map<string, BlitzData>>(new Map());
+  const [dispatchCache, setDispatchCache] = useState<Map<string, DispatchData>>(new Map());
   const pendingWorkstreamChildrenFetchesRef = useRef<Set<string>>(new Set());
   // Mirrors `workstreamChildrenCache` so the workstream-children fetch
   // effect below can read the current cache without putting it in deps
@@ -534,8 +550,9 @@ const SessionHistoryComponent: React.FC = () => {
   }, []);
 
   // Extract workspace name from path
-  const workspaceName = getFileName(workspacePath) || 'Workspace';
+  const workspaceName = getFileName(workspacePath) || '工作区';
   const workspaceColor = generateWorkspaceAccentColor(workspacePath);
+  const isMultiProject = useAtomValue(multiProjectModeAtom);
   const useThrottledTurnOrdering = mode === 'agent' && sortBy === 'updated';
   const liveOrderTimestampMap = useMemo(() => {
     const timestamps = new Map<string, number>();
@@ -653,7 +670,7 @@ const SessionHistoryComponent: React.FC = () => {
       });
     } catch (err) {
       console.error('[SessionHistory] Failed to load sessions:', err);
-      setError('Failed to load sessions');
+      setError('加载会话失败');
     }
   }, [refreshSessions]);
 
@@ -672,7 +689,7 @@ const SessionHistoryComponent: React.FC = () => {
       if (result.success && Array.isArray(result.sessions)) {
         let searchResults: SessionItem[] = result.sessions.map((s: any) => ({
           id: s.id,
-          title: s.title || 'Untitled Session',
+          title: s.title || '未命名会话',
           createdAt: s.createdAt,
           updatedAt: s.updatedAt,
           provider: s.provider || 'claude',
@@ -697,7 +714,7 @@ const SessionHistoryComponent: React.FC = () => {
       }
     } catch (err) {
       console.error('[SessionHistory] Failed to search sessions:', err);
-      setError('Failed to search sessions');
+      setError('搜索会话失败');
     } finally {
       setIsSearching(false);
     }
@@ -722,7 +739,7 @@ const SessionHistoryComponent: React.FC = () => {
       await executeSearch(query);
     } catch (err) {
       console.error('[SessionHistory] Failed to search sessions:', err);
-      setError('Failed to search sessions');
+      setError('搜索会话失败');
     }
   }, [workspacePath, executeSearch]);
 
@@ -975,7 +992,7 @@ const SessionHistoryComponent: React.FC = () => {
         }
       } else {
         console.error('[SessionHistory] Failed to build FTS index:', result.error);
-        setError('Failed to build search index');
+        setError('构建搜索索引失败');
       }
     } catch (err) {
       console.error('[SessionHistory] Failed to build FTS index:', err);
@@ -1253,16 +1270,16 @@ const SessionHistoryComponent: React.FC = () => {
       if (!preview.success || preview.count === 0) return;
 
       const confirmed = window.confirm(
-        `Remove ${preview.count} gitignored ${preview.count === 1 ? 'item' : 'items'} from "${worktreeName}"?\n\nThis includes files like node_modules and build artifacts that can be regenerated.`
+        `从 "${worktreeName}" 中移除 ${preview.count} 个被 gitignore 的项目？\n\n这包括 node_modules 和构建产物等可以重新生成的文件。`
       );
       if (!confirmed) return;
 
       const result = await window.electronAPI.worktreeCleanGitignored(worktreeData.path);
       if (result.success) {
-        window.alert(`Removed ${result.count} gitignored ${result.count === 1 ? 'item' : 'items'} from "${worktreeName}".`);
+        window.alert(`已从 "${worktreeName}" 中移除 ${result.count} 个被 gitignore 的项目。`);
       } else {
         console.error('[SessionHistory] Failed to clean gitignored files:', result.error);
-        window.alert(`Failed to clean gitignored files: ${result.error}`);
+        window.alert(`清理 gitignore 文件失败: ${result.error}`);
       }
     } catch (error) {
       console.error('[SessionHistory] Failed to clean gitignored files:', error);
@@ -1415,6 +1432,14 @@ const SessionHistoryComponent: React.FC = () => {
         return `blitz:${blitzParentId}`;
       }
 
+      // Dispatch group
+      const dispatchParentId = allSessions.find(
+        s => s.worktreeId === activeSession.worktreeId && s.parentSessionId && dispatchCache.has(s.parentSessionId)
+      )?.parentSessionId;
+      if (dispatchParentId) {
+        return `dispatch:${dispatchParentId}`;
+      }
+
       // Super loop
       const superLoop = superLoops.find(l => l.worktreeId === activeSession.worktreeId);
       if (superLoop) {
@@ -1450,7 +1475,7 @@ const SessionHistoryComponent: React.FC = () => {
     }
 
     return null;
-  }, [activeSessionId, allSessions, blitzCache, superLoops, sessions]);
+  }, [activeSessionId, allSessions, blitzCache, dispatchCache, superLoops, sessions]);
 
   // Handle Cmd+click on group headers (blitz, worktree, workstream, superloop)
   const handleGroupMultiSelect = useCallback((groupKey: string) => {
@@ -1746,7 +1771,7 @@ const SessionHistoryComponent: React.FC = () => {
     if (!onSessionDelete) return;
 
     const count = selectedSessionIds.size;
-    const confirmed = window.confirm(`Are you sure you want to permanently delete ${count} session${count > 1 ? 's' : ''}? This cannot be undone.`);
+    const confirmed = window.confirm(`确定要永久删除 ${count} 个会话吗？此操作不可撤销。`);
     if (!confirmed) return;
 
     for (const sessionId of selectedSessionIds) {
@@ -2165,6 +2190,8 @@ const SessionHistoryComponent: React.FC = () => {
     for (const session of sessions) {
       // Skip blitz sessions - they're rendered via BlitzGroup, not as individual items
       if (session.sessionType === 'blitz') continue;
+      // Skip dispatch sessions - they're rendered via DispatchGroup
+      if (session.sessionType === 'dispatch') continue;
       // Skip meta-agent sessions and their children - they're rendered via MetaAgentGroup
       if (metaAgentSessionIds.has(session.id) || metaAgentChildSessionIds.has(session.id)) continue;
 
@@ -2214,6 +2241,7 @@ const SessionHistoryComponent: React.FC = () => {
 
     // Group blitz worktrees by blitz parent session ID, keep standalone worktrees separate
     const blitzWorktrees = new Map<string, { worktreeId: string; sessions: SessionItem[] }[]>();
+    const dispatchChildren = new Map<string, SessionItem[]>();
     const standaloneWorktrees: [string, { sessions: SessionItem[]; timestamp: number }][] = [];
 
     for (const [worktreeId, data] of worktreeGroupsData) {
@@ -2230,18 +2258,26 @@ const SessionHistoryComponent: React.FC = () => {
       // Check if any session in this worktree has a parentSessionId pointing to a blitz session
       const blitzParentId = data.sessions.find(s => s.parentSessionId && blitzCache.has(s.parentSessionId))?.parentSessionId;
       if (blitzParentId) {
-        // This worktree belongs to a blitz
         const existing = blitzWorktrees.get(blitzParentId) || [];
         existing.push({ worktreeId, sessions: data.sessions });
         blitzWorktrees.set(blitzParentId, existing);
       } else {
-        standaloneWorktrees.push([worktreeId, data]);
+        // Check if any session belongs to a dispatch
+        const dispatchParentId = data.sessions.find(s => s.parentSessionId && dispatchCache.has(s.parentSessionId))?.parentSessionId;
+        if (dispatchParentId) {
+          const existing = dispatchChildren.get(dispatchParentId) || [];
+          existing.push(...data.sessions);
+          dispatchChildren.set(dispatchParentId, existing);
+        } else {
+          standaloneWorktrees.push([worktreeId, data]);
+        }
       }
     }
 
     // Also pick up blitz children that have no worktreeId (e.g., analysis sessions)
     for (const session of sessions) {
       if (session.sessionType === 'blitz') continue; // Skip blitz parent
+      if (session.sessionType === 'dispatch') continue; // Skip dispatch parent
       if (session.worktreeId) continue; // Already handled via worktreeGroupsData
       if (!session.parentSessionId) continue;
       if (!blitzCache.has(session.parentSessionId)) continue;
@@ -2283,6 +2319,30 @@ const SessionHistoryComponent: React.FC = () => {
       } else {
         items.push(item);
       }
+    }
+
+    // Add dispatch groups
+    for (const [dispatchId, childSessions] of dispatchChildren) {
+      const dispatchData = dispatchCache.get(dispatchId);
+      if (!showArchived && dispatchData?.isArchived) continue;
+
+      childSessions.sort((a, b) => a.createdAt - b.createdAt);
+
+      let timestamp = Math.max(...childSessions.map(s =>
+        timestampField === 'updatedAt' ? getDisplayedOrderTimestamp(s) : s.createdAt
+      ));
+      if (sortBy === 'created' && dispatchData?.createdAt) {
+        timestamp = dispatchData.createdAt;
+      }
+
+      const rank = Math.min(...childSessions.map(s => getDisplayedOrderRank(s.id)));
+      items.push({
+        type: 'dispatch' as const,
+        dispatchId,
+        childSessions,
+        timestamp,
+        rank,
+      });
     }
 
     // Add standalone worktree groups as single items (only if they have 2+ sessions)
@@ -2386,7 +2446,7 @@ const SessionHistoryComponent: React.FC = () => {
     }
 
     return result as Record<TimeGroupKey | 'Pinned' | 'Meta Agent', UnifiedListItem[]>;
-  }, [sessions, worktreeGroupsData, sortBy, worktreeCache, workstreamChildrenCache, blitzCache, superLoops, showArchived, isMetaAgentEnabled, getDisplayedOrderRank, getDisplayedOrderTimestamp, compareSessionOrder, compareUnifiedItems]);
+  }, [sessions, worktreeGroupsData, sortBy, worktreeCache, workstreamChildrenCache, blitzCache, dispatchCache, superLoops, showArchived, isMetaAgentEnabled, getDisplayedOrderRank, getDisplayedOrderTimestamp, compareSessionOrder, compareUnifiedItems]);
 
   const groupKeys = Object.keys(groupedItems) as (TimeGroupKey | 'Pinned' | 'Meta Agent')[];
 
@@ -2531,6 +2591,46 @@ const SessionHistoryComponent: React.FC = () => {
     if (!blitzCreated || blitzCreated.payload.workspacePath !== workspacePath) return;
     fetchBlitzes();
   }, [blitzCreated, workspacePath, fetchBlitzes]);
+
+  // Fetch dispatch sessions for this workspace
+  const fetchDispatches = useCallback(async () => {
+    if (!workspacePath) return;
+    try {
+      const result = await window.electronAPI.invoke('agent-work-os:dispatch-list', workspacePath);
+      if (result.success && result.dispatches) {
+        setDispatchCache(prev => {
+          const updated = new Map(prev);
+          for (const d of result.dispatches) {
+            updated.set(d.id, {
+              id: d.id,
+              title: d.title,
+              tasks: d.tasks,
+              mergeStrategy: d.mergeStrategy,
+              isArchived: d.isArchived,
+              createdAt: d.createdAt,
+            });
+          }
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('[SessionHistory] Failed to fetch dispatches:', err);
+    }
+  }, [workspacePath]);
+
+  useEffect(() => {
+    if (!workspacePath) return;
+    fetchDispatches();
+  }, [workspacePath, fetchDispatches]);
+
+  const dispatchCreated = useAtomValue(dispatchCreatedAtom);
+  const initialDispatchCreatedRef = useRef(dispatchCreated);
+  useEffect(() => {
+    if (!workspacePath) return;
+    if (dispatchCreated === initialDispatchCreatedRef.current) return;
+    if (!dispatchCreated || dispatchCreated.payload.workspacePath !== workspacePath) return;
+    fetchDispatches();
+  }, [dispatchCreated, workspacePath, fetchDispatches]);
 
   // Fetch children for expanded workstreams.
   //
@@ -2689,7 +2789,7 @@ const SessionHistoryComponent: React.FC = () => {
   if (loading) {
     return (
       <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-        <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+        {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
         <WorkspaceSummaryHeader
           workspacePath={workspacePath}
           workspaceName={workspaceName}
@@ -2743,7 +2843,7 @@ const SessionHistoryComponent: React.FC = () => {
             </>
           }
         />
-        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
         <div className="session-history-search px-3 py-2 border-b border-[var(--nim-border)] shrink-0 relative">
           <input
             type="text"
@@ -2772,7 +2872,7 @@ const SessionHistoryComponent: React.FC = () => {
             <button
               className="session-history-sort-button flex items-center justify-center px-1.5 py-1 text-xs rounded border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] text-[var(--nim-text-muted)] cursor-pointer transition-all duration-150 outline-none hover:bg-[var(--nim-bg-tertiary)] hover:border-[var(--nim-primary)] hover:text-[var(--nim-text)] [&_svg]:block"
               onClick={toggleSortDropdown}
-              title={`Sorted by: ${sortBy === 'updated' ? 'Last Updated' : 'Created'}`}
+              title={`排序方式: ${sortBy === 'updated' ? '最近更新' : '创建时间'}`}
               aria-label="Sort sessions"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2785,7 +2885,7 @@ const SessionHistoryComponent: React.FC = () => {
                   className={`session-history-sort-option flex items-center justify-between w-full px-3 py-2 text-[13px] border-none text-[var(--nim-text)] cursor-pointer transition-colors duration-150 text-left gap-2 hover:bg-[var(--nim-bg-hover)] [&>span]:flex-1 [&_svg]:shrink-0 [&_svg]:text-[var(--nim-primary)] ${sortBy === 'updated' ? 'bg-[var(--nim-bg-selected)] font-medium' : ''}`}
                   onClick={() => selectSortOption('updated')}
                 >
-                  <span>Last Updated</span>
+                  <span>最近更新</span>
                   {sortBy === 'updated' && (
                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -2796,7 +2896,7 @@ const SessionHistoryComponent: React.FC = () => {
                   className={`session-history-sort-option flex items-center justify-between w-full px-3 py-2 text-[13px] border-none text-[var(--nim-text)] cursor-pointer transition-colors duration-150 text-left gap-2 hover:bg-[var(--nim-bg-hover)] [&>span]:flex-1 [&_svg]:shrink-0 [&_svg]:text-[var(--nim-primary)] ${sortBy === 'created' ? 'bg-[var(--nim-bg-selected)] font-medium' : ''}`}
                   onClick={() => selectSortOption('created')}
                 >
-                  <span>Created</span>
+                  <span>创建时间</span>
                   {sortBy === 'created' && (
                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -2808,7 +2908,7 @@ const SessionHistoryComponent: React.FC = () => {
           </div>
         </div>
         <div className="session-history-loading flex flex-col items-center justify-center px-4 py-8 text-center text-[var(--nim-text-faint)] text-[13px]">
-          <span>Searching sessions...</span>
+          <span>搜索会话中...</span>
         </div>
       </div>
     );
@@ -2817,7 +2917,7 @@ const SessionHistoryComponent: React.FC = () => {
   if (error) {
     return (
       <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-        <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+        {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
         <WorkspaceSummaryHeader
           workspacePath={workspacePath}
           workspaceName={workspaceName}
@@ -2843,7 +2943,7 @@ const SessionHistoryComponent: React.FC = () => {
             </>
           }
         />
-        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
         <div className="session-history-error flex flex-col items-center justify-center px-4 py-8 text-center text-[var(--nim-error)] text-[13px]">
           <span>{error}</span>
         </div>
@@ -2879,7 +2979,7 @@ const SessionHistoryComponent: React.FC = () => {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          <span>New Session</span>
+          <span>{t('newSession')}</span>
           <span className="session-history-new-option-shortcut flex-none text-[11px] text-[var(--nim-text-muted)] opacity-70">{getShortcutDisplay(KeyboardShortcuts.file.newSession)}</span>
         </button>
       )}
@@ -2889,7 +2989,7 @@ const SessionHistoryComponent: React.FC = () => {
           data-testid="new-worktree-session-button"
           onClick={() => { if (isGitRepo) { openWorktreeBaseBranchPicker(); } }}
           disabled={!isGitRepo}
-          title={!isGitRepo ? 'Worktrees require a git repository' : undefined}
+          title={!isGitRepo ? 'Worktree 需要 Git 仓库' : undefined}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M5 13v-2.5a1.5 1.5 0 0 1 1.5-1.5h3"/>
@@ -2899,7 +2999,7 @@ const SessionHistoryComponent: React.FC = () => {
             <path d="M5 6v2.5a1.5 1.5 0 0 0 1.5 1.5"/>
             <path d="M12 7v4M10 9h4"/>
           </svg>
-          <span>New Worktree</span>
+          <span>新建 Worktree</span>
           <span className="session-history-new-option-shortcut flex-none text-[11px] text-[var(--nim-text-muted)] opacity-70">{getShortcutDisplay(KeyboardShortcuts.window.newWorktree)}</span>
         </button>
       )}
@@ -2909,12 +3009,12 @@ const SessionHistoryComponent: React.FC = () => {
           data-testid="new-blitz-button"
           onClick={() => { if (isGitRepo) { onNewBlitz(); newDropdownMenu.setIsOpen(false); } }}
           disabled={!isGitRepo}
-          title={!isGitRepo ? 'Blitz requires a git repository' : undefined}
+          title={!isGitRepo ? 'Blitz 需要 Git 仓库' : undefined}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 2L4 9h4l-1 5 5-7H8l1-5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="flex-1">New Blitz</span>
+          <span className="flex-1">新建 Blitz</span>
           <AlphaBadge size="xs" />
         </button>
       )}
@@ -2928,7 +3028,7 @@ const SessionHistoryComponent: React.FC = () => {
             <path d="M3 5L7 9L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M9 13H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
-          <span>New Terminal</span>
+          <span>新建终端</span>
         </button>
       )}
       {isSuperLoopsAvailable && (
@@ -2937,13 +3037,13 @@ const SessionHistoryComponent: React.FC = () => {
           data-testid="new-super-loop-button"
           onClick={() => { if (isGitRepo) { openSuperLoopDialog(); newDropdownMenu.setIsOpen(false); } }}
           disabled={!isGitRepo}
-          title={!isGitRepo ? 'Super Loops require a git repository' : undefined}
+          title={!isGitRepo ? 'Super Loop 需要 Git 仓库' : undefined}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M13 5.5H9.5M13 5.5L10.5 3M13 5.5L10.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M3 10.5H6.5M3 10.5L5.5 8M3 10.5L5.5 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="flex-1">New Super Loop</span>
+          <span className="flex-1">新建 Super Loop</span>
           <AlphaBadge size="xs" />
         </button>
       )}
@@ -2954,7 +3054,7 @@ const SessionHistoryComponent: React.FC = () => {
           onClick={() => { void handleNewMetaAgent(); newDropdownMenu.setIsOpen(false); }}
         >
           <MaterialSymbol icon="hub" size={14} />
-          <span className="flex-1">New Meta Agent</span>
+          <span className="flex-1">新建 Meta Agent</span>
           <AlphaBadge size="xs" />
         </button>
       )}
@@ -2985,7 +3085,7 @@ const SessionHistoryComponent: React.FC = () => {
     // session with the filtered tag). See GitHub #470 / NIM-675.
     return (
       <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-        <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+        {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
         <WorkspaceSummaryHeader
           workspacePath={workspacePath}
           workspaceName={workspaceName}
@@ -3038,11 +3138,11 @@ const SessionHistoryComponent: React.FC = () => {
             </>
           }
         />
-        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+        <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
         <div className="session-history-empty flex flex-col items-center justify-center px-4 py-8 text-center text-[var(--nim-text-faint)] text-[13px]">
-          <p className="my-1">No sessions yet</p>
+          <p className="my-1">还没有会话</p>
           <p className="session-history-empty-hint my-1 text-xs text-[var(--nim-text-faint)]">
-            Create a new session to get started
+            创建新会话以开始
           </p>
         </div>
         {/* Mount the new-session dropdown here too. Without this, clicking +
@@ -3057,7 +3157,7 @@ const SessionHistoryComponent: React.FC = () => {
 
   return (
     <div className="session-history flex flex-col h-full bg-[var(--nim-bg)] overflow-hidden">
-      <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />
+      {!isMultiProject && <div className="workspace-color-accent h-[3px] w-full opacity-90 shrink-0" style={{ backgroundColor: workspaceColor }} />}
       <WorkspaceSummaryHeader
         workspacePath={workspacePath}
         workspaceName={workspaceName}
@@ -3133,13 +3233,13 @@ const SessionHistoryComponent: React.FC = () => {
           </>
         }
       />
-      <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">Agent Sessions</div>
+      <div className="session-history-section-label px-3 py-1.5 text-[11px] font-semibold text-[var(--nim-text-faint)] uppercase tracking-wider border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] shrink-0">{t('agentSessions')}</div>
       <div className="session-history-search px-3 py-2 border-b border-[var(--nim-border)] shrink-0 relative z-10">
         <input
           ref={searchInputRef}
           type="text"
           className="session-history-search-input nim-input w-full px-3 py-2 pr-14 text-[13px] text-[var(--nim-text)] bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded outline-none transition-colors duration-150 placeholder:text-[var(--nim-text-faint)] focus:border-[var(--nim-primary)] focus:bg-[var(--nim-bg)]"
-          placeholder="Search or type # to filter by tag..."
+          placeholder={t('searchOrFilterByTag')}
           value={showTagDropdown
             ? (searchQuery ? searchQuery + ' ' : '') + '#' + tagQuery
             : searchQuery}
@@ -3251,23 +3351,23 @@ const SessionHistoryComponent: React.FC = () => {
               ))
             ) : (
               <div className="px-3 py-2 text-[12px] text-[var(--nim-text-faint)] italic">
-                {tagQuery ? 'No matching tags' : 'No tags in this workspace yet'}
+                {tagQuery ? '没有匹配的标签' : '此工作区暂无标签'}
               </div>
             )}
           </div>
         )}
         {isSearching && (
           <div className="session-history-search-status absolute right-12 top-1/2 -translate-y-1/2 text-xs text-[var(--nim-text-faint)] pointer-events-none">
-            {contentSearchTriggered ? 'Searching messages...' : 'Searching...'}
+            {contentSearchTriggered ? '搜索消息内容中...' : '搜索中...'}
           </div>
         )}
         {!isSearching && searchQuery && !contentSearchTriggered && (
           <button
             className="session-history-content-search-hint absolute right-12 top-1/2 -translate-y-1/2 text-xs text-[var(--nim-text-muted)] bg-transparent border-none cursor-pointer flex items-center gap-1 px-2 py-1 rounded transition-colors duration-150 hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-primary)]"
             onClick={searchMessageContents}
-            title="Press Tab to search message contents"
+            title="按 Tab 搜索消息内容"
           >
-            ⇥ Search contents
+            ⇥ 搜索内容
           </button>
         )}
         {/* Search filters dropdown - only visible when content search is active */}
@@ -3290,7 +3390,7 @@ const SessionHistoryComponent: React.FC = () => {
             {showSearchFilters && (
               <div className="absolute right-0 top-full mt-1 z-[100] min-w-[160px] bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded-lg shadow-lg overflow-hidden">
                 <div className="px-3 py-2 text-xs font-medium text-[var(--nim-text-muted)] border-b border-[var(--nim-border)]">
-                  Time Range
+                  时间范围
                 </div>
                 {(Object.entries(TIME_RANGE_LABELS) as [SearchTimeRange, string][]).map(([value, label]) => (
                   <button
@@ -3311,7 +3411,7 @@ const SessionHistoryComponent: React.FC = () => {
                   </button>
                 ))}
                 <div className="px-3 py-2 text-xs font-medium text-[var(--nim-text-muted)] border-t border-b border-[var(--nim-border)]">
-                  Message Type
+                  消息类型
                 </div>
                 {(Object.entries(DIRECTION_LABELS) as [SearchDirection, string][]).map(([value, label]) => (
                   <button
@@ -3372,9 +3472,9 @@ const SessionHistoryComponent: React.FC = () => {
         {(() => {
           const hasFilter = searchQuery.trim().length > 0 || tagFilter.tags.length > 0;
           const visibleCount = sessions.length;
-          const totalLabel = `${iosMatchCount} non-archived session${iosMatchCount === 1 ? '' : 's'} in this workspace (matches the iOS project list count)`;
+          const totalLabel = `此工作区有 ${iosMatchCount} 个未归档会话`;
           const title = hasFilter
-            ? `${visibleCount} of ${iosMatchCount} visible after current filters -- ${totalLabel}`
+            ? `当前筛选显示 ${visibleCount} / ${iosMatchCount} -- ${totalLabel}`
             : totalLabel;
           return (
             <span
@@ -3383,8 +3483,8 @@ const SessionHistoryComponent: React.FC = () => {
               data-testid="session-list-match-count"
             >
               {hasFilter
-                ? `${visibleCount} of ${iosMatchCount} session${iosMatchCount === 1 ? '' : 's'}`
-                : `${iosMatchCount} session${iosMatchCount === 1 ? '' : 's'}`}
+                ? `${visibleCount} / ${iosMatchCount} 个会话`
+                : `${iosMatchCount} 个会话`}
             </span>
           );
         })()}
@@ -3392,7 +3492,7 @@ const SessionHistoryComponent: React.FC = () => {
           <button
             className="session-history-sort-button flex items-center justify-center px-1.5 py-1 text-xs rounded border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] text-[var(--nim-text-muted)] cursor-pointer transition-all duration-150 outline-none hover:bg-[var(--nim-bg-tertiary)] hover:border-[var(--nim-primary)] hover:text-[var(--nim-text)] [&_svg]:block"
             onClick={toggleSortDropdown}
-            title={`Sorted by: ${sortBy === 'updated' ? 'Last Updated' : 'Created'}`}
+            title={`排序方式: ${sortBy === 'updated' ? '最近更新' : '创建时间'}`}
             aria-label="Sort sessions"
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3405,7 +3505,7 @@ const SessionHistoryComponent: React.FC = () => {
                 className={`session-history-sort-option flex items-center justify-between w-full px-3 py-2 text-[13px] border-none text-[var(--nim-text)] cursor-pointer transition-colors duration-150 text-left gap-2 hover:bg-[var(--nim-bg-hover)] [&>span]:flex-1 [&_svg]:shrink-0 [&_svg]:text-[var(--nim-primary)] ${sortBy === 'updated' ? 'bg-[var(--nim-bg-selected)] font-medium' : ''}`}
                 onClick={() => selectSortOption('updated')}
               >
-                <span>Last Updated</span>
+                <span>最近更新</span>
                 {sortBy === 'updated' && (
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -3416,7 +3516,7 @@ const SessionHistoryComponent: React.FC = () => {
                 className={`session-history-sort-option flex items-center justify-between w-full px-3 py-2 text-[13px] border-none text-[var(--nim-text)] cursor-pointer transition-colors duration-150 text-left gap-2 hover:bg-[var(--nim-bg-hover)] [&>span]:flex-1 [&_svg]:shrink-0 [&_svg]:text-[var(--nim-primary)] ${sortBy === 'created' ? 'bg-[var(--nim-bg-selected)] font-medium' : ''}`}
                 onClick={() => selectSortOption('created')}
               >
-                <span>Created</span>
+                <span>创建时间</span>
                 {sortBy === 'created' && (
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -3429,35 +3529,35 @@ const SessionHistoryComponent: React.FC = () => {
       </div>
       {(selectedSessionIds.size > 0 || selectedGroupIds.size > 0) && (
         <div className="session-history-bulk-actions flex items-center justify-between px-3 py-2 bg-[var(--nim-bg-selected)] border-b border-[var(--nim-border)] gap-2">
-          <span className="session-history-bulk-count text-xs font-medium text-[var(--nim-text)]">{selectedSessionIds.size + selectedGroupIds.size} selected</span>
+          <span className="session-history-bulk-count text-xs font-medium text-[var(--nim-text)]">{selectedSessionIds.size + selectedGroupIds.size} 项已选</span>
           <div className="session-history-bulk-buttons flex gap-1.5">
             {showArchived ? (
-              <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] [&_svg]:shrink-0" onClick={handleBulkUnarchive} title="Unarchive selected">
+              <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] [&_svg]:shrink-0" onClick={handleBulkUnarchive} title="取消归档所选">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2 5h12M4 5v8a1 1 0 001 1h6a1 1 0 001-1V5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M8 11V7M6 9l2-2 2 2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Unarchive
+                取消归档
               </button>
             ) : (
-              <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] [&_svg]:shrink-0" onClick={handleBulkArchive} title="Archive selected">
+              <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] [&_svg]:shrink-0" onClick={handleBulkArchive} title="归档所选">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2 5h12M4 5v8a1 1 0 001 1h6a1 1 0 001-1V5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M8 7v4M6 9l2 2 2-2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Archive
+                归档
               </button>
             )}
             {(
-              <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-error)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-error)] hover:border-[var(--nim-error)] hover:text-white [&_svg]:shrink-0" onClick={handleBulkDelete} title="Delete selected">
+              <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-error)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-error)] hover:border-[var(--nim-error)] hover:text-white [&_svg]:shrink-0" onClick={handleBulkDelete} title="删除所选">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2 4h12M5.333 4V2.667A.667.667 0 016 2h4a.667.667 0 01.667.667V4M12.667 4v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Delete
+                删除
               </button>
             )}
-            <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] [&_svg]:shrink-0" onClick={clearSelection} title="Clear selection">
-              Cancel
+            <button className="session-history-bulk-button flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer transition-all duration-150 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] [&_svg]:shrink-0" onClick={clearSelection} title="取消选择">
+              取消
             </button>
           </div>
         </div>
@@ -3466,9 +3566,9 @@ const SessionHistoryComponent: React.FC = () => {
         {groupKeys.length === 0 && (hasSearchQuery || hasTagFilter) ? (
           // No results for the active search/tag filter - offer a clear affordance
           <div className="session-history-empty flex flex-col items-center justify-center px-4 py-8 text-center text-[var(--nim-text-faint)] text-[13px]">
-            <p className="my-1">No matching sessions found</p>
+            <p className="my-1">未找到匹配的会话</p>
             <p className="session-history-empty-hint my-1 text-xs text-[var(--nim-text-faint)]">
-              {hasSearchQuery && hasTagFilter ? 'Adjust your search or ' : hasSearchQuery ? 'Try a different search term or ' : 'Remove the active tag filter or '}
+              {hasSearchQuery && hasTagFilter ? '调整搜索条件或' : hasSearchQuery ? '尝试其他搜索词或' : '移除当前标签筛选或'}
               <button
                 className="session-history-clear-search-link bg-transparent border-none text-[var(--nim-primary)] cursor-pointer underline p-0 text-inherit font-inherit hover:opacity-80"
                 onClick={() => {
@@ -3477,7 +3577,7 @@ const SessionHistoryComponent: React.FC = () => {
                 }}
                 type="button"
               >
-                {hasSearchQuery && hasTagFilter ? 'clear search and tags' : hasSearchQuery ? 'clear search' : 'clear tag filter'}
+                {hasSearchQuery && hasTagFilter ? '清除搜索和标签' : hasSearchQuery ? '清除搜索' : '清除标签筛选'}
               </button>
             </p>
           </div>
@@ -3506,7 +3606,18 @@ const SessionHistoryComponent: React.FC = () => {
                           size={12}
                           className={`collapsible-group-chevron shrink-0 text-nim-faint transition-transform duration-200 ${entry.isExpanded ? 'rotate-90' : ''}`}
                         />
-                        <span className="collapsible-group-title flex-1 overflow-hidden text-ellipsis whitespace-nowrap uppercase tracking-wide">{entry.groupKey}</span>
+                        <span className="collapsible-group-title flex-1 overflow-hidden text-ellipsis whitespace-nowrap uppercase tracking-wide">{
+                          {
+                            'Today': t('today'),
+                            'Yesterday': t('yesterday'),
+                            'This Week': t('thisWeek'),
+                            'Last Week': t('lastWeek'),
+                            'This Month': t('thisMonth'),
+                            'Last Month': t('lastMonth'),
+                            'Older': t('older'),
+                            'Pinned': t('pinned'),
+                          }[entry.groupKey] ?? entry.groupKey
+                        }</span>
                         <span className="collapsible-group-count shrink-0 text-[0.625rem] text-nim-faint font-normal">{entry.itemCount}</span>
                       </button>
                     </div>
@@ -3524,7 +3635,7 @@ const SessionHistoryComponent: React.FC = () => {
                   return (
                     <BlitzGroup
                       blitzId={item.blitzId}
-                      title={blitzData?.displayName || (blitzData?.prompt ? blitzData.prompt.slice(0, 60) + (blitzData.prompt.length > 60 ? '...' : '') : 'Loading...')}
+                      title={blitzData?.displayName || (blitzData?.prompt ? blitzData.prompt.slice(0, 60) + (blitzData.prompt.length > 60 ? '...' : '') : '加载中...')}
                       isExpanded={isBlitzExpanded}
                       isActive={isBlitzActive}
                       isPinned={blitzData?.isPinned}
@@ -3553,6 +3664,30 @@ const SessionHistoryComponent: React.FC = () => {
                     />
                   );
                 }
+                if (item.type === 'dispatch') {
+                  const dispatchData = dispatchCache.get(item.dispatchId);
+                  const isDispatchExpanded = !collapsedGroups.includes(`dispatch:${item.dispatchId}`);
+                  const isDispatchActive = item.childSessions.some(s => s.id === activeSessionId);
+
+                  return (
+                    <DispatchGroup
+                      dispatchId={item.dispatchId}
+                      title={dispatchData?.displayName || dispatchData?.title || '加载中...'}
+                      isExpanded={isDispatchExpanded}
+                      isActive={isDispatchActive}
+                      isArchived={dispatchData?.isArchived}
+                      isSelected={selectedGroupIds.has(`dispatch:${item.dispatchId}`)}
+                      onToggle={() => handleToggleGroup(`dispatch:${item.dispatchId}`)}
+                      onMultiSelect={() => handleGroupMultiSelect(`dispatch:${item.dispatchId}`)}
+                      tasks={item.childSessions.map(s => ({
+                        session: s,
+                        worktreeBranch: worktreeCache.get(s.worktreeId || '')?.branch,
+                      }))}
+                      activeSessionId={activeSessionId}
+                      onSessionSelect={handleSessionClick}
+                    />
+                  );
+                }
                 if (item.type === 'worktree') {
                   const worktreeData = worktreeCache.get(item.worktreeId);
                   const isWorktreeExpanded = !collapsedGroups.includes(`worktree:${item.worktreeId}`);
@@ -3561,7 +3696,7 @@ const SessionHistoryComponent: React.FC = () => {
                     <WorkstreamGroup
                       type="worktree"
                       id={item.worktreeId}
-                      title={worktreeData?.displayName || worktreeData?.name || 'Loading...'}
+                      title={worktreeData?.displayName || worktreeData?.name || '加载中...'}
                       isExpanded={isWorktreeExpanded}
                       isActive={item.sessions.some(s => s.id === activeSessionId)}
                       isSelected={selectedGroupIds.has(`worktree:${item.worktreeId}`)}
@@ -3590,7 +3725,7 @@ const SessionHistoryComponent: React.FC = () => {
                       onSessionPinToggle={handleSessionPinToggle}
                       onSessionRename={onSessionRename}
                       onSessionBranch={onSessionBranch}
-                      worktree={worktreeData || { id: item.worktreeId, name: 'Loading...', path: '', branch: '' }}
+                      worktree={worktreeData || { id: item.worktreeId, name: '加载中...', path: '', branch: '' }}
                       gitStatus={worktreeData?.gitStatus}
                       onWorktreePinToggle={handleWorktreePinToggle}
                       onWorktreeArchive={handleArchiveWorktree}
@@ -3613,7 +3748,7 @@ const SessionHistoryComponent: React.FC = () => {
                     <WorkstreamGroup
                       type="workstream"
                       id={session.id}
-                      title={session.title || 'Untitled Workstream'}
+                      title={session.title || '未命名工作流'}
                       isExpanded={isWorkstreamExpanded}
                       isActive={isWorkstreamActive}
                       isSelected={selectedGroupIds.has(`workstream:${session.id}`)}
@@ -3698,7 +3833,7 @@ const SessionHistoryComponent: React.FC = () => {
                 return (
                   <SessionListItem
                     id={session.id}
-                    title={session.title || 'Untitled Session'}
+                    title={session.title || '未命名会话'}
                     createdAt={session.createdAt}
                     updatedAt={session.updatedAt}
                     isActive={session.id === activeSessionId}

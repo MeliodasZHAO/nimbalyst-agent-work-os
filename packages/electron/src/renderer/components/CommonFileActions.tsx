@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MaterialSymbol } from '@nimbalyst/runtime';
 import { store } from '@nimbalyst/runtime/store';
 import { useAtomValue } from 'jotai';
@@ -51,6 +52,7 @@ export function CommonFileActions({
   showIcons = true,
   useButtons = false,
 }: CommonFileActionsProps) {
+  const { t } = useTranslation('editor');
   const actions = useFileActions(filePath, fileName);
   const hasTeam = useAtomValue(workspaceHasTeamAtom);
   const collabDocumentType = useMemo(
@@ -308,7 +310,7 @@ export function CommonFileActions({
         onClick={() => { actions.openInDefaultApp(); onClose(); }}
       >
         {showIcons && <MaterialSymbol icon="launch" size={iconSize} />}
-        <span>Open in Default App</span>
+        <span>{t('openInDefaultApp')}</span>
       </Item>
 
       {/* Open in External Editor (conditional) */}
@@ -318,7 +320,7 @@ export function CommonFileActions({
           onClick={() => { actions.openInExternalEditor(); onClose(); }}
         >
           {showIcons && <MaterialSymbol icon="open_in_new" size={iconSize} />}
-          <span>Open in {actions.externalEditorName}</span>
+          <span>{t('openInEditor', { editor: actions.externalEditorName })}</span>
         </Item>
       )}
 
@@ -328,7 +330,7 @@ export function CommonFileActions({
         onClick={() => { actions.revealInFinder(); onClose(); }}
       >
         {showIcons && <MaterialSymbol icon="folder_open" size={iconSize} />}
-        <span>Show in Finder</span>
+        <span>{t('showInFinder')}</span>
       </Item>
 
       {/* Copy Path */}
@@ -337,7 +339,7 @@ export function CommonFileActions({
         onClick={() => { actions.copyFilePath(); onClose(); }}
       >
         {showIcons && <MaterialSymbol icon="content_copy" size={iconSize} />}
-        <span>Copy Path</span>
+        <span>{t('copyPath')}</span>
       </Item>
 
       {/* Share Link (conditional on file type) */}
@@ -347,7 +349,7 @@ export function CommonFileActions({
           onClick={() => { actions.shareLink(); onClose(); }}
         >
           {showIcons && <MaterialSymbol icon="share" size={iconSize} />}
-          <span>Share Link</span>
+          <span>{t('shareLink')}</span>
         </Item>
       )}
 

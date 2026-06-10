@@ -48,6 +48,14 @@ jobs:
           cd ../..
           npm ci --ignore-scripts
 
+      # `npm ci --ignore-scripts` skips the extension-sdk prepare build, so its
+      # dist/ entry is missing. The Xcode editor build phase resolves
+      # @nimbalyst/extension-sdk and fails without it (matches ci.yml).
+      - name: Build extension-sdk
+        run: |
+          cd ../extension-sdk
+          npm run build
+
       - name: Build transcript bundle
         run: npx vite build --config vite.config.transcript.ts
 

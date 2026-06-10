@@ -15,7 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.nimbalyst.app.R
 import com.nimbalyst.app.sync.DeviceInfo
 import com.nimbalyst.app.sync.SyncConnectionState
 
@@ -41,7 +43,7 @@ fun ConnectionIndicator(
     ) {
         Icon(
             imageVector = Icons.Default.Computer,
-            contentDescription = "Desktop connection",
+            contentDescription = stringResource(R.string.cd_desktop_connection),
             modifier = Modifier.size(20.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )

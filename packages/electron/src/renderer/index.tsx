@@ -13,6 +13,8 @@ import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 import './styles/components.css';
+import './i18n';
+import i18n from './i18n';
 import posthog from "posthog-js";
 import {PostHogProvider} from "posthog-js/react";
 import { initMonacoEditor } from './utils/monacoConfig';
@@ -40,6 +42,8 @@ import {
   initDeveloperFeatureSettings,
   externalEditorSettingsAtom,
   initExternalEditorSettings,
+  appLanguageAtom,
+  initAppLanguage,
 } from './store/atoms/appSettings';
 import {
   claudeUsageIndicatorEnabledAtom,
@@ -162,6 +166,10 @@ await Promise.allSettled([
   }),
   initTrackerAutomationSettings().then((settings) => {
     store.set(trackerAutomationAtom, settings);
+  }),
+  initAppLanguage().then((lang) => {
+    store.set(appLanguageAtom, lang);
+    i18n.changeLanguage(lang);
   }),
 ]);
 

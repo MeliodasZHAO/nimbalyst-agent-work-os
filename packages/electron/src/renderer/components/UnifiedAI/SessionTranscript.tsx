@@ -15,6 +15,7 @@
  */
 
 import React, { useCallback, useRef, useImperativeHandle, forwardRef, useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { store, registerInteractiveWidgetHost, unregisterInteractiveWidgetHost } from '@nimbalyst/runtime/store';
 import type { SessionData, ChatAttachment, TranscriptViewMessage } from '@nimbalyst/runtime/ai/server/types';
@@ -409,6 +410,7 @@ export const SessionTranscript = forwardRef<SessionTranscriptRef, SessionTranscr
   additionalTeammates,
   waitingForNoun,
 }, ref) => {
+  const { t } = useTranslation('agent');
   const posthog = usePostHog();
   const inputRef = useRef<AIInputRef>(null);
   const transcriptPanelRef = useRef<{ scrollToMessage: (index: number) => void; scrollToTop: () => void }>(null);
@@ -2173,9 +2175,7 @@ export const SessionTranscript = forwardRef<SessionTranscriptRef, SessionTranscr
         placeholder={
           mode === 'chat'
             ? "Ask a question. @ for files, @@ for sessions, / for commands"
-            : enableSlashCommands
-              ? "Type your message... (Enter to send, Shift+Enter for new line, @ for files, @@ for sessions, / for commands)"
-              : "Type your message... (Enter to send, Shift+Enter for new line, @ for files, @@ for sessions, / for commands)"
+            : t('inputPlaceholder')
         }
         mode={aiMode}
         onModeChange={handleAIModeChange}

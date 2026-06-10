@@ -25,7 +25,7 @@ export const claudeMdTip: TipDefinition = {
   },
   content: {
     icon: RulesIcon,
-    title: 'Set standing instructions in CLAUDE.md',
-    body: 'Drop a **CLAUDE.md** at the workspace root with your coding conventions, preferred tools, and tone. Every session loads it automatically -- you only have to write it once.',
+    title: '在 CLAUDE.md 中设置常驻指令',
+    body: '在工作区根目录放一个 **CLAUDE.md**，写上你的编码规范、常用工具和风格要求。每个会话都会自动加载——你只需要写一次。',
   },
 };

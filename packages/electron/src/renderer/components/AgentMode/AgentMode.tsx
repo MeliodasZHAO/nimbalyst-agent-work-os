@@ -12,6 +12,7 @@
  */
 
 import React, { forwardRef, useImperativeHandle, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { ResizablePanel } from '../AgenticCoding/ResizablePanel';
 import { SessionHistory } from '../AgenticCoding/SessionHistory';
@@ -106,6 +107,7 @@ export const AgentMode = forwardRef<AgentModeRef, AgentModeProps>(function Agent
   onSwitchToAgentMode,
   onOpenSessionInChat,
 }, ref) {
+  const { t } = useTranslation('agent');
   // Ref to the workstream panel for closing tabs
   const workstreamPanelRef = useRef<AgentWorkstreamPanelRef>(null);
 
@@ -572,12 +574,12 @@ export const AgentMode = forwardRef<AgentModeRef, AgentModeProps>(function Agent
     )
   ) : (
     <div className="agent-mode-empty flex flex-col items-center justify-center h-full gap-4 text-nim-muted">
-      <p className="m-0 text-sm">Select a session or create a new one to get started</p>
+      <p className="m-0 text-sm">{t('selectOrCreateSession')}</p>
       <button
         onClick={() => dispatchCreateNewSession(undefined)}
         className="agent-mode-new-button py-2 px-4 rounded-md border border-nim-border bg-nim-bg-secondary text-nim cursor-pointer text-sm transition-colors hover:bg-nim-bg-active"
       >
-        New Session
+        {t('newSession')}
       </button>
     </div>
   );
@@ -589,18 +591,26 @@ export const AgentMode = forwardRef<AgentModeRef, AgentModeProps>(function Agent
 
   const viewMode = useAtomValue(viewModeAtom);
 
-  const kanbanContent = (
-    <SessionKanbanBoard
-      onSessionSelect={dispatchSelectSession}
-      onSessionOpen={dispatchSelectSession}
-    />
+  // Both views stay mounted; CSS toggles visibility to avoid expensive unmount/remount
+  const combinedRightPanel = (
+    <>
+      <div className={viewMode === 'kanban' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
+        <SessionKanbanBoard
+          onSessionSelect={dispatchSelectSession}
+          onSessionOpen={dispatchSelectSession}
+        />
+      </div>
+      <div className={viewMode === 'kanban' ? 'hidden' : 'flex flex-col flex-1 min-h-0'}>
+        {rightContent}
+      </div>
+    </>
   );
 
   return (
     <div className="agent-mode flex flex-row h-full w-full overflow-hidden">
       <ResizablePanel
         leftPanel={leftContent}
-        rightPanel={viewMode === 'kanban' ? kanbanContent : rightContent}
+        rightPanel={combinedRightPanel}
         leftWidth={historyWidth}
         minWidth={200}
         maxWidth={500}

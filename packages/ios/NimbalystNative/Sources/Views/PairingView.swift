@@ -25,7 +25,7 @@ public struct PairingView: View {
                     .font(.title)
                     .fontWeight(.bold)
 
-                Text("Open Nimbalyst on your Mac, go to Settings > Mobile Sync, and scan the QR code to pair this device.")
+                Text("Open Nimbalyst on your desktop, go to Settings > Mobile Sync, and scan the QR code to pair this device.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

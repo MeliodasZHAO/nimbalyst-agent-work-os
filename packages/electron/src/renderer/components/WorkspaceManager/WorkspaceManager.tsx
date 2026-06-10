@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { WindowTitleBar } from '../WindowTitleBar';
 
 // Apply the active theme as a base dark/light class on the WorkspaceManager
 // (project picker) window. The picker does not load the extension theme
@@ -106,7 +107,7 @@ export const WorkspaceManager: React.FC = () => {
 
   // Operation state
   const [operationInProgress, setOperationInProgress] = useState(false);
-  const [operationLabel, setOperationLabel] = useState('Moving project...');
+  const [operationLabel, setOperationLabel] = useState('正在移动项目...');
   const [operationError, setOperationError] = useState<string | null>(null);
 
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -271,7 +272,7 @@ export const WorkspaceManager: React.FC = () => {
   const openRenameDialog = async (workspace: WorkspaceInfo) => {
     const canMoveResult = await window.electronAPI.projectMigration.canMove(workspace.path);
     if (!canMoveResult.canMove) {
-      setOperationError(canMoveResult.reason || 'Cannot rename project');
+      setOperationError(canMoveResult.reason || '当前无法重命名这个项目');
       return;
     }
 
@@ -320,7 +321,7 @@ export const WorkspaceManager: React.FC = () => {
     // Check if can move first
     const canMoveResult = await window.electronAPI.projectMigration.canMove(workspace.path);
     if (!canMoveResult.canMove) {
-      setOperationError(canMoveResult.reason || 'Cannot move project');
+      setOperationError(canMoveResult.reason || '当前无法移动这个项目');
       return;
     }
 
@@ -357,7 +358,7 @@ export const WorkspaceManager: React.FC = () => {
     const newPath = confirmDialog.destinationPath;
 
     setConfirmDialog(prev => ({ ...prev, visible: false }));
-    setOperationLabel('Moving project...');
+    setOperationLabel('正在移动项目...');
     setOperationInProgress(true);
     setOperationError(null);
 
@@ -374,10 +375,10 @@ export const WorkspaceManager: React.FC = () => {
           }
         }
       } else {
-        setOperationError(moveResult.error || 'Failed to move project');
+        setOperationError(moveResult.error || '移动项目失败');
       }
     } catch (error: any) {
-      setOperationError(error.message || 'Failed to move project');
+      setOperationError(error.message || '移动项目失败');
     } finally {
       setOperationInProgress(false);
     }
@@ -399,12 +400,12 @@ export const WorkspaceManager: React.FC = () => {
     if (invalidChars.test(newName)) {
       setRenameDialog(prev => ({
         ...prev,
-        error: 'Name contains invalid characters',
+        error: '名称包含不能用于文件夹的字符',
       }));
       return;
     }
 
-    setOperationLabel('Renaming project...');
+    setOperationLabel('正在重命名项目...');
     setOperationInProgress(true);
     setRenameDialog(prev => ({ ...prev, error: null }));
 
@@ -428,13 +429,13 @@ export const WorkspaceManager: React.FC = () => {
       } else {
         setRenameDialog(prev => ({
           ...prev,
-          error: result.error || 'Failed to rename project',
+          error: result.error || '重命名项目失败',
         }));
       }
     } catch (error: any) {
       setRenameDialog(prev => ({
         ...prev,
-        error: error.message || 'Failed to rename project',
+        error: error.message || '重命名项目失败',
       }));
     } finally {
       setOperationInProgress(false);
@@ -443,7 +444,7 @@ export const WorkspaceManager: React.FC = () => {
 
   const formatDate = (timestamp: number | string | undefined) => {
     if (!timestamp) {
-      return 'Unknown';
+      return '未知';
     }
 
     // Convert string to number if needed
@@ -456,14 +457,14 @@ export const WorkspaceManager: React.FC = () => {
     }
 
     if (!ts || isNaN(ts) || ts === 0) {
-      return 'Unknown';
+      return '未知';
     }
 
     const date = new Date(ts);
 
     // Check if date is valid
     if (isNaN(date.getTime())) {
-      return 'Never';
+      return '从未打开';
     }
 
     const now = new Date();
@@ -473,14 +474,14 @@ export const WorkspaceManager: React.FC = () => {
     if (days < 0) {
       return date.toLocaleDateString();
     } else if (days === 0) {
-      return 'Today';
+      return '今天';
     } else if (days === 1) {
-      return 'Yesterday';
+      return '昨天';
     } else if (days < 7) {
-      return `${days} days ago`;
+      return `${days} 天前`;
     } else if (days < 30) {
       const weeks = Math.floor(days / 7);
-      return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+      return `${weeks} 周前`;
     } else {
       return date.toLocaleDateString();
     }
@@ -540,19 +541,24 @@ export const WorkspaceManager: React.FC = () => {
   };
 
   return (
-    <div className="workspace-manager flex w-full h-screen overflow-hidden bg-[var(--nim-bg)] pt-[38px] before:content-[''] before:fixed before:top-0 before:left-0 before:right-0 before:h-[38px] before:[-webkit-app-region:drag] before:z-[1000]">
+    <div className="workspace-manager-shell flex flex-col w-full h-screen overflow-hidden bg-[var(--nim-bg)]">
+      <WindowTitleBar />
+      <div className="workspace-manager flex w-full flex-1 overflow-hidden bg-[var(--nim-bg)]">
       <div className="sidebar w-[380px] bg-[var(--nim-bg-secondary)] border-r border-[var(--nim-border)] flex flex-col shrink-0">
         <div className="sidebar-header p-3 bg-[var(--nim-bg)] border-b border-[var(--nim-border)] [-webkit-app-region:no-drag]">
           <div className="app-branding flex items-center gap-2.5 mb-4">
             <img src="./icon.png" alt="Nimbalyst" className="app-logo w-8 h-8 shrink-0 object-contain" />
-            <h2 className="m-0 text-lg font-bold text-[var(--nim-text)] tracking-tight">Nimbalyst</h2>
+            <div className="min-w-0">
+              <h2 className="m-0 text-lg font-bold text-[var(--nim-text)] tracking-tight">Nimbalyst 工作台</h2>
+              <p className="m-0 mt-0.5 text-[11px] text-[var(--nim-text-muted)] leading-tight">选择项目，启动 Agent Work OS</p>
+            </div>
           </div>
           <div className="action-buttons flex gap-2">
             <button className="btn nim-btn-primary" onClick={handleBrowse}>
-              Open Folder
+              打开项目
             </button>
             <button className="btn nim-btn-secondary" onClick={handleCreateWorkspace}>
-              New Folder
+              新建项目
             </button>
           </div>
         </div>
@@ -563,7 +569,7 @@ export const WorkspaceManager: React.FC = () => {
               <input
                 type="text"
                 className="workspace-search nim-input"
-                placeholder="Search projects..."
+                placeholder="搜索最近项目..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -578,11 +584,11 @@ export const WorkspaceManager: React.FC = () => {
             </div>
           ) : workspaces.length === 0 ? (
             <div className="sidebar-empty flex flex-col items-center justify-center h-full p-5 text-center">
-              <p className="text-[13px] text-[var(--nim-text-faint)] m-0">No recent projects</p>
+              <p className="text-[13px] text-[var(--nim-text-faint)] m-0">还没有最近项目</p>
             </div>
           ) : filteredWorkspaces.length === 0 ? (
             <div className="sidebar-empty flex flex-col items-center justify-center h-full p-5 text-center">
-              <p className="text-[13px] text-[var(--nim-text-faint)] m-0">No matching projects</p>
+              <p className="text-[13px] text-[var(--nim-text-faint)] m-0">没有匹配的项目</p>
             </div>
           ) : (
             filteredWorkspaces.map((workspace, index) => (
@@ -611,7 +617,7 @@ export const WorkspaceManager: React.FC = () => {
                   <div className="workspace-path text-[11px] text-[var(--nim-text-muted)] overflow-hidden text-ellipsis whitespace-nowrap mb-0.5">{workspace.path}</div>
                   <div className="workspace-meta flex gap-3 text-[11px] text-[var(--nim-text-faint)]">
                     {workspace.markdownCount !== undefined && (
-                      <span className="whitespace-nowrap">{workspace.markdownCount} markdown files</span>
+                      <span className="whitespace-nowrap">{workspace.markdownCount} 个 Markdown 文件</span>
                     )}
                     <span className="whitespace-nowrap">{formatDate(workspace.lastOpened)}</span>
                   </div>
@@ -633,10 +639,10 @@ export const WorkspaceManager: React.FC = () => {
               <div className="content-actions flex flex-col items-end gap-2 shrink-0">
                 <div className="content-actions-primary flex flex-wrap justify-end gap-2">
                   <button className="btn nim-btn-primary" onClick={handleOpenWorkspace}>
-                    Open Project
+                    打开项目
                   </button>
                   <button className="btn nim-btn-secondary !text-[var(--nim-error)] !border-[var(--nim-error-subtle)] hover:!bg-[var(--nim-error-subtle)]" onClick={() => handleRemoveFromRecent()}>
-                    Remove from Recent
+                    从最近项目移除
                   </button>
                 </div>
                 <div className="content-actions-secondary flex flex-wrap justify-end gap-2">
@@ -644,13 +650,13 @@ export const WorkspaceManager: React.FC = () => {
                     className="btn nim-btn-secondary !h-8 !px-2.5 !text-[12px]"
                     onClick={() => openRenameDialog(selectedWorkspace)}
                   >
-                    Rename
+                    重命名
                   </button>
                   <button
                     className="btn nim-btn-secondary !h-8 !px-2.5 !text-[12px]"
                     onClick={() => handleMoveProject(selectedWorkspace)}
                   >
-                    Move
+                    移动
                   </button>
                 </div>
               </div>
@@ -662,25 +668,25 @@ export const WorkspaceManager: React.FC = () => {
                   <div className="stats-grid grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
                     <div className="stat-card bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-4">
                       <div className="stat-value text-2xl font-semibold text-[var(--nim-text)] mb-1">{workspaceStats.fileCount}</div>
-                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">Total Files</div>
+                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">文件总数</div>
                     </div>
                     <div className="stat-card bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-4">
                       <div className="stat-value text-2xl font-semibold text-[var(--nim-text)] mb-1">{workspaceStats.markdownCount}</div>
-                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">Markdown Files</div>
+                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">Markdown 文件</div>
                     </div>
                     <div className="stat-card bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-4">
                       <div className="stat-value text-2xl font-semibold text-[var(--nim-text)] mb-1">{formatSize(workspaceStats.totalSize)}</div>
-                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">Total Size</div>
+                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">占用空间</div>
                     </div>
                     <div className="stat-card bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-4">
                       <div className="stat-value text-2xl font-semibold text-[var(--nim-text)] mb-1">{formatDate(selectedWorkspace.lastOpened)}</div>
-                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">Last Opened</div>
+                      <div className="stat-label text-xs text-[var(--nim-text-muted)] uppercase tracking-wider">最近打开</div>
                     </div>
                   </div>
 
                   {workspaceStats.recentFiles.length > 0 && (
                     <div className="recent-files bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-md p-4 mt-4">
-                      <h3 className="text-sm font-semibold text-[var(--nim-text)] m-0 mb-3">Recent Files</h3>
+                      <h3 className="text-sm font-semibold text-[var(--nim-text)] m-0 mb-3">最近文件</h3>
                       <ul className="list-none m-0 p-0">
                         {workspaceStats.recentFiles.map(file => (
                           <li key={file} className="flex items-center gap-2 py-1.5 text-[13px] text-[var(--nim-text-muted)] border-b border-[var(--nim-border-subtle)] last:border-b-0">
@@ -700,32 +706,31 @@ export const WorkspaceManager: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="welcome-container flex items-center justify-center h-full p-10 bg-gradient-to-br from-[#667eea] to-[#764ba2] relative overflow-hidden before:content-[''] before:absolute before:top-[-50%] before:right-[-50%] before:w-[200%] before:h-[200%] before:bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_70%)] before:animate-[float_20s_ease-in-out_infinite]">
-            <div className="welcome-content bg-white/[0.98] dark:bg-[var(--nim-bg)] rounded-2xl p-8 max-w-[500px] w-full shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] backdrop-blur-[10px] relative z-[1]">
+          <div className="welcome-container flex items-center justify-center h-full p-10 bg-[var(--nim-bg-secondary)] relative overflow-hidden">
+            <div className="welcome-content bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-lg p-8 max-w-[560px] w-full shadow-[0_18px_45px_rgba(15,23,42,0.12)] relative z-[1]">
               <div className="welcome-header flex items-center justify-center gap-5 mb-6">
-                <img src="./icon.png" alt="Nimbalyst" className="welcome-logo w-16 h-16 object-contain" />
+                <img src="./icon.png" alt="Nimbalyst" className="welcome-logo w-14 h-14 object-contain" />
                 <div className="welcome-text text-left">
-                  <h1 className="welcome-title text-[28px] font-extrabold text-[var(--nim-text)] m-0 mb-1 tracking-tight">Nimbalyst</h1>
-                  <p className="welcome-subtitle text-sm text-[var(--nim-text-muted)] m-0 font-normal">AI-native, interactive work platform</p>
+                  <h1 className="welcome-title text-[28px] font-extrabold text-[var(--nim-text)] m-0 mb-1 tracking-tight">Nimbalyst 工作台</h1>
+                  <p className="welcome-subtitle text-sm text-[var(--nim-text-muted)] m-0 font-normal">为 Codex、Claude Code 和多 Agent 协作准备项目现场</p>
                 </div>
               </div>
 
               <div className="welcome-info-compact mb-6 text-center">
                 <p className="welcome-description text-sm text-[var(--nim-text-muted)] leading-relaxed m-0">
-                  Projects are local folders on your computer. Open any folder to view and edit all markdown files within it.
-                  If you are working on a coding project, it is recommended to open the root folder of your project as
-                  agents are configured at the project level.
+                  选择一个本地文件夹作为项目。Nimbalyst 会读取其中的 Markdown、代码与项目配置，
+                  让 Agent Work OS 能按项目规则启动会话、创建 worktree、记录证据并同步到安卓端。
                 </p>
               </div>
 
               <div className="welcome-actions flex justify-center gap-4">
                 <button className="btn btn-large btn-welcome-primary bg-[var(--nim-primary)] text-white border-none py-3 px-6 text-[15px] font-semibold rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_2px_8px_rgba(59,130,246,0.3)] hover:bg-[var(--nim-primary-hover)] hover:shadow-[0_4px_12px_rgba(59,130,246,0.4)] hover:-translate-y-px" onClick={handleBrowse}>
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>folder_open</span>
-                  Open Folder
+                  打开项目
                 </button>
                 <button className="btn btn-large btn-welcome-secondary bg-[var(--nim-bg)] text-[var(--nim-text-muted)] border-2 border-[var(--nim-border)] py-3 px-6 text-[15px] font-semibold rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 hover:bg-[var(--nim-bg-secondary)] hover:border-[var(--nim-border-hover)] hover:-translate-y-px" onClick={handleCreateWorkspace}>
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>create_new_folder</span>
-                  New Folder
+                  新建项目
                 </button>
               </div>
             </div>
@@ -745,7 +750,7 @@ export const WorkspaceManager: React.FC = () => {
             onClick={() => handleContextMenuAction('open')}
           >
             <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>folder_open</span>
-            Open Project
+            打开项目
           </button>
           <div className="border-t border-[var(--nim-border)] my-1" />
           <button
@@ -753,14 +758,14 @@ export const WorkspaceManager: React.FC = () => {
             onClick={() => handleContextMenuAction('rename')}
           >
             <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>edit</span>
-            Rename...
+            重命名...
           </button>
           <button
             className="w-full px-3 py-1.5 text-left text-[13px] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] flex items-center gap-2"
             onClick={() => handleContextMenuAction('move')}
           >
             <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>drive_file_move</span>
-            Move to...
+            移动到...
           </button>
           <div className="border-t border-[var(--nim-border)] my-1" />
           <button
@@ -768,7 +773,7 @@ export const WorkspaceManager: React.FC = () => {
             onClick={() => handleContextMenuAction('remove')}
           >
             <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>close</span>
-            Remove from Recent
+            从最近项目移除
           </button>
         </div>
       )}
@@ -777,24 +782,24 @@ export const WorkspaceManager: React.FC = () => {
       {renameDialog.visible && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[3000]">
           <div className="bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-lg shadow-xl p-5 w-[450px]">
-            <h2 className="text-lg font-semibold text-[var(--nim-text)] m-0 mb-3">Rename Project</h2>
+            <h2 className="text-lg font-semibold text-[var(--nim-text)] m-0 mb-3">重命名项目</h2>
 
             {/* Warning banner */}
             <div className="bg-[var(--nim-warning)]/10 border border-[var(--nim-warning)]/30 rounded-md p-3 mb-4 flex gap-2">
               <span className="material-symbols-outlined text-[18px] text-[var(--nim-warning)] shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>warning</span>
               <div className="text-[12px] text-[var(--nim-text-muted)]">
-                <p className="m-0 mb-1 font-medium text-[var(--nim-text)]">This will rename the project folder on disk</p>
-                <p className="m-0">All AI session history, file history, and settings will be migrated. This may take a while for large projects.</p>
+                <p className="m-0 mb-1 font-medium text-[var(--nim-text)]">这会重命名磁盘上的项目文件夹</p>
+                <p className="m-0">AI 会话历史、文件历史和设置会一起迁移。大型项目可能需要等待一会儿。</p>
                 {renameDialog.stats && (
                   <p className="m-0 mt-1 text-[var(--nim-text-faint)]">
-                    Project size: {renameDialog.stats.fileCount.toLocaleString()} files, {formatSize(renameDialog.stats.totalSize)}
+                    项目规模：{renameDialog.stats.fileCount.toLocaleString()} 个文件，{formatSize(renameDialog.stats.totalSize)}
                   </p>
                 )}
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="block text-[13px] text-[var(--nim-text-muted)] mb-1">New name</label>
+              <label className="block text-[13px] text-[var(--nim-text-muted)] mb-1">新名称</label>
               <input
                 ref={renameInputRef}
                 type="text"
@@ -820,14 +825,14 @@ export const WorkspaceManager: React.FC = () => {
                 onClick={() => setRenameDialog({ visible: false, workspace: null, newName: '', error: null })}
                 disabled={operationInProgress}
               >
-                Cancel
+                取消
               </button>
               <button
                 className="btn nim-btn-primary"
                 onClick={handleRenameSubmit}
                 disabled={operationInProgress || !renameDialog.newName.trim()}
               >
-                {operationInProgress ? 'Renaming...' : 'Rename'}
+                {operationInProgress ? '正在重命名...' : '重命名'}
               </button>
             </div>
           </div>
@@ -838,29 +843,29 @@ export const WorkspaceManager: React.FC = () => {
       {confirmDialog.visible && confirmDialog.type === 'move' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[3000]">
           <div className="bg-[var(--nim-bg)] border border-[var(--nim-border)] rounded-lg shadow-xl p-5 w-[500px]">
-            <h2 className="text-lg font-semibold text-[var(--nim-text)] m-0 mb-3">Move Project</h2>
+            <h2 className="text-lg font-semibold text-[var(--nim-text)] m-0 mb-3">移动项目</h2>
 
             {/* Warning banner */}
             <div className="bg-[var(--nim-warning)]/10 border border-[var(--nim-warning)]/30 rounded-md p-3 mb-4 flex gap-2">
               <span className="material-symbols-outlined text-[18px] text-[var(--nim-warning)] shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>warning</span>
               <div className="text-[12px] text-[var(--nim-text-muted)]">
-                <p className="m-0 mb-1 font-medium text-[var(--nim-text)]">This will move the entire project folder</p>
-                <p className="m-0">All project files will be copied to the new location, and all AI session history, file history, and settings will be migrated. This may take a while for large projects.</p>
+                <p className="m-0 mb-1 font-medium text-[var(--nim-text)]">这会移动整个项目文件夹</p>
+                <p className="m-0">所有项目文件会复制到新位置，AI 会话历史、文件历史和设置也会一起迁移。大型项目可能需要等待一会儿。</p>
               </div>
             </div>
 
             <div className="mb-4 space-y-2">
               <div>
-                <label className="block text-[12px] text-[var(--nim-text-muted)] mb-0.5">From</label>
+                <label className="block text-[12px] text-[var(--nim-text-muted)] mb-0.5">原位置</label>
                 <div className="text-[13px] text-[var(--nim-text)] bg-[var(--nim-bg-secondary)] px-3 py-2 rounded border border-[var(--nim-border)] font-mono overflow-hidden text-ellipsis">{confirmDialog.workspace?.path}</div>
               </div>
               <div>
-                <label className="block text-[12px] text-[var(--nim-text-muted)] mb-0.5">To</label>
+                <label className="block text-[12px] text-[var(--nim-text-muted)] mb-0.5">新位置</label>
                 <div className="text-[13px] text-[var(--nim-text)] bg-[var(--nim-bg-secondary)] px-3 py-2 rounded border border-[var(--nim-border)] font-mono overflow-hidden text-ellipsis">{confirmDialog.destinationPath}</div>
               </div>
               {confirmDialog.stats && (
                 <div className="flex gap-4 pt-2 text-[12px] text-[var(--nim-text-muted)]">
-                  <span>{confirmDialog.stats.fileCount.toLocaleString()} files</span>
+                  <span>{confirmDialog.stats.fileCount.toLocaleString()} 个文件</span>
                   <span>{formatSize(confirmDialog.stats.totalSize)}</span>
                 </div>
               )}
@@ -871,13 +876,13 @@ export const WorkspaceManager: React.FC = () => {
                 className="btn nim-btn-secondary"
                 onClick={() => setConfirmDialog(prev => ({ ...prev, visible: false }))}
               >
-                Cancel
+                取消
               </button>
               <button
                 className="btn nim-btn-primary"
                 onClick={executeMoveProject}
               >
-                Move Project
+                移动项目
               </button>
             </div>
           </div>
@@ -915,6 +920,7 @@ export const WorkspaceManager: React.FC = () => {
           66% { transform: translate(30px, -20px) rotate(240deg); }
         }
       `}</style>
+    </div>
     </div>
   );
 };

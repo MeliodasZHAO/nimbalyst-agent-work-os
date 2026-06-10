@@ -2,7 +2,7 @@
   "id": "com.nimbalyst.planning",
   "name": "Planning",
   "version": "1.0.0",
-  "description": "Structured planning and tracking with YAML frontmatter",
+  "description": "结构化规划与追踪，使用 YAML frontmatter",
   "author": "Nimbalyst",
   "apiVersion": "1.0.0",
   "permissions": {
@@ -13,24 +13,24 @@
     "claudePlugin": {
       "path": "claude-plugin",
       "displayName": "Planning Tools",
-      "description": "Structured planning and tracking with YAML frontmatter",
+      "description": "结构化规划与追踪，使用 YAML frontmatter",
       "enabledByDefault": true,
       "commands": [
         {
           "name": "design",
-          "description": "Create a structured plan document"
+          "description": "创建结构化计划文档"
         },
         {
           "name": "implement",
-          "description": "Execute a plan with progress tracking"
+          "description": "执行计划并跟踪进度"
         },
         {
           "name": "track",
-          "description": "Track bugs, tasks, ideas, and other items"
+          "description": "追踪 Bug、任务、想法和其他事项"
         },
         {
           "name": "launch-new-session",
-          "description": "Spin off a sibling AI session to keep working in parallel"
+          "description": "启动一个并行的智能体会话继续工作"
         }
       ]
     }

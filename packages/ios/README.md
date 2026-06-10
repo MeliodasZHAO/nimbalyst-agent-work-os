@@ -1,6 +1,6 @@
 # Nimbalyst for iOS
 
-Native SwiftUI companion app for [Nimbalyst](https://nimbalyst.com), the AI-native code editor. View and interact with your AI coding sessions on iPhone and iPad, synced in real-time from your Mac.
+Native SwiftUI companion app for [Nimbalyst](https://nimbalyst.com), the AI-native code editor. View and interact with your AI coding sessions on iPhone and iPad, synced in real-time from your desktop.
 
 ## Features
 
@@ -9,7 +9,7 @@ Native SwiftUI companion app for [Nimbalyst](https://nimbalyst.com), the AI-nati
 - **Rich transcript viewer** - Full chat transcripts with code blocks, tool calls, and interactive widgets
 - **Session management** - Search sessions, group by time period, create new sessions from mobile
 - **iPad split view** - Sidebar navigation on iPad, stack navigation on iPhone
-- **Desktop presence** - See when your Mac is online and connected
+- **Desktop presence** - See when your desktop is online and connected
 
 ## Screenshots
 
@@ -48,7 +48,7 @@ _Coming soon_
 
 ### Pairing with Desktop
 
-1. On your Mac, open Nimbalyst and go to **Settings > Session Sync**
+1. On your desktop, open Nimbalyst and go to **Settings > Session Sync**
 2. Enable sync and click **Pair Mobile Device**
 3. On the iOS app, scan the QR code
 4. Sign in with the same Google account you use on desktop

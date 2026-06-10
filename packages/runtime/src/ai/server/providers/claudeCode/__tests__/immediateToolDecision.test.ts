@@ -196,4 +196,38 @@ describe('resolveImmediateToolDecision', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('mobile permission policy auto-approval', () => {
+    it('auto-approves when allowToolPermissionApproval is true', async () => {
+      const deps = createDeps({
+        mobilePermissionPolicyResolver: () => ({ allowToolPermissionApproval: true }),
+      });
+      const params = createParams({ toolName: 'Bash' });
+      const result = await resolveImmediateToolDecision(deps, params);
+      assertZodCompliantAllow(result);
+    });
+
+    it('falls through when allowToolPermissionApproval is false', async () => {
+      const deps = createDeps({
+        mobilePermissionPolicyResolver: () => ({ allowToolPermissionApproval: false }),
+      });
+      const params = createParams({ toolName: 'Bash' });
+      const result = await resolveImmediateToolDecision(deps, params);
+      expect(result).toBeNull();
+    });
+
+    it('falls through when mobilePermissionPolicyResolver is undefined', async () => {
+      const deps = createDeps({ mobilePermissionPolicyResolver: undefined });
+      const params = createParams({ toolName: 'Bash' });
+      const result = await resolveImmediateToolDecision(deps, params);
+      expect(result).toBeNull();
+    });
+
+    it('falls through when resolver returns null', async () => {
+      const deps = createDeps({ mobilePermissionPolicyResolver: () => null });
+      const params = createParams({ toolName: 'Bash' });
+      const result = await resolveImmediateToolDecision(deps, params);
+      expect(result).toBeNull();
+    });
+  });
 });

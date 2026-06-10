@@ -1,0 +1,13 @@
+# Copy to local.properties and fill in local-only values.
+# Do not commit local.properties or keystore files.
+
+# Android SDK path is usually managed by Android Studio.
+# sdk.dir=C:\\Users\\you\\AppData\\Local\\Android\\Sdk
+
+# Optional release signing config.
+# If all four values are present, :app:assembleRelease creates a signed release APK.
+# If any value is missing, Gradle still builds the unsigned release variant.
+NIMBALYST_RELEASE_STORE_FILE=keystores/nimbalyst-release.jks
+NIMBALYST_RELEASE_STORE_PASSWORD=change-me
+NIMBALYST_RELEASE_KEY_ALIAS=nimbalyst-release
+NIMBALYST_RELEASE_KEY_PASSWORD=change-me

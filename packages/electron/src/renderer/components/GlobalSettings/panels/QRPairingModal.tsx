@@ -78,7 +78,7 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
 
   const generateQR = useCallback(async () => {
     if (!effectiveUrl) {
-      setError('Server URL is required');
+      setError('需要服务器 URL');
       return;
     }
 
@@ -111,7 +111,7 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
       setCopied(false);
     } catch (err) {
       console.error('[QRPairingModal] Failed to generate QR:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate QR code');
+      setError(err instanceof Error ? err.message : '生成二维码失败');
     }
   }, [effectiveUrl]);
 
@@ -156,7 +156,7 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
         onClick={(e) => e.stopPropagation()}
       >
         <div className="qr-modal-header flex items-center justify-between px-5 py-4 border-b border-nim sticky top-0 bg-nim z-10">
-          <h2 className="qr-modal-title text-lg font-semibold text-nim m-0">Pair Mobile Device</h2>
+          <h2 className="qr-modal-title text-lg font-semibold text-nim m-0">配对移动设备</h2>
           <button
             className="qr-modal-close p-1 bg-transparent border-none cursor-pointer text-nim-muted hover:text-nim"
             onClick={onClose}
@@ -175,10 +175,10 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                 <svg className="qr-dev-notice-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 5a1 1 0 112 0v3a1 1 0 11-2 0V5zm1 7a1 1 0 100-2 1 1 0 000 2z" />
                 </svg>
-                <span>Local Development Server</span>
+                <span>本地开发服务器</span>
               </div>
               <p className="qr-dev-notice-text text-xs text-nim-muted mb-2">
-                Your phone needs to connect via your local network IP instead of localhost.
+                你的手机需要通过局域网 IP 而非 localhost 连接。
               </p>
               <label className="qr-dev-toggle flex items-center gap-2 cursor-pointer">
                 <input
@@ -187,11 +187,11 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                   onChange={(e) => setUseLocalIP(e.target.checked)}
                 />
                 <span className="qr-dev-toggle-text text-xs text-nim">
-                  Use LAN IP: <code className="bg-nim-secondary px-1 py-0.5 rounded">{localIP}</code>
+                  使用局域网 IP: <code className="bg-nim-secondary px-1 py-0.5 rounded">{localIP}</code>
                 </span>
               </label>
               <p className="qr-dev-notice-url text-xs text-nim-faint mt-2 mb-0">
-                Server URL in QR: <code className="bg-nim-secondary px-1 py-0.5 rounded">{effectiveUrl}</code>
+                二维码中的服务器 URL: <code className="bg-nim-secondary px-1 py-0.5 rounded">{effectiveUrl}</code>
               </p>
             </div>
           )}
@@ -203,7 +203,7 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                 className="qr-regenerate-button px-4 py-2 bg-nim-primary text-nim-on-primary rounded-md text-sm font-medium cursor-pointer hover:bg-nim-primary-hover"
                 onClick={generateQR}
               >
-                Try Again
+                重试
               </button>
             </div>
           ) : qrDataUrl ? (
@@ -211,22 +211,22 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
               <div className="qr-code-container flex justify-center mb-4">
                 <img
                   src={qrDataUrl}
-                  alt="QR Code for mobile pairing"
+                  alt="移动设备配对二维码"
                   className="qr-code-image rounded-lg cursor-pointer"
                   onClick={(e) => {
                     if (e.metaKey && qrPayload) {
                       handleCopyPayload();
                     }
                   }}
-                  title="Cmd+click to copy payload"
+                  title="按住 Cmd 点击可复制配对数据"
                 />
               </div>
 
               <div className="qr-instructions text-sm text-nim-muted space-y-1 mb-4">
-                <p className="qr-step">1. Open Nimbalyst on your mobile device</p>
-                <p className="qr-step">2. Go to Settings and tap "Scan QR Code"</p>
-                <p className="qr-step">3. Point your camera at this QR code</p>
-                <p className="qr-step">4. Sign in with the same account as desktop</p>
+                <p className="qr-step">1. 在手机上打开 Nimbalyst</p>
+                <p className="qr-step">2. 进入设置并点击"扫描二维码"</p>
+                <p className="qr-step">3. 将摄像头对准此二维码</p>
+                <p className="qr-step">4. 使用与桌面端相同的账户登录</p>
               </div>
 
               <div className="qr-info mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-[13px] text-nim-muted">
@@ -235,10 +235,10 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
-                  <span className="font-semibold text-green-500">End-to-End Encrypted</span>
+                  <span className="font-semibold text-green-500">端到端加密</span>
                 </div>
                 <p className="m-0">
-                  This QR code securely transfers your encryption key. Your keys never touch our servers - only your devices can decrypt your data.
+                  此二维码安全传输你的加密密钥。密钥不会经过我们的服务器，只有你的设备可以解密数据。
                 </p>
               </div>
 
@@ -247,9 +247,9 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                 <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                   <div className="flex items-start gap-2.5">
                     <div className="flex-1">
-                      <span className="text-[13px] font-medium text-nim">Prevent sleep while syncing</span>
+                      <span className="text-[13px] font-medium text-nim">同步时防止休眠</span>
                       <p className="text-[11px] text-nim-muted mt-1 mb-0">
-                        Keeps your computer awake so you can send prompts from your phone. Display can still turn off.
+                        保持电脑唤醒，以便手机可以发送指令。屏幕仍可关闭。
                       </p>
                     </div>
                     <select
@@ -257,9 +257,9 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                       onChange={(e) => onPreventSleepModeChange(e.target.value as 'off' | 'always' | 'pluggedIn')}
                       className="bg-nim-secondary border border-nim rounded px-2 py-1 text-[12px] text-nim cursor-pointer shrink-0 mt-0.5"
                     >
-                      <option value="off">Off</option>
-                      <option value="always">Always</option>
-                      <option value="pluggedIn">When plugged in</option>
+                      <option value="off">关</option>
+                      <option value="always">始终</option>
+                      <option value="pluggedIn">充电时</option>
                     </select>
                   </div>
                 </div>
@@ -269,14 +269,14 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                 <svg className="qr-warning-icon shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 5a1 1 0 112 0v3a1 1 0 11-2 0V5zm1 7a1 1 0 100-2 1 1 0 000 2z" />
                 </svg>
-                <span>Only scan with your own device. This shares your encryption key.</span>
+                <span>请仅使用自己的设备扫描。这将共享你的加密密钥。</span>
               </div>
 
               <button
                 className="qr-regenerate-button w-full mt-4 px-4 py-2 bg-nim-secondary text-nim-muted border border-nim rounded-md text-sm font-medium cursor-pointer hover:bg-nim-hover"
                 onClick={generateQR}
               >
-                Regenerate QR Code
+                重新生成二维码
               </button>
 
               {/* Copy pairing data for manual setup (alternative to QR scanning) */}
@@ -300,10 +300,10 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
                         </>
                       )}
                     </svg>
-                    {copied ? 'Copied!' : 'Copy Pairing Data'}
+                    {copied ? '已复制!' : '复制配对数据'}
                   </button>
                   <p className="mt-2 text-[11px] text-nim-faint text-center">
-                    Can't scan? Paste this into the mobile app's Manual Setup
+                    无法扫描？将此数据粘贴到手机应用的手动设置中
                   </p>
                 </div>
               )}
@@ -311,7 +311,7 @@ export function QRPairingModal({ isOpen, onClose, serverUrl, preventSleepMode, o
           ) : (
             <div className="qr-loading flex flex-col items-center justify-center py-8">
               <div className="qr-spinner w-8 h-8 border-2 border-nim-primary border-t-transparent rounded-full animate-spin mb-3" />
-              <p className="text-nim-muted text-sm">Generating QR code...</p>
+              <p className="text-nim-muted text-sm">正在生成二维码...</p>
             </div>
           )}
         </div>

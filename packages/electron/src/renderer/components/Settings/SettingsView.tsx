@@ -17,6 +17,7 @@ import { LMStudioPanel } from '../GlobalSettings/panels/LMStudioPanel';
 import { AdvancedPanel } from '../GlobalSettings/panels/AdvancedPanel';
 import { DatabasePanel } from '../GlobalSettings/panels/DatabasePanel';
 import { AgentFeaturesPanel } from './AgentFeaturesPanel';
+import { AgentWorkOSPanel } from './AgentWorkOSPanel';
 import { BetaFeaturesPanel } from '../GlobalSettings/panels/BetaFeaturesPanel';
 import { NotificationsPanel } from '../GlobalSettings/panels/NotificationsPanel';
 import { VoiceModePanel } from './VoiceModePanel';
@@ -32,6 +33,7 @@ import { ThemesPanel } from './panels/ThemesPanel';
 import { TeamPanel } from './panels/TeamPanel';
 import { TrackerConfigPanel } from './panels/TrackerConfigPanel';
 import { ExtensionMarketplacePanel } from './panels/ExtensionMarketplacePanel';
+import { LanguagePanel } from '../GlobalSettings/panels/LanguagePanel';
 import { walkthroughs } from '../../walkthroughs';
 import {
   aiProviderSettingsAtom,
@@ -147,8 +149,8 @@ export function SettingsView({
   const [workspaceMcpServerCount, setWorkspaceMcpServerCount] = useState(0);
 
   // Valid categories for each scope
-  const projectCategories: SettingsCategory[] = ['agent-permissions', 'team', 'tracker-config', 'installed-extensions', 'claude-plugins', 'mcp-servers', 'claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio'];
-  const userCategories: SettingsCategory[] = ['claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio', 'sync', 'notifications', 'voice-mode', 'agent-features', 'advanced', 'marketplace', 'installed-extensions', 'claude-plugins', 'mcp-servers'];
+  const projectCategories: SettingsCategory[] = ['agent-permissions', 'team', 'tracker-config', 'agent-work-os', 'installed-extensions', 'claude-plugins', 'mcp-servers', 'claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio'];
+  const userCategories: SettingsCategory[] = ['claude-code', 'claude', 'openai', 'openai-codex', 'opencode', 'copilot-cli', 'lmstudio', 'sync', 'notifications', 'voice-mode', 'agent-work-os', 'agent-features', 'language', 'advanced', 'marketplace', 'installed-extensions', 'claude-plugins', 'mcp-servers'];
 
   // When initialCategory/initialScope props change, update state (for deep linking)
   useEffect(() => {
@@ -556,6 +558,14 @@ export function SettingsView({
         return <DatabasePanel />;
       case 'agent-features':
         return <AgentFeaturesPanel />;
+      case 'agent-work-os':
+        return (
+          <AgentWorkOSPanel
+            scope={scope}
+            workspacePath={scope === 'project' ? workspacePath ?? undefined : undefined}
+            workspaceName={workspaceName ?? undefined}
+          />
+        );
       case 'beta-features':
         return <BetaFeaturesPanel />;
       case 'notifications':
@@ -611,6 +621,8 @@ export function SettingsView({
             workspacePath={workspacePath ?? undefined}
           />
         );
+      case 'language':
+        return <LanguagePanel />;
       case 'team':
         return <TeamPanel workspacePath={workspacePath ?? undefined} />;
       case 'tracker-config':
@@ -646,7 +658,7 @@ export function SettingsView({
     <div className="settings-view flex flex-col h-full bg-[var(--nim-bg)] text-[var(--nim-text)]">
       {/* Settings Header */}
       <header className="settings-view-header h-[52px] bg-[var(--nim-bg-secondary)] border-b border-[var(--nim-border)] flex items-center px-5 gap-4 shrink-0">
-        <h1 className="settings-view-title text-base font-semibold text-[var(--nim-text)] m-0">Settings</h1>
+        <h1 className="settings-view-title text-base font-semibold text-[var(--nim-text)] m-0">设置</h1>
 
         <div className="settings-scope-container flex items-center gap-3">
           <div className="settings-scope-tabs flex bg-[var(--nim-bg-tertiary)] p-1 rounded-lg">
@@ -658,7 +670,7 @@ export function SettingsView({
               }`}
               onClick={() => handleScopeChange('user')}
             >
-              User
+              用户
             </button>
             <button
               className={`settings-scope-tab py-1.5 px-4 rounded-md text-xs font-medium cursor-pointer transition-all duration-150 border-none disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -668,15 +680,15 @@ export function SettingsView({
               }`}
               onClick={() => handleScopeChange('project')}
               disabled={!workspacePath}
-              title={!workspacePath ? 'Open a project to access project settings' : undefined}
+              title={!workspacePath ? '打开一个项目以访问项目设置' : undefined}
             >
-              Project
+              项目
             </button>
           </div>
           <span className="settings-scope-hint text-[13px] text-[var(--nim-text-muted)]">
             {scope === 'user'
-              ? 'These settings apply to all projects'
-              : `Settings for ${workspaceName || 'this project'}`}
+              ? '这些设置应用于所有项目'
+              : `${workspaceName || '此项目'}的设置`}
           </span>
         </div>
 

@@ -56,6 +56,7 @@ import {
 import type { TranscriptEvent } from '@nimbalyst/runtime/ai/server/transcript/types';
 import { TranscriptStreamAccumulator } from './transcriptStreamAccumulator';
 import { resolveOwnedWorkspacePath } from '../../shared/sessionWorkspaceRouting';
+import { errorNotificationService } from '../services/ErrorNotificationService';
 
 /**
  * Per-session accumulator of canonical events received via IPC.
@@ -91,6 +92,13 @@ const transcriptAccumulator = new TranscriptStreamAccumulator({
           setTimeout(cb, 16);
         },
 });
+
+interface MobileWorkPacketGuardBlockedPayload {
+  sessionId: string;
+  promptId: string;
+  promptType: 'exit_plan_mode' | 'tool_permission' | 'git_commit';
+  warningText?: string;
+}
 
 // Track blitz IDs for which an analysis session creation has already been triggered.
 // Prevents duplicate IPC calls when multiple children complete near-simultaneously.
@@ -976,6 +984,19 @@ export function initSessionStateListeners(): () => void {
     }
   };
 
+  const handleMobileWorkPacketGuardBlocked = (payload: MobileWorkPacketGuardBlockedPayload) => {
+    const actionLabel = payload.promptType === 'exit_plan_mode'
+      ? 'plan approval'
+      : payload.promptType === 'tool_permission'
+        ? 'tool approval'
+        : 'commit approval';
+    errorNotificationService.showWarning(
+      'Mobile approval blocked',
+      payload.warningText || `Work Packet gate evidence requires desktop review before ${actionLabel}.`,
+      { duration: 9000 },
+    );
+  };
+
   // First, subscribe to the session state manager (IPC call to register this window).
   // Workspace can change during app lifetime; this is updated via updateSessionStateListenerWorkspace().
   activeWorkspacePathSnapshot = store.get(sessionListWorkspaceAtom) || null;
@@ -1029,6 +1050,7 @@ export function initSessionStateListeners(): () => void {
   let cleanupTranscriptEvent: (() => void) | undefined;
   let cleanupTranscriptSessionReparsed: (() => void) | undefined;
   let cleanupMessagesLoggedBatch: (() => void) | undefined;
+  let cleanupMobileWorkPacketGuardBlocked: (() => void) | undefined;
   if (window.electronAPI?.on) {
     cleanupTranscriptEvent = window.electronAPI.on('transcript:event', handleTranscriptEvent);
     cleanupTranscriptSessionReparsed = window.electronAPI.on('transcript:session-reparsed', handleTranscriptSessionReparsed);
@@ -1049,6 +1071,10 @@ export function initSessionStateListeners(): () => void {
     cleanupNotificationClicked = window.electronAPI.on('notification-clicked', handleNotificationClicked);
     cleanupSyncReadState = window.electronAPI.on('sessions:sync-read-state', handleSyncReadState);
     cleanupSyncDraftInput = window.electronAPI.on('sessions:sync-draft-input', handleSyncDraftInput);
+    cleanupMobileWorkPacketGuardBlocked = window.electronAPI.on(
+      'ai:mobileWorkPacketGuardBlocked',
+      handleMobileWorkPacketGuardBlocked,
+    );
   }
 
   // Return cleanup function
@@ -1093,6 +1119,7 @@ export function initSessionStateListeners(): () => void {
     cleanupNotificationClicked?.();
     cleanupSyncReadState?.();
     cleanupSyncDraftInput?.();
+    cleanupMobileWorkPacketGuardBlocked?.();
     cleanupTranscriptEvent?.();
     cleanupTranscriptSessionReparsed?.();
     transcriptAccumulator.clear();

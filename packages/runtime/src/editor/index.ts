@@ -175,6 +175,7 @@ export {
   getDefaultFrontmatterForType,
   getModelDefaults,
   getBuiltInFullDocumentTrackerTypes,
+  getFullDocumentTrackerTypes,
   type TrackerTypeInfo,
 } from './plugins/FloatingDocumentActionsPlugin/TrackerTypeHelper';
 

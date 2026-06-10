@@ -7,10 +7,12 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSetAtom } from 'jotai';
 import { activeTipIdAtom } from './atoms';
 import { recordTipShown } from './TipService';
 import { tips } from './definitions';
+import { resolveTipBody, resolveTipTitle } from './tipText';
 
 interface AllTipsDialogProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface AllTipsDialogProps {
 
 export function AllTipsDialog({ isOpen, onClose }: AllTipsDialogProps): React.ReactElement | null {
   const setActiveTipId = useSetAtom(activeTipIdAtom);
+  const { t } = useTranslation('agent');
 
   if (!isOpen) return null;
 
@@ -65,10 +68,10 @@ export function AllTipsDialog({ isOpen, onClose }: AllTipsDialogProps): React.Re
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-semibold text-[var(--nim-text)] leading-snug">
-                  {tip.content.title}
+                  {resolveTipTitle(tip.content, t)}
                 </div>
                 <div className="text-[12.5px] text-[var(--nim-text-muted)] mt-1 leading-relaxed line-clamp-3">
-                  {tip.content.body.replace(/\*\*/g, '')}
+                  {resolveTipBody(tip.content, t).replace(/\*\*/g, '')}
                 </div>
               </div>
               <button

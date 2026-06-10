@@ -12,6 +12,7 @@ export * from './ai/models';
 export * from './ai/tools';
 export * from './ai/modelConstants';
 export * from './ai/adapters/sessionStore';
+export * from './agent-work-os';
 export { SessionManager } from './ai/server/SessionManager';
 export {
   DocumentContextService,

@@ -21,6 +21,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtom, useSetAtom } from 'jotai';
 import { usePostHog } from 'posthog-js/react';
 import { TipCard } from './TipCard';
@@ -42,6 +43,7 @@ function nextTipAfter(tipId: string | null) {
 }
 
 export function InlineTipDisplay() {
+  const { t } = useTranslation('agent');
   const posthog = usePostHog();
   const [activeTipId, setActiveTipId] = useAtom(activeTipIdAtom);
   const setVisibleCount = useSetAtom(emptyTranscriptVisibleCountAtom);
@@ -147,7 +149,7 @@ export function InlineTipDisplay() {
           aria-label="Next tip"
           title="Next tip"
         >
-          Next
+          {t('next')}
           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 6l6 6-6 6" />
           </svg>
@@ -160,7 +162,7 @@ export function InlineTipDisplay() {
         aria-label="Show all tips"
         title="Show all tips"
       >
-        All tips
+        {t('allTips')}
       </button>
     </>
   );

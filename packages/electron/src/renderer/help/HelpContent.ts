@@ -33,22 +33,22 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'file-tree-filter-button': {
-    title: 'Filter Your File Tree',
-    body: 'Show only markdown files, uncommitted git changes, or files the AI has read or written in this session.',
+    title: '筛选文件树',
+    body: '仅显示 Markdown 文件、未提交的 Git 变更，或本次会话中 AI 读写过的文件。',
   },
   'file-tree-quick-open-button': {
-    title: 'Quick Open Files',
-    body: 'Search for any file in your project by name. Recently opened files appear at the top.',
+    title: '快速打开文件',
+    body: '按文件名搜索项目中的任何文件，最近打开过的文件会排在最前面。',
     shortcut: KeyboardShortcuts.file.open,
   },
   'file-tree-new-file-button': {
-    title: 'New File',
-    body: 'Create a new file in the selected folder.',
+    title: '新建文件',
+    body: '在选中的文件夹中创建新文件。',
     shortcut: KeyboardShortcuts.file.newFile,
   },
   'file-tree-new-folder-button': {
-    title: 'New Folder',
-    body: 'Create a new folder in the selected folder.',
+    title: '新建文件夹',
+    body: '在选中的文件夹中创建新文件夹。',
   },
 
   // ============================================================================
@@ -56,17 +56,17 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'ai-sessions-button': {
-    title: 'Past AI Sessions',
-    body: 'See AI sessions that edited this file. Jump back to continue a conversation or review changes.',
+    title: '历史 AI 会话',
+    body: '查看编辑过此文件的 AI 会话，可跳回之前的对话继续交流或回顾变更。',
   },
   'file-history-button': {
-    title: 'Document History',
-    body: 'View previous versions of this document. Restore or compare any saved state.',
+    title: '文档历史',
+    body: '查看此文档的历史版本，可恢复或对比任意保存状态。',
     shortcut: KeyboardShortcuts.edit.viewHistory,
   },
   'toc-toggle-button': {
-    title: 'Table of Contents',
-    body: 'Toggle the table of contents panel. Navigate quickly to any heading in the document.',
+    title: '目录',
+    body: '切换目录面板，快速跳转到文档中的任意标题。',
   },
 
   // ============================================================================
@@ -74,22 +74,22 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'diff-keep-button': {
-    title: 'Keep Changes',
-    body: 'Accept the AI changes for this section and update the document.',
+    title: '保留变更',
+    body: '接受此区域的 AI 变更并更新文档。',
     shortcut: KeyboardShortcuts.edit.approve,
   },
   'diff-revert-button': {
-    title: 'Revert Changes',
-    body: 'Reject the AI changes and restore the original content.',
+    title: '撤销变更',
+    body: '拒绝 AI 变更并恢复原始内容。',
     shortcut: KeyboardShortcuts.edit.reject,
   },
   'diff-keep-all-button': {
-    title: 'Keep All Changes',
-    body: 'Accept all pending AI changes throughout the document.',
+    title: '保留所有变更',
+    body: '接受文档中所有待处理的 AI 变更。',
   },
   'diff-revert-all-button': {
-    title: 'Revert All Changes',
-    body: 'Reject all pending AI changes and restore the original document.',
+    title: '撤销所有变更',
+    body: '拒绝所有待处理的 AI 变更并恢复原始文档。',
   },
 
   // ============================================================================
@@ -97,13 +97,13 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'nav-back-button': {
-    title: 'Navigate Back',
-    body: 'Go back to the previous file or location.',
+    title: '后退',
+    body: '返回上一个文件或位置。',
     shortcut: KeyboardShortcuts.view.navigateBack,
   },
   'nav-forward-button': {
-    title: 'Navigate Forward',
-    body: 'Go forward in your navigation history.',
+    title: '前进',
+    body: '前进到导航历史中的下一个位置。',
     shortcut: KeyboardShortcuts.view.navigateForward,
   },
 
@@ -112,13 +112,13 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'files-mode-button': {
-    title: 'Files Mode',
-    body: 'Browse and edit your project files with AI assistance on any document.',
+    title: '文件模式',
+    body: '浏览和编辑项目文件，任何文档都可获得 AI 辅助。',
     shortcut: KeyboardShortcuts.view.filesMode,
   },
   'agent-mode-button': {
-    title: 'Agent Mode',
-    body: 'Full AI coding agent with project-wide context, tool use, and multi-step tasks.',
+    title: 'Agent 模式',
+    body: '全功能 AI 编程代理，具备项目级上下文、工具调用和多步任务能力。',
     shortcut: KeyboardShortcuts.view.agentMode,
   },
 
@@ -127,8 +127,8 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'session-kanban-button': {
-    title: 'Kanban Board',
-    body: 'Switch to a kanban board view of your sessions organized by phase: Backlog, Planning, Implementing, Validating, and Complete. Drag sessions between columns to update their status.',
+    title: '看板视图',
+    body: '切换到按阶段组织的看板视图：待办、规划中、开发中、验证中和已完成。拖拽会话到不同列即可更新状态。',
     shortcut: KeyboardShortcuts.window.kanbanView,
   },
 
@@ -137,14 +137,14 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'layout-controls': {
-    title: 'Session Layout Modes',
-    body: `View your AI session and files edited together:
+    title: '会话布局模式',
+    body: `同时查看 AI 会话和编辑的文件：
 
-**Files**: Show only the file editor tabs. Available when you open an edited file in an AI Session.
+**文件**：仅显示文件编辑器标签页。在 AI 会话中打开已编辑的文件后可用。
 
-**Split**: Show both transcript and editor stacked vertically. Drag the divider to adjust.
+**分栏**：上下堆叠显示对话记录和编辑器，拖动分隔条调整比例。
 
-**Agent**: Show only the conversation transcript.`,
+**Agent**：仅显示对话记录。`,
   },
 
   // ============================================================================
@@ -152,28 +152,28 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'session-history-button': {
-    title: 'Session History',
-    body: 'Browse past AI sessions. Search, filter, and resume previous conversations.',
+    title: '会话历史',
+    body: '浏览历史 AI 会话，支持搜索、筛选和恢复之前的对话。',
     shortcut: KeyboardShortcuts.window.sessionManager,
   },
   'session-quick-open-button': {
-    title: 'Quick Open Session',
-    body: 'Search and jump to any AI session by content or title. Much faster than scrolling through history.',
+    title: '快速打开会话',
+    body: '按内容或标题搜索并跳转到任意 AI 会话，比滚动历史记录快得多。',
     shortcut: KeyboardShortcuts.window.sessionQuickOpen,
   },
   'session-quick-search-button': {
-    title: 'Search Sessions',
-    body: `Quickly find any AI session by name. Type **@** to search by file edited -- find every session that touched a specific file. Press **Tab** to switch to prompt search and find sessions by what you asked.`,
+    title: '搜索会话',
+    body: `按名称快速查找 AI 会话。输入 **@** 可按编辑过的文件搜索——找到所有修改过某个文件的会话。按 **Tab** 切换到提示词搜索，按你问过的内容查找会话。`,
     shortcut: KeyboardShortcuts.window.sessionQuickOpen,
   },
   'session-archive-button': {
-    title: 'Archive Session',
-    body: 'Archive this session to keep your session list organized. Archived sessions can be restored anytime.',
+    title: '归档会话',
+    body: '归档此会话以保持列表整洁，已归档的会话随时可以恢复。',
   },
 
   'tracker-automation-section': {
-    title: 'Tracker Automation',
-    body: `Automatically connect git commits to your tracker items. When enabled, Nimbalyst links commits via the session's tracker items and by parsing issue keys (e.g. **NIM-123**) from commit messages — including commits made in your terminal.\n\nFor project-specific behavior, add instructions to your project's **CLAUDE.md** (e.g. "always reference tracker issue keys in commits" or "don't auto-close critical bugs without review").`,
+    title: 'Tracker 自动化',
+    body: `自动将 Git 提交关联到 Tracker 项目。启用后，Nimbalyst 会通过会话的 Tracker 项目以及解析提交信息中的 Issue 编号（如 **NIM-123**）来建立关联——包括在终端中手动提交的 commit。\n\n如需项目级定制，可在项目的 **CLAUDE.md** 中添加说明（例如"提交时始终引用 Tracker Issue 编号"或"不要自动关闭关键 Bug"）。`,
   },
 
   // ============================================================================
@@ -181,20 +181,20 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'agent-input': {
-    title: 'AI Input',
-    body: 'Type your message or paste images and files. The AI has full context of your project.',
+    title: 'AI 输入框',
+    body: '输入消息或粘贴图片和文件，AI 拥有你项目的完整上下文。',
   },
   'plan-mode-toggle': {
-    title: 'Plan vs Agent Mode',
-    body: 'Toggle between Plan and Agent modes. Plan mode creates structured plans before the AI writes code. Agent mode executes changes directly.',
+    title: '规划模式 vs Agent 模式',
+    body: '在规划模式和 Agent 模式之间切换。规划模式会在 AI 写代码前先创建结构化计划；Agent 模式则直接执行变更。',
   },
   'attach-files-input': {
-    title: 'Attach Files & Images',
-    body: 'Drag and drop files or paste images directly into the chat. You can also use @ to mention files from your project.',
+    title: '附加文件和图片',
+    body: '将文件拖拽或粘贴图片到对话中，也可以用 @ 引用项目中的文件。',
   },
   'agent-welcome': {
-    title: 'Start Your First Session',
-    body: 'Create an AI coding session. Describe what you want to build, and the agent will help you.',
+    title: '开始你的第一个会话',
+    body: '创建一个 AI 编程会话。描述你想要构建的内容，Agent 会帮助你完成。',
   },
 
   // ============================================================================
@@ -202,8 +202,8 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'files-scope-dropdown': {
-    title: 'File Scope Modes',
-    body: 'Control which files are shown. View AI edits from this session, only uncommitted changes, or all files in the workspace. In workstreams, filter by individual session or see all sessions combined.',
+    title: '文件范围模式',
+    body: '控制显示哪些文件。可查看本次会话的 AI 编辑、仅未提交的变更，或工作区内的所有文件。在工作流中，可按单个会话筛选或查看所有会话的汇总。',
   },
 
   // ============================================================================
@@ -211,12 +211,12 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'git-commit-mode-toggle': {
-    title: 'Commit Modes',
-    body: 'Choose how to commit your changes. Manual lets you write your own message. Smart uses AI to analyze changes and propose a commit message.',
+    title: '提交模式',
+    body: '选择如何提交变更。手动模式让你自己编写提交信息；智能模式使用 AI 分析变更并生成提交信息。',
   },
   'git-operations-commit-with-ai-button': {
-    title: 'AI-Assisted Commit',
-    body: 'Have the AI analyze your changes and propose a set of files and a commit message for you to edit and approve.',
+    title: 'AI 辅助提交',
+    body: '让 AI 分析你的变更，推荐要提交的文件并生成提交信息，供你编辑和确认。',
   },
 
   // ============================================================================
@@ -224,16 +224,16 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'model-picker': {
-    title: 'Select AI Model',
-    body: 'Choose which AI model to use. Different models have different capabilities and speeds.',
+    title: '选择 AI 模型',
+    body: '选择要使用的 AI 模型，不同模型具有不同的能力和速度。',
   },
   'action-prompts-dropdown': {
-    title: 'Action Prompts',
-    body: 'Reusable prompts you define in nimbalyst-local/ai-actions.md. Picking one inserts its body into the draft so you can tweak it before sending.',
+    title: '动作提示词',
+    body: '在 nimbalyst-local/ai-actions.md 中定义的可复用提示词。选择后会插入到草稿中，发送前可以调整。',
   },
   'context-indicator': {
-    title: 'Context Window',
-    body: 'Shows how much of the AI context window is used. Includes files, conversation history, and tools.',
+    title: '上下文窗口',
+    body: '显示 AI 上下文窗口的使用情况，包括文件、对话历史和工具。',
   },
 
   // ============================================================================
@@ -241,12 +241,12 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'transcript-archive-button': {
-    title: 'Archive Session',
-    body: 'Archive this session to keep your session list tidy.',
+    title: '归档会话',
+    body: '归档此会话以保持列表整洁。',
   },
   'transcript-search-button': {
-    title: 'Search Transcript',
-    body: 'Search within this conversation for specific messages or content.',
+    title: '搜索对话记录',
+    body: '在当前对话中搜索特定消息或内容。',
   },
 
   // ============================================================================
@@ -254,8 +254,8 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'voice-mode-toggle': {
-    title: 'Voice Mode',
-    body: 'Speak to the AI instead of typing. The AI will respond with voice.',
+    title: '语音模式',
+    body: '用语音与 AI 交流，AI 也会用语音回复。',
   },
 
   // ============================================================================
@@ -263,42 +263,42 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'gutter-permissions-button': {
-    title: 'Agent Permissions',
-    body: 'Configure which tools the AI agent can use. Control file access, command execution, and more.',
+    title: 'Agent 权限',
+    body: '配置 AI Agent 可以使用哪些工具，控制文件访问、命令执行等权限。',
   },
   'gutter-sync-button': {
-    title: 'Session Sync',
-    body: 'Check sync status for this project and manage sync settings.',
+    title: '会话同步',
+    body: '查看此项目的同步状态并管理同步设置。',
   },
   'gutter-extension-dev-button': {
-    title: 'Extension Dev Mode',
-    body: 'Open extension development tools, logs, and rebuild options.',
+    title: '扩展开发模式',
+    body: '打开扩展开发工具、日志和重新构建选项。',
   },
   'gutter-theme-button': {
-    title: 'Theme',
-    body: 'Switch between light and dark themes.',
+    title: '主题',
+    body: '在浅色和深色主题之间切换。',
   },
   'gutter-feedback-button': {
-    title: 'Send Feedback',
-    body: 'Share feedback or report issues with the team.',
+    title: '发送反馈',
+    body: '向团队分享反馈或报告问题。',
   },
   'gutter-user-button': {
-    title: 'User Menu',
-    body: 'Open user menu to access User Settings, Project Settings, Team Settings, and account info.',
+    title: '用户菜单',
+    body: '打开用户菜单，访问用户设置、项目设置、团队设置和账户信息。',
   },
   'terminal-panel-button': {
-    title: 'Terminal',
-    body: 'Toggle the terminal panel for running commands.',
+    title: '终端',
+    body: '切换终端面板以运行命令。',
     shortcut: KeyboardShortcuts.view.toggleTerminalPanel,
   },
   'tracker-mode-button': {
-    title: 'Trackers',
-    body: 'Switch to Tracker mode for a full project management view with table and kanban layouts.',
+    title: 'Tracker',
+    body: '切换到 Tracker 模式，以表格和看板布局进行项目管理。',
     shortcut: KeyboardShortcuts.view.trackerMode,
   },
   'collab-mode-button': {
-    title: 'Shared Documents',
-    body: 'Browse and edit documents shared with your team in real-time. Collaborate on markdown, spreadsheets, and diagrams.',
+    title: '共享文档',
+    body: '浏览和编辑与团队实时共享的文档，支持协作编辑 Markdown、电子表格和图表。',
     shortcut: KeyboardShortcuts.view.collabMode,
   },
 
@@ -307,20 +307,20 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'settings-project-tab': {
-    title: 'Project Settings',
-    body: 'Settings specific to this project. Stored in the project folder.',
+    title: '项目设置',
+    body: '仅对当前项目生效的设置，存储在项目文件夹中。',
   },
   'settings-global-tab': {
-    title: 'Global Settings',
-    body: 'Settings that apply to all projects.',
+    title: '全局设置',
+    body: '对所有项目生效的设置。',
   },
   'settings-walkthroughs-toggle': {
-    title: 'Feature Guides',
-    body: 'Show helpful guides for new features. Guides appear automatically as you use the app.',
+    title: '功能引导',
+    body: '显示新功能的引导提示，引导会在你使用应用时自动出现。',
   },
   'settings-walkthroughs-reset': {
-    title: 'Reset Guides',
-    body: 'Show all feature guides again, even ones you have already seen.',
+    title: '重置引导',
+    body: '重新显示所有功能引导，包括你已经看过的。',
   },
 
   // ============================================================================
@@ -328,13 +328,13 @@ export const HelpContent: Record<string, HelpEntry> = {
   // ============================================================================
 
   'project-manager-open': {
-    title: 'Open Project',
-    body: 'Open a project folder from your computer.',
+    title: '打开项目',
+    body: '从电脑中打开一个项目文件夹。',
     shortcut: KeyboardShortcuts.file.openFolder,
   },
   'project-manager-recent': {
-    title: 'Recent Projects',
-    body: 'Your recently opened projects for quick access.',
+    title: '最近项目',
+    body: '最近打开过的项目，方便快速访问。',
   },
 };
 

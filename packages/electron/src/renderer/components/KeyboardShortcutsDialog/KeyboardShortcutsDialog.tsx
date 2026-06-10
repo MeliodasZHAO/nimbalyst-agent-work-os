@@ -113,71 +113,71 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
   // All general shortcuts are defined in: packages/electron/src/shared/KeyboardShortcuts.ts
   const generalShortcuts: ShortcutGroup[] = [
     {
-      title: 'File',
+      title: '文件',
       shortcuts: [
-        { label: 'New File / New Session', shortcut: KeyboardShortcuts.file.newFile }, // shared/KeyboardShortcuts.ts:9 - Cmd+N
-        { label: 'New Session (any mode)', shortcut: KeyboardShortcuts.file.newSessionGlobal }, // shared/KeyboardShortcuts.ts:11 - Cmd+Shift+N
-        { label: 'Open File', shortcut: KeyboardShortcuts.file.open }, // shared/KeyboardShortcuts.ts:12 - Cmd+O
-        { label: 'Open Folder', shortcut: KeyboardShortcuts.file.openFolder }, // shared/KeyboardShortcuts.ts:13 - Cmd+Shift+O
-        { label: 'Save', shortcut: KeyboardShortcuts.file.save }, // shared/KeyboardShortcuts.ts:14 - Cmd+S
-        { label: 'Close Tab', shortcut: KeyboardShortcuts.file.closeTab }, // shared/KeyboardShortcuts.ts:15 - Cmd+W
-        { label: 'Reopen Closed Tab', shortcut: KeyboardShortcuts.file.reopenClosedTab }, // shared/KeyboardShortcuts.ts:16 - Cmd+Shift+T
-        { label: 'Close Project', shortcut: KeyboardShortcuts.file.closeProject }, // shared/KeyboardShortcuts.ts:17 - Cmd+Shift+W
-        { label: 'Quit', shortcut: KeyboardShortcuts.file.quit }, // shared/KeyboardShortcuts.ts:18 - Cmd+Q
+        { label: '新建文件 / 新建会话', shortcut: KeyboardShortcuts.file.newFile },
+        { label: '新建会话（任意模式）', shortcut: KeyboardShortcuts.file.newSessionGlobal },
+        { label: '打开文件', shortcut: KeyboardShortcuts.file.open },
+        { label: '打开文件夹', shortcut: KeyboardShortcuts.file.openFolder },
+        { label: '保存', shortcut: KeyboardShortcuts.file.save },
+        { label: '关闭标签', shortcut: KeyboardShortcuts.file.closeTab },
+        { label: '重新打开已关闭的标签', shortcut: KeyboardShortcuts.file.reopenClosedTab },
+        { label: '关闭项目', shortcut: KeyboardShortcuts.file.closeProject },
+        { label: '退出', shortcut: KeyboardShortcuts.file.quit },
       ],
     },
     {
-      title: 'Edit',
+      title: '编辑',
       shortcuts: [
-        { label: 'Undo', shortcut: KeyboardShortcuts.edit.undo }, // shared/KeyboardShortcuts.ts:23 - Cmd+Z
-        { label: 'Redo', shortcut: KeyboardShortcuts.edit.redo }, // shared/KeyboardShortcuts.ts:24 - Cmd+Shift+Z
-        { label: 'Cut', shortcut: KeyboardShortcuts.edit.cut }, // shared/KeyboardShortcuts.ts:25 - Cmd+X
-        { label: 'Copy', shortcut: KeyboardShortcuts.edit.copy }, // shared/KeyboardShortcuts.ts:26 - Cmd+C
-        { label: 'Paste', shortcut: KeyboardShortcuts.edit.paste }, // shared/KeyboardShortcuts.ts:28 - Cmd+V
-        { label: 'Paste as Text', shortcut: KeyboardShortcuts.edit.pasteAsText }, // shared/KeyboardShortcuts.ts:29 - Cmd+Shift+V
-        { label: 'Select All', shortcut: KeyboardShortcuts.edit.selectAll }, // shared/KeyboardShortcuts.ts:29 - Cmd+A
-        { label: 'Find', shortcut: KeyboardShortcuts.edit.find }, // shared/KeyboardShortcuts.ts:30 - Cmd+F
-        { label: 'Find Next', shortcut: KeyboardShortcuts.edit.findNext }, // shared/KeyboardShortcuts.ts:31 - Cmd+G
-        { label: 'Find Previous', shortcut: KeyboardShortcuts.edit.findPrevious }, // shared/KeyboardShortcuts.ts:32 - Cmd+Shift+G
-        { label: 'View Local History', shortcut: KeyboardShortcuts.edit.viewHistory }, // shared/KeyboardShortcuts.ts:34 - Cmd+Y
-        { label: 'Approve Current Action', shortcut: KeyboardShortcuts.edit.approve }, // shared/KeyboardShortcuts.ts:35 - Cmd+Enter
-        { label: 'Reject Current Action', shortcut: KeyboardShortcuts.edit.reject }, // shared/KeyboardShortcuts.ts:36 - Cmd+Shift+Backspace
-        { label: 'Toggle Plan Mode (Claude Code)', shortcut: 'Shift+Tab' }, // AIInput.tsx - toggle between Plan/Agent mode
+        { label: '撤销', shortcut: KeyboardShortcuts.edit.undo },
+        { label: '重做', shortcut: KeyboardShortcuts.edit.redo },
+        { label: '剪切', shortcut: KeyboardShortcuts.edit.cut },
+        { label: '复制', shortcut: KeyboardShortcuts.edit.copy },
+        { label: '粘贴', shortcut: KeyboardShortcuts.edit.paste },
+        { label: '粘贴为纯文本', shortcut: KeyboardShortcuts.edit.pasteAsText },
+        { label: '全选', shortcut: KeyboardShortcuts.edit.selectAll },
+        { label: '查找', shortcut: KeyboardShortcuts.edit.find },
+        { label: '查找下一个', shortcut: KeyboardShortcuts.edit.findNext },
+        { label: '查找上一个', shortcut: KeyboardShortcuts.edit.findPrevious },
+        { label: '查看本地历史', shortcut: KeyboardShortcuts.edit.viewHistory },
+        { label: '批准当前操作', shortcut: KeyboardShortcuts.edit.approve },
+        { label: '拒绝当前操作', shortcut: KeyboardShortcuts.edit.reject },
+        { label: '切换计划模式（Claude Code）', shortcut: 'Shift+Tab' },
       ],
     },
     {
-      title: 'View',
+      title: '视图',
       shortcuts: [
-        { label: 'Files Mode', shortcut: KeyboardShortcuts.view.filesMode }, // shared/KeyboardShortcuts.ts:42 - Cmd+E
-        { label: 'Agent Mode', shortcut: KeyboardShortcuts.view.agentMode }, // shared/KeyboardShortcuts.ts:43 - Cmd+K
-        { label: 'Session Kanban View', shortcut: KeyboardShortcuts.window.kanbanView }, // shared/KeyboardShortcuts.ts:81 - Cmd+Shift+K
-        { label: 'Toggle AI Chat Panel', shortcut: KeyboardShortcuts.view.toggleAIChat }, // shared/KeyboardShortcuts.ts:46 - Cmd+Shift+A
-        { label: 'Toggle Bottom Panel', shortcut: KeyboardShortcuts.view.toggleBottomPanel }, // shared/KeyboardShortcuts.ts:47 - Cmd+J
-        { label: 'Toggle Terminal Panel', shortcut: KeyboardShortcuts.view.toggleTerminalPanel }, // shared/KeyboardShortcuts.ts:48 - Ctrl+`
-        { label: 'Tracker Mode', shortcut: KeyboardShortcuts.view.trackerMode }, // shared/KeyboardShortcuts.ts:49 - Cmd+T
-        { label: 'Shared Documents', shortcut: KeyboardShortcuts.view.collabMode }, // shared/KeyboardShortcuts.ts:50 - Cmd+D
-        { label: 'Toggle Sidebar', shortcut: KeyboardShortcuts.view.toggleSidebar }, // shared/KeyboardShortcuts.ts:51 - Cmd+B
-        { label: 'Navigate Back', shortcut: KeyboardShortcuts.view.navigateBack }, // shared/KeyboardShortcuts.ts:52 - Cmd+[
-        { label: 'Navigate Forward', shortcut: KeyboardShortcuts.view.navigateForward }, // shared/KeyboardShortcuts.ts:53 - Cmd+]
-        { label: 'Next Tab', shortcut: KeyboardShortcuts.view.nextTab }, // shared/KeyboardShortcuts.ts:56 - Cmd+Option+Right
-        { label: 'Previous Tab', shortcut: KeyboardShortcuts.view.prevTab }, // shared/KeyboardShortcuts.ts:57 - Cmd+Option+Left
-        { label: 'Actual Size', shortcut: KeyboardShortcuts.view.actualSize }, // shared/KeyboardShortcuts.ts:60 - Cmd+0
-        { label: 'Zoom In', shortcut: KeyboardShortcuts.view.zoomIn }, // shared/KeyboardShortcuts.ts:61 - Cmd+Plus
-        { label: 'Zoom Out', shortcut: KeyboardShortcuts.view.zoomOut }, // shared/KeyboardShortcuts.ts:62 - Cmd+-
-        { label: 'Toggle Full Screen', shortcut: KeyboardShortcuts.view.toggleFullScreen }, // shared/KeyboardShortcuts.ts:70 - Ctrl+Cmd+F
+        { label: '文件模式', shortcut: KeyboardShortcuts.view.filesMode },
+        { label: 'Agent 模式', shortcut: KeyboardShortcuts.view.agentMode },
+        { label: '会话看板视图', shortcut: KeyboardShortcuts.window.kanbanView },
+        { label: '切换 AI 聊天面板', shortcut: KeyboardShortcuts.view.toggleAIChat },
+        { label: '切换底部面板', shortcut: KeyboardShortcuts.view.toggleBottomPanel },
+        { label: '切换终端面板', shortcut: KeyboardShortcuts.view.toggleTerminalPanel },
+        { label: '看板模式', shortcut: KeyboardShortcuts.view.trackerMode },
+        { label: '共享文档', shortcut: KeyboardShortcuts.view.collabMode },
+        { label: '切换侧边栏', shortcut: KeyboardShortcuts.view.toggleSidebar },
+        { label: '后退', shortcut: KeyboardShortcuts.view.navigateBack },
+        { label: '前进', shortcut: KeyboardShortcuts.view.navigateForward },
+        { label: '下一个标签', shortcut: KeyboardShortcuts.view.nextTab },
+        { label: '上一个标签', shortcut: KeyboardShortcuts.view.prevTab },
+        { label: '实际大小', shortcut: KeyboardShortcuts.view.actualSize },
+        { label: '放大', shortcut: KeyboardShortcuts.view.zoomIn },
+        { label: '缩小', shortcut: KeyboardShortcuts.view.zoomOut },
+        { label: '切换全屏', shortcut: KeyboardShortcuts.view.toggleFullScreen },
       ],
     },
     {
-      title: 'Window',
+      title: '窗口',
       shortcuts: [
-        { label: 'Project Manager', shortcut: KeyboardShortcuts.window.workspaceManager }, // shared/KeyboardShortcuts.ts:75 - Cmd+P
-        { label: 'Switch Project', shortcut: KeyboardShortcuts.window.projectQuickOpen }, // shared/KeyboardShortcuts.ts - Cmd+Shift+P
-        { label: 'Session Quick Open', shortcut: KeyboardShortcuts.window.sessionQuickOpen }, // shared/KeyboardShortcuts.ts:77 - Cmd+L
-        { label: 'Prompt Quick Open', shortcut: KeyboardShortcuts.window.promptQuickOpen }, // shared/KeyboardShortcuts.ts:78 - Cmd+Shift+L
-        { label: 'Content Search', shortcut: KeyboardShortcuts.window.contentSearch }, // shared/KeyboardShortcuts.ts:79 - Cmd+Shift+F
-        { label: 'New Worktree', shortcut: KeyboardShortcuts.window.newWorktree }, // shared/KeyboardShortcuts.ts:81 - Cmd+Alt+W
-        { label: 'Settings', shortcut: KeyboardShortcuts.window.aiModels }, // shared/KeyboardShortcuts.ts:82 - Cmd+,
-        { label: 'Minimize', shortcut: KeyboardShortcuts.window.minimize }, // shared/KeyboardShortcuts.ts:83 - Cmd+M
+        { label: '项目管理器', shortcut: KeyboardShortcuts.window.workspaceManager },
+        { label: '切换项目', shortcut: KeyboardShortcuts.window.projectQuickOpen },
+        { label: '会话快速打开', shortcut: KeyboardShortcuts.window.sessionQuickOpen },
+        { label: '提示词快速打开', shortcut: KeyboardShortcuts.window.promptQuickOpen },
+        { label: '内容搜索', shortcut: KeyboardShortcuts.window.contentSearch },
+        { label: '新建 Worktree', shortcut: KeyboardShortcuts.window.newWorktree },
+        { label: '设置', shortcut: KeyboardShortcuts.window.aiModels },
+        { label: '最小化', shortcut: KeyboardShortcuts.window.minimize },
       ],
     },
   ];
@@ -185,51 +185,51 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
   // Editor shortcuts are defined in: packages/runtime/src/editor/plugins/ShortcutsPlugin/shortcuts.ts
   const editorShortcuts: ShortcutGroup[] = [
     {
-      title: 'Text Formatting',
+      title: '文字格式',
       shortcuts: [
-        { label: 'Bold', shortcut: IS_MAC ? '⌘+B' : 'Ctrl+B' }, // shortcuts.ts:48 - BOLD
-        { label: 'Italic', shortcut: IS_MAC ? '⌘+I' : 'Ctrl+I' }, // shortcuts.ts:49 - ITALIC
-        { label: 'Underline', shortcut: IS_MAC ? '⌘+U' : 'Ctrl+U' }, // shortcuts.ts:50 - UNDERLINE
-        { label: 'Strikethrough', shortcut: IS_MAC ? '⌘+Shift+X' : 'Ctrl+Shift+X' }, // shortcuts.ts:31 - STRIKETHROUGH
-        { label: 'Insert Link', shortcut: IS_MAC ? '⌘+K' : 'Ctrl+K' }, // shortcuts.ts:51 - INSERT_LINK
-        { label: 'Clear Formatting', shortcut: IS_MAC ? '⌘+\\' : 'Ctrl+\\' }, // shortcuts.ts:45 - CLEAR_FORMATTING
+        { label: '加粗', shortcut: IS_MAC ? '⌘+B' : 'Ctrl+B' },
+        { label: '斜体', shortcut: IS_MAC ? '⌘+I' : 'Ctrl+I' },
+        { label: '下划线', shortcut: IS_MAC ? '⌘+U' : 'Ctrl+U' },
+        { label: '删除线', shortcut: IS_MAC ? '⌘+Shift+X' : 'Ctrl+Shift+X' },
+        { label: '插入链接', shortcut: IS_MAC ? '⌘+K' : 'Ctrl+K' },
+        { label: '清除格式', shortcut: IS_MAC ? '⌘+\\' : 'Ctrl+\\' },
       ],
     },
     {
-      title: 'Paragraph Formatting',
+      title: '段落格式',
       shortcuts: [
-        { label: 'Normal Text', shortcut: IS_MAC ? '⌘+Opt+0' : 'Ctrl+Alt+0' }, // shortcuts.ts:16 - NORMAL
-        { label: 'Heading 1', shortcut: IS_MAC ? '⌘+Opt+1' : 'Ctrl+Alt+1' }, // shortcuts.ts:17 - HEADING1
-        { label: 'Heading 2', shortcut: IS_MAC ? '⌘+Opt+2' : 'Ctrl+Alt+2' }, // shortcuts.ts:18 - HEADING2
-        { label: 'Heading 3', shortcut: IS_MAC ? '⌘+Opt+3' : 'Ctrl+Alt+3' }, // shortcuts.ts:19 - HEADING3
-        { label: 'Numbered List', shortcut: IS_MAC ? '⌘+Shift+7' : 'Ctrl+Shift+7' }, // shortcuts.ts:20 - NUMBERED_LIST
-        { label: 'Bullet List', shortcut: IS_MAC ? '⌘+Shift+8' : 'Ctrl+Shift+8' }, // shortcuts.ts:21 - BULLET_LIST
-        { label: 'Check List', shortcut: IS_MAC ? '⌘+Shift+9' : 'Ctrl+Shift+9' }, // shortcuts.ts:22 - CHECK_LIST
-        { label: 'Code Block', shortcut: IS_MAC ? '⌘+Opt+C' : 'Ctrl+Alt+C' }, // shortcuts.ts:23 - CODE_BLOCK
-        { label: 'Quote', shortcut: IS_MAC ? '⌃+Shift+Q' : 'Ctrl+Shift+Q' }, // shortcuts.ts:24 - QUOTE
+        { label: '正文', shortcut: IS_MAC ? '⌘+Opt+0' : 'Ctrl+Alt+0' },
+        { label: '标题 1', shortcut: IS_MAC ? '⌘+Opt+1' : 'Ctrl+Alt+1' },
+        { label: '标题 2', shortcut: IS_MAC ? '⌘+Opt+2' : 'Ctrl+Alt+2' },
+        { label: '标题 3', shortcut: IS_MAC ? '⌘+Opt+3' : 'Ctrl+Alt+3' },
+        { label: '有序列表', shortcut: IS_MAC ? '⌘+Shift+7' : 'Ctrl+Shift+7' },
+        { label: '无序列表', shortcut: IS_MAC ? '⌘+Shift+8' : 'Ctrl+Shift+8' },
+        { label: '任务列表', shortcut: IS_MAC ? '⌘+Shift+9' : 'Ctrl+Shift+9' },
+        { label: '代码块', shortcut: IS_MAC ? '⌘+Opt+C' : 'Ctrl+Alt+C' },
+        { label: '引用', shortcut: IS_MAC ? '⌃+Shift+Q' : 'Ctrl+Shift+Q' },
       ],
     },
     {
-      title: 'Text Alignment',
+      title: '文字对齐',
       shortcuts: [
-        { label: 'Left Align', shortcut: IS_MAC ? '⌘+Shift+L' : 'Ctrl+Shift+L' }, // shortcuts.ts:37 - LEFT_ALIGN
-        { label: 'Center Align', shortcut: IS_MAC ? '⌘+Shift+E' : 'Ctrl+Shift+E' }, // shortcuts.ts:35 - CENTER_ALIGN
-        { label: 'Right Align', shortcut: IS_MAC ? '⌘+Shift+R' : 'Ctrl+Shift+R' }, // shortcuts.ts:38 - RIGHT_ALIGN
-        { label: 'Justify', shortcut: IS_MAC ? '⌘+Shift+J' : 'Ctrl+Shift+J' }, // shortcuts.ts:36 - JUSTIFY_ALIGN
-        { label: 'Indent', shortcut: IS_MAC ? '⌘+]' : 'Ctrl+]' }, // shortcuts.ts:43 - INDENT
-        { label: 'Outdent', shortcut: IS_MAC ? '⌘+[' : 'Ctrl+[' }, // shortcuts.ts:44 - OUTDENT
+        { label: '左对齐', shortcut: IS_MAC ? '⌘+Shift+L' : 'Ctrl+Shift+L' },
+        { label: '居中对齐', shortcut: IS_MAC ? '⌘+Shift+E' : 'Ctrl+Shift+E' },
+        { label: '右对齐', shortcut: IS_MAC ? '⌘+Shift+R' : 'Ctrl+Shift+R' },
+        { label: '两端对齐', shortcut: IS_MAC ? '⌘+Shift+J' : 'Ctrl+Shift+J' },
+        { label: '增加缩进', shortcut: IS_MAC ? '⌘+]' : 'Ctrl+]' },
+        { label: '减少缩进', shortcut: IS_MAC ? '⌘+[' : 'Ctrl+[' },
       ],
     },
     {
-      title: 'Text Case & Size',
+      title: '大小写与字号',
       shortcuts: [
-        { label: 'Lowercase', shortcut: IS_MAC ? '⌃+Shift+1' : 'Ctrl+Shift+1' }, // shortcuts.ts:32 - LOWERCASE
-        { label: 'Uppercase', shortcut: IS_MAC ? '⌃+Shift+2' : 'Ctrl+Shift+2' }, // shortcuts.ts:33 - UPPERCASE
-        { label: 'Capitalize', shortcut: IS_MAC ? '⌃+Shift+3' : 'Ctrl+Shift+3' }, // shortcuts.ts:34 - CAPITALIZE
-        { label: 'Increase Font Size', shortcut: IS_MAC ? '⌘+Shift+.' : 'Ctrl+Shift+.' }, // shortcuts.ts:28 - INCREASE_FONT_SIZE
-        { label: 'Decrease Font Size', shortcut: IS_MAC ? '⌘+Shift+,' : 'Ctrl+Shift+,' }, // shortcuts.ts:29 - DECREASE_FONT_SIZE
-        { label: 'Subscript', shortcut: IS_MAC ? '⌘+,' : 'Ctrl+,' }, // shortcuts.ts:41 - SUBSCRIPT
-        { label: 'Superscript', shortcut: IS_MAC ? '⌘+.' : 'Ctrl+.' }, // shortcuts.ts:42 - SUPERSCRIPT
+        { label: '小写', shortcut: IS_MAC ? '⌃+Shift+1' : 'Ctrl+Shift+1' },
+        { label: '大写', shortcut: IS_MAC ? '⌃+Shift+2' : 'Ctrl+Shift+2' },
+        { label: '首字母大写', shortcut: IS_MAC ? '⌃+Shift+3' : 'Ctrl+Shift+3' },
+        { label: '增大字号', shortcut: IS_MAC ? '⌘+Shift+.' : 'Ctrl+Shift+.' },
+        { label: '减小字号', shortcut: IS_MAC ? '⌘+Shift+,' : 'Ctrl+Shift+,' },
+        { label: '下标', shortcut: IS_MAC ? '⌘+,' : 'Ctrl+,' },
+        { label: '上标', shortcut: IS_MAC ? '⌘+.' : 'Ctrl+.' },
       ],
     },
   ];
@@ -251,7 +251,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
       >
         <div className="keyboard-shortcuts-dialog-header flex items-center justify-between px-6 py-5 border-b border-[var(--nim-border)]">
           <h2 className="m-0 text-xl font-semibold text-[var(--nim-text)]">
-            Keyboard Shortcuts
+            快捷键
           </h2>
           <button
             className="keyboard-shortcuts-dialog-close flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none text-[32px] leading-none text-[var(--nim-text-muted)] cursor-pointer rounded transition-all duration-200 hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)]"
@@ -274,7 +274,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
                   : 'text-[var(--nim-text-muted)] hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]'
               }`}
             >
-              {tab === 'general' ? 'General' : tab === 'editor' ? 'Editor Formatting' : 'Extensions'}
+              {tab === 'general' ? '通用' : tab === 'editor' ? '编辑器格式' : '扩展'}
             </button>
           ))}
         </div>
@@ -282,7 +282,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
         <div className="keyboard-shortcuts-dialog-content overflow-y-auto flex-1 p-6 grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-8 max-[900px]:grid-cols-1 max-[600px]:p-5 max-[600px]:gap-6">
           {shortcutGroups.length === 0 && activeTab === 'extensions' ? (
             <div className="text-[var(--nim-text-muted)] text-sm">
-              No extension keybindings registered. Extensions can contribute keybindings via their manifest.json.
+              尚未注册扩展快捷键。扩展可以通过其 manifest.json 注册快捷键。
             </div>
           ) : (
             shortcutGroups.map((group) => (
@@ -311,7 +311,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
         </div>
 
         <div className="px-6 py-3 border-t border-[var(--nim-border)] text-[var(--nim-text-muted)] text-xs">
-          Press <kbd className="bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded px-1.5 py-0.5 mx-1">Esc</kbd> to close
+          按 <kbd className="bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded px-1.5 py-0.5 mx-1">Esc</kbd> 关闭
         </div>
       </div>
     </div>

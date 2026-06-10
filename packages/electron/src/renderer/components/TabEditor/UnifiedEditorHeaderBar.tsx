@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { $isHeadingNode } from '@lexical/rich-text';
 import { $getRoot } from 'lexical';
@@ -22,8 +23,8 @@ import {
   getDefaultFrontmatterForType,
   getModelDefaults,
   getCurrentTrackerTypeFromMarkdown,
+  getFullDocumentTrackerTypes,
   removeTrackerTypeFromMarkdown,
-  type TrackerTypeInfo,
 } from '@nimbalyst/runtime';
 import { $generateHtmlFromNodes } from '@lexical/html';
 import { copyToClipboard, ProviderIcon } from '@nimbalyst/runtime';
@@ -39,12 +40,6 @@ import { useLocalFileSharedDocLink } from '../../hooks/useCollabLocalOrigin';
 import { sharedDocumentsAtom, pendingCollabDocumentAtom } from '../../store/atoms/collabDocuments';
 import { setWindowModeAtom } from '../../store/atoms/windowMode';
 import { getCollabNodeName, getCollabParentPath, normalizeCollabPath } from '../CollabMode/collabTree';
-
-// Built-in tracker types that support full-document mode
-const TRACKER_TYPES: TrackerTypeInfo[] = [
-  { type: 'plan', displayName: 'Plan', icon: 'flag', color: '#3b82f6' },
-  { type: 'decision', displayName: 'Decision', icon: 'gavel', color: '#8b5cf6' },
-];
 
 // Editor reference type - can be LexicalEditor or any editor with similar interface
 interface EditorLike {
@@ -180,12 +175,14 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
   showHistoryAction = true,
   showCommonFileActions = true,
 }) => {
+  const { t } = useTranslation('editor');
   const openHistoryDialog = useSetAtom(historyDialogFileAtom);
 
   // Dropdown states
   const [showAISessions, setShowAISessions] = useState(false);
   const [showTOC, setShowTOC] = useState(false);
   const [showDocTypeSubmenu, setShowDocTypeSubmenu] = useState(false);
+  const trackerTypes = getFullDocumentTrackerTypes();
 
   // Actions menu - uses floating-ui for portal rendering + viewport overflow protection
   const actionsMenu = useFloatingMenu({ placement: 'bottom-end' });
@@ -634,26 +631,26 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                 {/* Dropdown header */}
                 <div className="ai-sessions-header px-4 py-2.5 border-b border-[var(--nim-border)]">
                   <div className="ai-sessions-title text-[11px] font-semibold uppercase tracking-wide text-[var(--nim-text-muted)]">
-                    AI Sessions that edited this file
+                    {t('aiSessionsTitle')}
                   </div>
                 </div>
 
                 {loadingSessions ? (
-                  <div className="ai-sessions-loading p-4 text-center text-[13px] text-[var(--nim-text-muted)]">Loading sessions...</div>
+                  <div className="ai-sessions-loading p-4 text-center text-[13px] text-[var(--nim-text-muted)]">{t('loadingSessions')}</div>
                 ) : aiSessions.length > 0 ? (
                   <div className="ai-sessions-list max-h-[300px] overflow-y-auto">
                     {hasGroupedSessions ? (
                       <>
                         {/* Current workspace sessions */}
                         <div className="ai-sessions-group-header px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--nim-text-faint)] bg-[var(--nim-bg-secondary)]">
-                          {isInWorktree ? 'This worktree' : 'This project'}
+                          {isInWorktree ? t('thisWorktree') : t('thisProject')}
                         </div>
                         {currentWorkspaceSessions.map((session) => (
                           <SessionItem key={session.id} session={session} onClick={onSwitchToAgentMode ? handleLoadSessionInAgentMode : undefined} onOpenChat={onOpenSessionInChat ? handleLoadSessionInChat : undefined} formatTime={formatRelativeTime} />
                         ))}
                         {/* Other sessions */}
                         <div className="ai-sessions-group-header px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--nim-text-faint)] bg-[var(--nim-bg-secondary)]">
-                          Other sessions
+                          {t('otherSessions')}
                         </div>
                         {otherSessions.map((session) => (
                           <SessionItem key={session.id} session={session} isLast onClick={onSwitchToAgentMode ? handleLoadSessionInAgentMode : undefined} onOpenChat={onOpenSessionInChat ? handleLoadSessionInChat : undefined} formatTime={formatRelativeTime} />
@@ -666,7 +663,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                     )}
                   </div>
                 ) : (
-                  <div className="ai-sessions-empty p-4 text-center text-[13px] text-[var(--nim-text-muted)]">No AI sessions have edited this file yet</div>
+                  <div className="ai-sessions-empty p-4 text-center text-[13px] text-[var(--nim-text-muted)]">{t('noAiSessions')}</div>
                 )}
 
                 {/* Start new session button - only shown when agent mode switch is available */}
@@ -680,7 +677,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                         <line x1="12" y1="5" x2="12" y2="19"/>
                         <line x1="5" y1="12" x2="19" y2="12"/>
                       </svg>
-                      Start new agent session
+                      {t('startNewAgentSession')}
                     </button>
                   </div>
                 )}
@@ -735,7 +732,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                     ))}
                   </ul>
                 ) : (
-                  <div className="toc-empty py-4 px-3 text-center text-[13px] text-[var(--nim-text-muted)]">No headings in document</div>
+                  <div className="toc-empty py-4 px-3 text-center text-[13px] text-[var(--nim-text-muted)]">{t('noHeadings')}</div>
                 )}
               </div>
             )}
@@ -788,7 +785,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                 >
                   <div className="px-3 py-2 border-b border-[var(--nim-border)]">
                     <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--nim-text-faint)]">
-                      Shared Document
+                      {t('sharedDocument')}
                     </div>
                     <div className="mt-1 text-[13px] text-[var(--nim-text)]">
                       Shared to team on {formatSharedTimestamp(sharedDocLink.binding.createdAt)}
@@ -833,7 +830,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                       <polyline points="7 10 12 5 17 10" />
                       <line x1="12" y1="5" x2="12" y2="16" />
                     </svg>
-                    Re-upload to Shared Doc
+                    {t('reuploadToSharedDoc')}
                   </button>
                 </div>
               </FloatingPortal>
@@ -880,7 +877,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                     <polyline points="16 18 22 12 16 6"/>
                     <polyline points="8 6 2 12 8 18"/>
                   </svg>
-                  {isSourceModeActive ? 'Exit Source Mode' : 'Toggle Source Mode'}
+                  {isSourceModeActive ? t('exitSourceMode') : t('toggleSourceMode')}
                 </button>
               )}
 
@@ -897,7 +894,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  View History
+                  {t('viewHistory')}
                 </button>
               )}
 
@@ -917,7 +914,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                         <polyline points="16 18 22 12 16 6"/>
                         <polyline points="8 6 2 12 8 18"/>
                       </svg>
-                      Toggle Markdown Mode
+                      {t('toggleMarkdownMode')}
                     </button>
                   )}
 
@@ -931,7 +928,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                       </svg>
-                      Copy as Markdown
+                      {t('copyAsMarkdown')}
                     </button>
                   )}
 
@@ -947,7 +944,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                         <path d="M12 18v-6"/>
                         <path d="M9 15l3 3 3-3"/>
                       </svg>
-                      Export to PDF...
+                      {t('exportToPdf')}
                     </button>
                   )}
 
@@ -964,12 +961,12 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                         <line x1="16" y1="13" x2="8" y2="13"/>
                         <line x1="16" y1="17" x2="8" y2="17"/>
                       </svg>
-                      <span className="dropdown-item-label flex-1">Set Document Type</span>
+                      <span className="dropdown-item-label flex-1">{t('setDocumentType')}</span>
                       <span className="dropdown-item-chevron ml-auto text-sm text-[var(--nim-text-faint)]">&#8250;</span>
 
                       {showDocTypeSubmenu && (
                         <div className="dropdown-submenu absolute right-full left-auto top-0 min-w-[180px] py-1 rounded-md z-[1001] bg-[var(--nim-bg)] border border-[var(--nim-border)] shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
-                          {TRACKER_TYPES.map((type) => (
+                          {trackerTypes.map((type) => (
                             <button
                               key={type.type}
                               className="dropdown-item w-full py-2 px-3 border-none bg-transparent text-[13px] text-left cursor-pointer flex items-center gap-2.5 transition-colors duration-150 text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
@@ -1003,7 +1000,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                                 <span className="material-symbols-outlined opacity-70" style={{ fontSize: '18px' }}>
                                   close
                                 </span>
-                                <span>Remove Type</span>
+                                <span>{t('removeType')}</span>
                               </button>
                             </>
                           )}
@@ -1028,7 +1025,7 @@ export const UnifiedEditorHeaderBar: React.FC<UnifiedEditorHeaderBarProps> = ({
                     <path d="M12 16v-4"/>
                     <path d="M12 8h.01"/>
                   </svg>
-                  Toggle Debug Tree
+                  {t('toggleDebugTree')}
                 </button>
               )}
 

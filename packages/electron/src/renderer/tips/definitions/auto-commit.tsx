@@ -27,10 +27,10 @@ export const autoCommitTip: TipDefinition = {
   },
   content: {
     icon: CommitIcon,
-    title: 'Auto-commit after every AI turn',
-    body: 'Enable auto-commit in the Claude Code panel and every turn ends with a checkpoint commit. Easy to revert, hard to lose work to a runaway agent.',
+    title: '每次 AI 回合后自动提交',
+    body: '在 Claude Code 面板中启用自动提交，每次回合结束时都会创建一个检查点提交。方便回退，再也不怕失控的 Agent 丢代码了。',
     action: {
-      label: 'Open Claude Code Settings',
+      label: '打开 Claude Code 设置',
       onClick: () => {
         store.set(openSettingsCommandAtom, { category: 'claude-code', timestamp: Date.now() });
       },

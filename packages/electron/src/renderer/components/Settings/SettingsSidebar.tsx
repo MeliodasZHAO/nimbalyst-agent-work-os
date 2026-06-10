@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { MaterialSymbol, getProviderIcon } from '@nimbalyst/runtime';
 import { useAlphaFeatures } from '../../hooks/useAlphaFeature';
 import { AlphaBadge, SETTINGS_ALPHA_TOOLTIP } from '../common/AlphaBadge';
@@ -19,9 +20,11 @@ export type SettingsCategory =
   | 'voice-mode'
   | 'sync'
   | 'themes'
+  | 'language'
   | 'advanced'
   | 'database'
   | 'agent-features'
+  | 'agent-work-os'
   | 'beta-features'
   | 'mcp-servers'
   | 'installed-extensions'
@@ -34,6 +37,7 @@ export type SettingsCategory =
   | 'tracker-config';
 
 interface CategoryGroup {
+  key: string;
   title: string;
   items: CategoryItem[];
   infoTooltip?: string;
@@ -71,6 +75,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   // Database panel exposes the PGLite→SQLite migration. Hidden from non-dev
   // users until we finish internal testing with other devs.
   const developerMode = useAtomValue(developerModeAtom);
+  const { t } = useTranslation('settings');
   const getStatusDot = (providerId: string): 'success' | 'warning' | 'error' | undefined => {
     const status = providerStatus[providerId];
     if (!status) return undefined;
@@ -81,91 +86,100 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
 
   const categoryGroups: CategoryGroup[] = [
     {
-      title: 'Application',
+      key: 'application',
+      title: t('application'),
       items: [
         {
           id: 'sync',
-          name: 'Account & Sync',
+          name: t('accountSync'),
           icon: <MaterialSymbol icon="account_circle" size={16} />,
         },
         {
           id: 'shared-links',
-          name: 'Shared Links',
+          name: t('sharedLinks'),
           icon: <MaterialSymbol icon="link" size={16} />,
         },
         {
           id: 'notifications',
-          name: 'Notifications',
+          name: t('notifications'),
           icon: <MaterialSymbol icon="notifications" size={16} />,
         },
         {
           id: 'themes',
-          name: 'Themes',
+          name: t('themes'),
           icon: <MaterialSymbol icon="palette" size={16} />,
         },
         {
+          id: 'language',
+          name: t('language'),
+          icon: <MaterialSymbol icon="translate" size={16} />,
+        },
+        {
           id: 'advanced',
-          name: 'Advanced',
+          name: t('advanced'),
           icon: <MaterialSymbol icon="settings" size={16} />,
         },
         {
           id: 'database',
-          name: 'Database',
+          name: t('database'),
           icon: <MaterialSymbol icon="database" size={16} />,
           isAlpha: true,
           hidden: !developerMode,
         },
         {
           id: 'voice-mode',
-          name: 'Voice Mode',
+          name: t('voiceMode'),
           icon: <MaterialSymbol icon="mic" size={16} />,
           isAlpha: true,
         },
         {
+          id: 'agent-work-os',
+          name: t('agentWorkOS'),
+          icon: <MaterialSymbol icon="assignment" size={16} />,
+          isAlpha: true,
+        },
+        {
           id: 'agent-features',
-          name: 'Agent Features',
+          name: t('agentFeatures'),
           icon: <MaterialSymbol icon="science" size={16} />,
           isAlpha: true,
         },
 
         {
           id: 'beta-features',
-          name: 'Beta Features',
+          name: t('betaFeatures'),
           icon: <MaterialSymbol icon="biotech" size={16} />,
           hidden: true,
         },
       ],
     },
     {
-      title: 'Agent Providers',
-      infoTooltip: `Agents run in loops against your files to produce work. 
-      
-The have full MCP support with file system access, multi-file operations, and session persistence.
-
-Best for complex coding tasks.`,
+      key: 'agent-providers',
+      title: t('agentProviders'),
+      infoTooltip: t('agentProvidersTooltip'),
       items: [
         {
           id: 'claude-code',
-          name: 'Claude Agent',
+          name: t('claudeAgent'),
           icon: getProviderIcon('claude-code', { size: 16 }),
           statusDot: getStatusDot('claude-code'),
         },
         {
           id: 'openai-codex',
-          name: 'OpenAI Codex',
+          name: t('openaiCodex'),
           icon: getProviderIcon('openai', { size: 16 }),
           statusDot: getStatusDot('openai-codex'),
         },
         {
           id: 'opencode',
-          name: 'OpenCode',
+          name: t('openCode'),
           icon: getProviderIcon('opencode', { size: 16 }),
           statusDot: getStatusDot('opencode'),
           isAlpha: true,
         },
         {
           id: 'copilot-cli',
-          name: 'GitHub Copilot',
+          name: t('githubCopilot'),
           icon: <MaterialSymbol icon="terminal" size={16} />,
           statusDot: getStatusDot('copilot-cli'),
           isAlpha: true,
@@ -173,86 +187,86 @@ Best for complex coding tasks.`,
       ],
     },
     {
-      title: 'Chat Providers',
-      infoTooltip: `Chat mode is a quicker, more focused tool that is limited to reading and writing your currently open file.
-
-Uses direct API calls with files attached as context. Faster responses, simpler behavior. Includes local model support via LM Studio.
-
-Best for quick edits and tasks that do not require multi-file operations.`,
+      key: 'chat-providers',
+      title: t('chatProviders'),
+      infoTooltip: t('chatProvidersTooltip'),
       items: [
         {
           id: 'claude',
-          name: 'Claude Chat',
+          name: t('claudeChat'),
           icon: getProviderIcon('claude', { size: 16 }),
           statusDot: getStatusDot('claude'),
         },
         {
           id: 'openai',
-          name: 'OpenAI',
+          name: t('openai'),
           icon: getProviderIcon('openai', { size: 16 }),
           statusDot: getStatusDot('openai'),
         },
         {
           id: 'lmstudio',
-          name: 'LM Studio',
+          name: t('lmStudio'),
           icon: getProviderIcon('lmstudio', { size: 16 }),
           statusDot: getStatusDot('lmstudio'),
         },
       ],
     },
     {
-      title: 'Project',
+      key: 'project',
+      title: t('project'),
       items: [
         {
           id: 'agent-permissions',
-          name: 'Agent Permissions',
+          name: t('agentPermissions'),
           icon: <MaterialSymbol icon="shield" size={16} />,
         },
       ],
     },
     ...(alphaFeatures['collaboration'] ? [{
-      title: 'Collaboration',
+      key: 'collaboration',
+      title: t('collaboration'),
       items: [
         {
           id: 'team' as SettingsCategory,
-          name: 'Team',
+          name: t('team'),
           icon: <MaterialSymbol icon="group" size={16} />,
           isAlpha: true,
         },
         {
           id: 'tracker-config' as SettingsCategory,
-          name: 'Trackers',
+          name: t('trackers'),
           icon: <MaterialSymbol icon="assignment" size={16} />,
           isAlpha: true,
         },
       ],
     }] : []),
     {
-      title: 'Extensions',
+      key: 'extensions',
+      title: t('extensions'),
       items: [
         {
           id: 'marketplace',
-          name: 'Marketplace',
+          name: t('marketplace'),
           icon: <MaterialSymbol icon="storefront" size={16} />,
         },
         {
           id: 'installed-extensions',
-          name: 'Installed',
+          name: t('installed'),
           icon: <MaterialSymbol icon="extension" size={16} />,
         },
         {
           id: 'privileged-extensions',
-          name: 'Privileged Capabilities',
+          name: t('privilegedCapabilities'),
           icon: <MaterialSymbol icon="shield_lock" size={16} />,
         },
         {
           id: 'claude-plugins',
-          name: 'Claude Plugins',
+          name: t('claudePlugins'),
           icon: <MaterialSymbol icon="widgets" size={16} />,
         },
         {
           id: 'mcp-servers',
-          name: 'MCP Servers',
+          name: t('mcpServers'),
           icon: <MaterialSymbol icon="dns" size={16} />,
         },
       ],
@@ -264,13 +278,13 @@ Best for quick edits and tasks that do not require multi-file operations.`,
   // User scope: Show Agent/Chat Providers, Application, Extensions (not Project)
   const filteredGroups = scope === 'project'
     ? [
-        categoryGroups.find(g => g.title === 'Project'),
-        categoryGroups.find(g => g.title === 'Collaboration'),
-        categoryGroups.find(g => g.title === 'Agent Providers'),
-        categoryGroups.find(g => g.title === 'Chat Providers'),
-        categoryGroups.find(g => g.title === 'Extensions'),
+        categoryGroups.find(g => g.key === 'project'),
+        categoryGroups.find(g => g.key === 'collaboration'),
+        categoryGroups.find(g => g.key === 'agent-providers'),
+        categoryGroups.find(g => g.key === 'chat-providers'),
+        categoryGroups.find(g => g.key === 'extensions'),
       ].filter((g): g is CategoryGroup => g != null)
-    : categoryGroups.filter(g => g.title !== 'Project' && g.title !== 'Collaboration');
+    : categoryGroups.filter(g => g.key !== 'project' && g.key !== 'collaboration');
 
   const [tooltip, setTooltip] = useState<{ text: string; top: number; left: number } | null>(null);
 
@@ -291,7 +305,7 @@ Best for quick edits and tasks that do not require multi-file operations.`,
     <div className="settings-sidebar w-[240px] shrink-0 border-r border-[var(--nim-border)] bg-[var(--nim-bg)] overflow-y-auto">
       <div className="settings-sidebar-content p-3">
         {filteredGroups.map((group) => (
-          <div key={group.title} className="settings-sidebar-group mb-4">
+          <div key={group.key} className="settings-sidebar-group mb-4">
             <div className="settings-sidebar-group-title flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--nim-text-muted)]">
               {group.title}
               {group.infoTooltip && (

@@ -65,15 +65,6 @@ export function updateWindowTitleBars() {
         // Update background color
         window.setBackgroundColor(backgroundColor);
 
-        // Update title bar overlay on Windows/Linux
-        if (process.platform !== 'darwin' && window.setTitleBarOverlay) {
-          try {
-            window.setTitleBarOverlay(titleBarColor);
-          } catch (error) {
-            console.error('Error setting title bar overlay:', error);
-          }
-        }
-
         // Send theme-change event to all windows
         // Each window's renderer listens to this and updates its own UI
         window.webContents.send('theme-change', currentTheme);

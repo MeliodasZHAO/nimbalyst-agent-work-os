@@ -38,10 +38,10 @@ export function UpdateAvailableToast({
         className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-1 pr-7"
         data-testid="update-toast-version"
       >
-        New Version: Nimbalyst {version}
+        新版本: Nimbalyst {version}
       </div>
       <div className="update-toast-subtitle text-xs text-[var(--nim-text-muted)] leading-normal mb-4">
-        There's a new app update available to download
+        有新的应用更新可供下载
       </div>
 
       {/* Action buttons */}
@@ -51,21 +51,21 @@ export function UpdateAvailableToast({
           onClick={onUpdateNow}
           data-testid="update-now-btn"
         >
-          Update Now
+          立即更新
         </button>
         <button
           className="update-toast-btn update-toast-btn-secondary py-2 px-3.5 border border-[var(--nim-border)] rounded-md text-[13px] font-medium cursor-pointer transition-all duration-200 font-[inherit] whitespace-nowrap bg-[var(--nim-bg-tertiary)] text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
           onClick={onViewReleaseNotes}
           data-testid="release-notes-btn"
         >
-          Release Notes
+          版本说明
         </button>
         <button
           className="update-toast-btn update-toast-btn-text py-2 px-3 border-none rounded-md text-[13px] font-medium cursor-pointer transition-all duration-200 font-[inherit] whitespace-nowrap bg-transparent text-[var(--nim-text-muted)] hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)]"
           onClick={onRemindLater}
           data-testid="remind-later-btn"
         >
-          Remind me later
+          稍后提醒
         </button>
       </div>
     </div>

@@ -125,6 +125,12 @@ interface ElectronAPI {
 
   setDocumentEdited: (edited: boolean) => void;
   setTitle: (title: string) => void;
+  // Frameless window controls (Windows only)
+  windowMinimize: () => void;
+  windowMaximizeToggle: () => void;
+  windowClose: () => void;
+  windowIsMaximized: () => Promise<boolean>;
+  onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) => () => void;
   sendToMainWindow?: (channel: string, data: unknown) => Promise<void>;
   reportUserActivity?: () => void;
 
@@ -220,7 +226,7 @@ interface ElectronAPI {
   // AI operations (flat methods)
   aiHasApiKey: () => Promise<boolean>;
   aiInitialize: (provider?: string, apiKey?: string) => Promise<any>;
-  aiCreateSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'opencode' | 'copilot-cli' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) => Promise<any>;
+  aiCreateSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'openai-codex-acp' | 'opencode' | 'copilot-cli' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) => Promise<any>;
   aiSendMessage: (message: string, documentContext?: any, sessionId?: string, workspacePath?: string) => Promise<any>;
   aiGetSessions: (workspacePath?: string) => Promise<any>;
   aiLoadSession: (sessionId: string, workspacePath?: string, trackAsResume?: boolean) => Promise<any>;
@@ -292,7 +298,7 @@ interface ElectronAPI {
   ai: {
     hasApiKey: () => Promise<boolean>;
     initialize: (provider?: string, apiKey?: string) => Promise<any>;
-    createSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) => Promise<any>;
+    createSession: (provider: 'claude' | 'claude-code' | 'openai' | 'openai-codex' | 'openai-codex-acp' | 'opencode' | 'copilot-cli' | 'lmstudio', documentContext?: any, workspacePath?: string, modelId?: string, sessionType?: string, worktreeId?: string) => Promise<any>;
     sendMessage: (message: string, documentContext?: any, sessionId?: string, workspacePath?: string) => Promise<any>;
     getSessions: (workspacePath?: string) => Promise<any>;
     getSessionList: (workspacePath?: string) => Promise<any>;
@@ -593,6 +599,17 @@ interface ElectronAPI {
     }) => Promise<{
       codexEnabled: boolean;
       claudeGeneratedExtensionWorkflowsEnabled: boolean;
+    }>;
+  };
+
+  agentWorkOS: {
+    runVisualCheck: (options: { label?: string; workspacePath?: string }) => Promise<{
+      success: boolean;
+      resultPath?: string;
+      screenshots?: Array<{ viewport: string; width: number; height: number; path: string }>;
+      stdout?: string;
+      stderr?: string;
+      error?: string;
     }>;
   };
 

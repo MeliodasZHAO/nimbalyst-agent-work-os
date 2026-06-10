@@ -214,14 +214,14 @@ const TEMPLATE_CATEGORIES: Record<string, TemplateCategory> = {
 };
 
 const CATEGORY_LABELS: Record<TemplateCategory, string> = {
-  development: 'Development',
-  productivity: 'Productivity & Project Management',
-  automation: 'Automation & Workflows',
-  ai: 'AI & Reasoning',
-  commerce: 'Commerce & Payments',
-  data: 'Data & Analytics',
-  search: 'Search',
-  files: 'Files & Storage'
+  development: '开发',
+  productivity: '生产力与项目管理',
+  automation: '自动化与工作流',
+  ai: 'AI 与推理',
+  commerce: '商务与支付',
+  data: '数据与分析',
+  search: '搜索',
+  files: '文件与存储'
 };
 
 const CATEGORY_ORDER: TemplateCategory[] = ['development', 'productivity', 'automation', 'ai', 'commerce', 'data', 'search', 'files'];
@@ -1618,7 +1618,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
   if (loading) {
     return (
       <div className="provider-panel flex flex-col">
-        <div className="mcp-loading p-8 text-center text-[var(--nim-text-muted)]">Loading MCP servers...</div>
+        <div className="mcp-loading p-8 text-center text-[var(--nim-text-muted)]">加载 MCP 服务器中...</div>
       </div>
     );
   }
@@ -1628,7 +1628,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
       <div className="provider-panel flex flex-col">
         <div className="mcp-error p-8 text-center text-[#e74c3c]">
           Error: {error}
-          <button onClick={loadServers} className="mcp-retry-button ml-4 px-4 py-2 bg-[var(--nim-primary)] text-white border-none rounded cursor-pointer">Retry</button>
+          <button onClick={loadServers} className="mcp-retry-button ml-4 px-4 py-2 bg-[var(--nim-primary)] text-white border-none rounded cursor-pointer">重试</button>
         </div>
       </div>
     );
@@ -1676,13 +1676,13 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
           className="mcp-back-button inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--nim-border)] rounded-md bg-[var(--nim-bg)] text-[var(--nim-text)] text-[0.8125rem] cursor-pointer transition-all duration-150 mb-4 hover:bg-[var(--nim-bg-hover)]"
           aria-label="Back to server list"
         >
-          ← Back to servers
+          ← 返回服务器列表
         </button>
 
         <div className="mcp-template-selection-header mb-6">
-          <h3 className="mcp-template-selection-title text-lg font-semibold text-[var(--nim-text)] m-0 mb-2">Add MCP Server</h3>
+          <h3 className="mcp-template-selection-title text-lg font-semibold text-[var(--nim-text)] m-0 mb-2">添加 MCP 服务器</h3>
           <p className="mcp-template-selection-description text-sm text-[var(--nim-text-muted)] m-0">
-            Choose a template to get started quickly, or create a custom configuration.
+            选择一个模板快速开始，或创建自定义配置。
           </p>
         </div>
 
@@ -1692,7 +1692,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
             type="text"
             value={templateSearch}
             onChange={(e) => setTemplateSearch(e.target.value)}
-            placeholder="Search templates..."
+            placeholder="搜索模板..."
             className="mcp-template-search-input w-full py-3 pl-4 pr-10 border border-[var(--nim-border)] rounded-lg bg-[var(--nim-bg)] text-[var(--nim-text)] text-[0.9375rem] placeholder:text-[var(--nim-text-faint)] focus:border-[var(--nim-primary)] focus:outline-none"
             aria-label="Search MCP server templates"
             autoFocus
@@ -1712,7 +1712,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
         {/* Custom/Scratch - always show unless searching */}
         {!templateSearch && (
           <div className="mcp-template-category mb-6">
-            <h4 className="mcp-template-category-title text-xs font-semibold uppercase tracking-wider text-[var(--nim-text-faint)] m-0 mb-3 pb-2 border-b border-[var(--nim-border)]">Custom Configuration</h4>
+            <h4 className="mcp-template-category-title text-xs font-semibold uppercase tracking-wider text-[var(--nim-text-faint)] m-0 mb-3 pb-2 border-b border-[var(--nim-border)]">自定义配置</h4>
             <div className="mcp-template-grid grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
               <div
                 className="mcp-template-card mcp-template-scratch-card flex flex-col items-center justify-center min-h-[100px] p-4 border-2 border-dashed border-[var(--nim-border)] rounded-lg bg-transparent cursor-pointer transition-all duration-150 hover:border-[var(--nim-primary)] hover:bg-[color-mix(in_srgb,var(--nim-primary)_5%,transparent)]"
@@ -1728,8 +1728,8 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                 aria-label="Start from scratch - Configure all settings manually"
               >
                 <div className="mcp-template-scratch-text text-sm text-[var(--nim-text-muted)] text-center">
-                  + Start from scratch<br />
-                  <small>Configure all settings manually</small>
+                  + 从零开始<br />
+                  <small>手动配置所有设置</small>
                 </div>
               </div>
             </div>
@@ -1784,7 +1784,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
         {/* No results */}
         {filteredTemplates.length === 0 && templateSearch && (
           <div className="mcp-template-no-results p-8 text-center text-[var(--nim-text-faint)] text-[0.9375rem]" role="status" aria-live="polite">
-            No templates match "{templateSearch}"
+            没有匹配 "{templateSearch}" 的模板
           </div>
         )}
       </div>
@@ -1808,7 +1808,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
             className="mcp-back-button inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--nim-border)] rounded-md bg-[var(--nim-bg)] text-[var(--nim-text)] text-[0.8125rem] cursor-pointer transition-all duration-150 mb-4 hover:bg-[var(--nim-bg-hover)]"
             aria-label="Back to template selection"
           >
-            ← Back to templates
+            ← 返回模板
           </button>
         )}
 
@@ -1832,7 +1832,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                 className="mcp-docs-link-button inline-flex items-center gap-1 px-3 py-2 border border-[var(--nim-border)] rounded bg-[var(--nim-bg-secondary)] text-[var(--nim-primary)] text-sm no-underline transition-colors duration-150 hover:bg-[var(--nim-bg-hover)]"
                 aria-label={`View documentation for ${selectedTemplate.name}`}
               >
-                View Docs
+                查看文档
               </a>
             )}
           </div>
@@ -1840,7 +1840,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
 
         {/* Server Name */}
         <div className="mcp-form-group mb-6">
-          <label htmlFor="server-name" className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Server Name</label>
+          <label htmlFor="server-name" className="block mb-2 font-medium text-sm text-[var(--nim-text)]">服务器名称</label>
           <input
             id="server-name"
             type="text"
@@ -1947,10 +1947,10 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
           <div className="mcp-required-section p-5 bg-[color-mix(in_srgb,var(--nim-warning)_8%,transparent)] border border-[color-mix(in_srgb,var(--nim-warning)_30%,transparent)] rounded-lg mb-6">
             <div className="mcp-required-section-header flex items-center gap-2 mb-2">
               <span className="mcp-required-icon flex items-center justify-center w-5 h-5 bg-[var(--nim-warning)] text-white rounded-full text-xs font-bold shrink-0">!</span>
-              <h4 className="mcp-required-section-title text-[0.9375rem] font-semibold text-[var(--nim-text)] m-0">Required: Enter Your Credentials</h4>
+              <h4 className="mcp-required-section-title text-[0.9375rem] font-semibold text-[var(--nim-text)] m-0">必填：输入你的凭据</h4>
             </div>
             <p className="mcp-required-section-hint text-[0.8125rem] text-[var(--nim-text-muted)] m-0 mb-4">
-              These values are required for the server to connect.
+              这些值是服务器连接所必需的。
             </p>
 
             {requiredEnvVars.map(({ key, index }) => {
@@ -1966,7 +1966,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                     value={formEnv[index].value}
                     onChange={(e) => updateEnvVar(index, 'value', e.target.value)}
                     onBlur={!isNewConfig ? autoSave : undefined}
-                    placeholder={`Enter your ${help?.label || key}`}
+                    placeholder={`输入你的 ${help?.label || key}`}
                     className="w-full px-3 py-2.5 border-2 border-[color-mix(in_srgb,var(--nim-warning)_50%,transparent)] rounded-md bg-[var(--nim-bg)] text-[var(--nim-text)] text-sm placeholder:text-[var(--nim-text-faint)] focus:border-[var(--nim-primary)] focus:outline-none"
                   />
                   {help && (
@@ -1976,7 +1976,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                         <>
                           {' - '}
                           <a href={help.link} target="_blank" rel="noopener noreferrer" className="text-[var(--nim-primary)] no-underline hover:underline">
-                            Get one here
+                            从这里获取
                           </a>
                         </>
                       )}
@@ -1991,7 +1991,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
         {/* Test Connection Button (visible for templates, outside Advanced section) */}
         {selectedTemplate && !isNativeOAuthConfig && (
           <div className="mcp-form-group mb-6">
-            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Test Connection</label>
+            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">测试连接</label>
             <div className="mcp-test-standalone flex flex-col gap-2">
               <button
                 onClick={handleTestConnection}
@@ -2000,10 +2000,10 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                 aria-label="Test server connection"
                 aria-busy={testStatus === 'testing'}
               >
-                {testStatus === 'testing' ? 'Testing...' :
-                 testStatus === 'success' ? 'Connected' : 'Test Connection'}
+                {testStatus === 'testing' ? '测试中...' :
+                 testStatus === 'success' ? '已连接' : '测试连接'}
               </button>
-              {testStatus === 'error' && <span className="mcp-test-failed-label text-[#e74c3c] font-medium text-sm ml-2">Failed</span>}
+              {testStatus === 'error' && <span className="mcp-test-failed-label text-[#e74c3c] font-medium text-sm ml-2">失败</span>}
               {testMessage && (
                 <div
                   className={`mcp-test-message mt-2 p-2 rounded text-sm flex items-center gap-2 ${testStatus === 'testing' ? 'bg-[rgba(52,152,219,0.1)] text-[var(--nim-text-muted)] border border-[rgba(52,152,219,0.3)]' : ''} ${testStatus === 'success' ? 'bg-[rgba(39,174,96,0.1)] text-[#27ae60] border border-[rgba(39,174,96,0.3)]' : ''} ${testStatus === 'error' ? 'bg-[rgba(231,76,60,0.1)] text-[#e74c3c] border border-[rgba(231,76,60,0.3)]' : ''}`}
@@ -2018,7 +2018,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                       className="mcp-help-link-button ml-3 px-2 py-1 text-xs font-medium text-[var(--nim-primary)] bg-transparent border border-[var(--nim-primary)] rounded cursor-pointer transition-all duration-150 hover:bg-[var(--nim-primary)] hover:text-white"
                       onClick={() => window.electronAPI.openExternal(testHelpUrl)}
                     >
-                      Install Instructions
+                      安装说明
                     </button>
                   )}
                 </div>
@@ -2029,10 +2029,10 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
 
         {selectedTemplate && isNativeOAuthConfig && (
           <div className="mcp-form-group mb-6">
-            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Next Step</label>
+            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">下一步</label>
             <div className="p-4 rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg-secondary)] text-sm text-[var(--nim-text)] leading-snug">
-              This settings panel only saves the server configuration.
-              Open a Claude or Codex session and use this server there to trigger browser authorization.
+              此设置面板仅保存服务器配置。
+              打开 Claude 或 Codex 会话并在其中使用此服务器以触发浏览器授权。
             </div>
           </div>
         )}
@@ -2041,8 +2041,8 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
         {selectedTemplate ? (
           <details className="mcp-advanced-section mt-6 border border-[var(--nim-border)] rounded-lg overflow-hidden [&[open]>summary::after]:rotate-45">
             <summary className="p-4 cursor-pointer flex items-center justify-between font-medium text-sm bg-[var(--nim-bg-secondary)] text-[var(--nim-text)] list-none [&::-webkit-details-marker]:hidden after:content-[''] after:w-1.5 after:h-1.5 after:border-r-2 after:border-b-2 after:border-[var(--nim-text-faint)] after:-rotate-45 after:transition-transform after:duration-200">
-              Advanced Configuration
-              <span className="mcp-advanced-hint text-xs text-[var(--nim-text-faint)] font-normal mr-2">Pre-configured, typically no changes needed</span>
+              高级配置
+              <span className="mcp-advanced-hint text-xs text-[var(--nim-text-faint)] font-normal mr-2">已预配置，通常无需修改</span>
             </summary>
             <div className="mcp-advanced-content p-4 border-t border-[var(--nim-border)]">
               {renderAdvancedFields(true)}
@@ -2061,7 +2061,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
               className="mcp-delete-button px-4 py-2 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[#e74c3c] text-sm cursor-pointer hover:bg-[#e74c3c] hover:text-white hover:border-[#e74c3c]"
               aria-label={`Delete ${selectedServer.name} server`}
             >
-              Delete
+              删除
             </button>
           )}
           {isNewConfig && formName.trim() && (formCommand.trim() || formUrl.trim()) && (
@@ -2072,7 +2072,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
               aria-label="Add new MCP server"
               aria-busy={saveStatus === 'saving'}
             >
-              {saveStatus === 'saving' ? 'Saving...' : 'Add Server'}
+              {saveStatus === 'saving' ? '保存中...' : '添加服务器'}
             </button>
           )}
           <span
@@ -2081,9 +2081,9 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
             aria-live="polite"
             aria-atomic="true"
           >
-            {saveStatus === 'saving' && !isNewConfig && 'Saving...'}
-            {saveStatus === 'saved' && 'Saved'}
-            {saveStatus === 'error' && 'Error saving'}
+            {saveStatus === 'saving' && !isNewConfig && '保存中...'}
+            {saveStatus === 'saved' && '已保存'}
+            {saveStatus === 'error' && '保存出错'}
           </span>
         </div>
       </div>
@@ -2100,7 +2100,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
     return (
       <>
         <div className={`mcp-form-group mb-6 ${readonly ? 'mcp-readonly-group' : ''}`}>
-          <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Transport Type</label>
+          <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">传输类型</label>
           <select
             value={formType}
             onChange={(e) => {
@@ -2110,23 +2110,23 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
             className={`mcp-type-select w-full px-3 py-2 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text)] text-sm cursor-pointer ${readonly ? 'opacity-60 cursor-not-allowed bg-[var(--nim-bg-tertiary)]' : ''}`}
             disabled={readonly}
           >
-            <option value="stdio">stdio (Local executable)</option>
-            <option value="http">HTTP (Remote server - Streamable HTTP)</option>
-            <option value="sse">SSE (Remote server - Legacy)</option>
+            <option value="stdio">stdio (本地可执行文件)</option>
+            <option value="http">HTTP (远程服务器 - Streamable HTTP)</option>
+            <option value="sse">SSE (远程服务器 - 旧版)</option>
           </select>
           <div className="mcp-form-hint mt-1 text-xs text-[var(--nim-text-faint)]">
             {formType === 'stdio'
-              ? 'Runs a local executable that communicates via stdin/stdout'
+              ? '运行通过 stdin/stdout 通信的本地可执行文件'
               : formType === 'http'
-              ? 'Connects to a remote server using Streamable HTTP (recommended for remote servers)'
-              : 'Connects to a remote server via Server-Sent Events (legacy)'}
+              ? '通过 Streamable HTTP 连接远程服务器（推荐用于远程服务器）'
+              : '通过 Server-Sent Events 连接远程服务器（旧版）'}
           </div>
         </div>
 
         {formType === 'stdio' ? (
           <>
             <div className={`mcp-form-group mb-6 ${readonly ? 'mcp-readonly-group' : ''}`}>
-              <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Command</label>
+              <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">命令</label>
               <div className="mcp-command-row flex gap-2 items-center">
                 <input
                   type="text"
@@ -2144,10 +2144,10 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                   aria-label="Test server connection"
                   aria-busy={testStatus === 'testing'}
                 >
-                  {testStatus === 'testing' ? 'Testing...' :
-                   testStatus === 'success' ? 'Connected' : 'Test'}
+                  {testStatus === 'testing' ? '测试中...' :
+                   testStatus === 'success' ? '已连接' : '测试'}
                 </button>
-                {testStatus === 'error' && <span className="mcp-test-failed-label text-[#e74c3c] font-medium text-sm ml-2">Failed</span>}
+                {testStatus === 'error' && <span className="mcp-test-failed-label text-[#e74c3c] font-medium text-sm ml-2">失败</span>}
               </div>
               {testMessage && (
                 <div
@@ -2163,7 +2163,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                       className="mcp-help-link-button ml-3 px-2 py-1 text-xs font-medium text-[var(--nim-primary)] bg-transparent border border-[var(--nim-primary)] rounded cursor-pointer transition-all duration-150 hover:bg-[var(--nim-primary)] hover:text-white"
                       onClick={() => window.electronAPI.openExternal(testHelpUrl)}
                     >
-                      Install Instructions
+                      安装说明
                     </button>
                   )}
                 </div>
@@ -2171,7 +2171,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
             </div>
 
             <div className={`mcp-form-group mb-6 ${readonly ? 'mcp-readonly-group' : ''}`}>
-              <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Arguments</label>
+              <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">参数</label>
               {formArgs.map((arg, index) => (
                 <div key={index} className="mcp-array-item flex gap-2 mb-2">
                   <input
@@ -2189,13 +2189,13 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                 </div>
               ))}
               {!readonly && (
-                <button onClick={addArg} className="mcp-add-button w-full px-4 py-2 border border-dashed border-[var(--nim-border)] rounded bg-transparent text-[var(--nim-primary)] text-sm cursor-pointer text-left hover:bg-[var(--nim-bg-hover)]">+ Add Argument</button>
+                <button onClick={addArg} className="mcp-add-button w-full px-4 py-2 border border-dashed border-[var(--nim-border)] rounded bg-transparent text-[var(--nim-primary)] text-sm cursor-pointer text-left hover:bg-[var(--nim-bg-hover)]">+ 添加参数</button>
               )}
             </div>
           </>
         ) : (
           <div className={`mcp-form-group mb-6 ${readonly ? 'mcp-readonly-group' : ''}`}>
-            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Server URL</label>
+            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">服务器 URL</label>
             <div className="mcp-command-row flex gap-2 items-center">
               <input
                 type="url"
@@ -2214,8 +2214,8 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                   aria-label="Test server connection"
                   aria-busy={testStatus === 'testing'}
                 >
-                  {testStatus === 'testing' ? 'Testing...' :
-                   testStatus === 'success' ? 'Connected' : 'Test'}
+                  {testStatus === 'testing' ? '测试中...' :
+                   testStatus === 'success' ? '已连接' : '测试'}
                 </button>
               )}
               {!isNativeOAuthConfig && testStatus === 'error' && <span className="mcp-test-failed-label text-[#e74c3c] font-medium text-sm ml-2">Failed</span>}
@@ -2250,7 +2250,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
         {/* HTTP Headers (HTTP only) */}
         {formType === 'http' && !readonly && (
           <div className="mcp-form-group mb-6">
-            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">HTTP Headers</label>
+            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">HTTP 请求头</label>
             {formHeaders.map((header, index) => (
               <div key={index} className="mcp-env-item flex gap-2 mb-2">
                 <input
@@ -2272,14 +2272,14 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                 <button onClick={() => { removeHeader(index); if (isExistingServer) setTimeout(autoSave, 0); }} className="mcp-remove-button w-7 h-7 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text-faint)] text-lg leading-none cursor-pointer hover:bg-[#e74c3c] hover:text-white hover:border-[#e74c3c]">x</button>
               </div>
             ))}
-            <button onClick={addHeader} className="mcp-add-button w-full px-4 py-2 border border-dashed border-[var(--nim-border)] rounded bg-transparent text-[var(--nim-primary)] text-sm cursor-pointer text-left hover:bg-[var(--nim-bg-hover)]">+ Add HTTP Header</button>
+            <button onClick={addHeader} className="mcp-add-button w-full px-4 py-2 border border-dashed border-[var(--nim-border)] rounded bg-transparent text-[var(--nim-primary)] text-sm cursor-pointer text-left hover:bg-[var(--nim-bg-hover)]">+ 添加 HTTP 请求头</button>
           </div>
         )}
 
         {/* Additional env vars (not in required section) */}
         {!readonly && (
           <div className="mcp-form-group mb-6">
-            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">Environment Variables</label>
+            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">环境变量</label>
             {formEnv.map((envVar, index) => (
               <div key={index} className="mcp-env-item flex gap-2 mb-2">
                 <input
@@ -2301,14 +2301,14 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
                 <button onClick={() => { removeEnvVar(index); if (isExistingServer) setTimeout(autoSave, 0); }} className="mcp-remove-button w-7 h-7 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text-faint)] text-lg leading-none cursor-pointer hover:bg-[#e74c3c] hover:text-white hover:border-[#e74c3c]">x</button>
               </div>
             ))}
-            <button onClick={addEnvVar} className="mcp-add-button w-full px-4 py-2 border border-dashed border-[var(--nim-border)] rounded bg-transparent text-[var(--nim-primary)] text-sm cursor-pointer text-left hover:bg-[var(--nim-bg-hover)]">+ Add Environment Variable</button>
+            <button onClick={addEnvVar} className="mcp-add-button w-full px-4 py-2 border border-dashed border-[var(--nim-border)] rounded bg-transparent text-[var(--nim-primary)] text-sm cursor-pointer text-left hover:bg-[var(--nim-bg-hover)]">+ 添加环境变量</button>
           </div>
         )}
 
         {/* OAuth section for existing mcp-remote servers and HTTP transport */}
         {isExistingServer && isOAuthServer(currentConfig) && (
           <div className="mcp-form-group mb-6">
-            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">OAuth Authorization</label>
+            <label className="block mb-2 font-medium text-sm text-[var(--nim-text)]">OAuth 授权</label>
             <div className="mcp-oauth-section p-4 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded-md">
               <div className="mcp-oauth-status flex items-center gap-3 mb-3">
                 <span className="mcp-oauth-label text-sm font-medium text-[var(--nim-text)]">Status:</span>
@@ -2374,11 +2374,11 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
   return (
     <div className="provider-panel flex flex-col">
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
-        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">MCP Servers</h3>
+        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">MCP 服务器</h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
           {scope === 'user'
-            ? 'Configure global MCP servers available in all projects.'
-            : 'Configure project-specific MCP servers (saved to .mcp.json).'}
+            ? '配置所有项目中可用的全局 MCP 服务器。'
+            : '配置项目专属的 MCP 服务器（保存到 .mcp.json）。'}
         </p>
       </div>
 
@@ -2387,14 +2387,14 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
         {viewState === 'list' && (
           <aside className="mcp-servers-sidebar flex-[0_0_280px] min-w-[220px] max-w-[350px] flex flex-col border border-[var(--nim-border)] rounded-md overflow-hidden @[max-width:600px]:flex-[0_0_100%] @[max-width:600px]:max-w-full" aria-label="MCP servers list">
             <div className="mcp-servers-header flex justify-between items-center px-4 py-3 border-b border-[var(--nim-border)] bg-[var(--nim-bg-secondary)]">
-              <h4 className="m-0 text-sm font-semibold text-[var(--nim-text)]">Servers</h4>
+              <h4 className="m-0 text-sm font-semibold text-[var(--nim-text)]">服务器</h4>
               <button
                 onClick={handleNewServer}
                 className="mcp-add-server-button flex items-center gap-1.5 px-3 py-1.5 rounded-md border-none bg-[var(--nim-primary)] text-white text-[0.8125rem] font-medium cursor-pointer transition-opacity duration-150 hover:opacity-90"
                 aria-label="Add new MCP server"
               >
                 <span className="mcp-add-icon text-base leading-none" aria-hidden="true">+</span>
-                <span>Add</span>
+                <span>添加</span>
               </button>
             </div>
 
@@ -2414,13 +2414,13 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
             <div className="mcp-servers-list flex-1 overflow-y-auto" role="list">
               {servers.length === 0 ? (
                 <div className="mcp-empty-state px-4 py-8 text-center text-[var(--nim-text-faint)] text-sm flex flex-col items-center gap-4" role="status">
-                  <span className="mcp-empty-state-text text-[var(--nim-text-muted)]">No MCP servers configured</span>
+                  <span className="mcp-empty-state-text text-[var(--nim-text-muted)]">暂无已配置的 MCP 服务器</span>
                   <button
                     onClick={handleNewServer}
                     className="mcp-empty-state-cta px-5 py-2.5 rounded-md border-2 border-dashed border-[var(--nim-primary)] bg-transparent text-[var(--nim-primary)] text-sm font-medium cursor-pointer transition-all duration-150 hover:bg-[color-mix(in_srgb,var(--nim-primary)_10%,transparent)]"
                     aria-label="Add your first MCP server"
                   >
-                    + Add Your First Server
+                    + 添加你的第一个服务器
                   </button>
                 </div>
               ) : (
@@ -2514,7 +2514,7 @@ function MCPServersPanelInner({ scope = 'user', workspacePath }: MCPServersPanel
 
           {viewState === 'list' && !selectedServer && (
             <div className="mcp-no-selection flex items-center justify-center h-full text-[var(--nim-text-faint)] text-sm">
-              Select a server or click "Add" to create a new one
+              选择一个服务器或点击"添加"创建新服务器
             </div>
           )}
 
@@ -2531,16 +2531,16 @@ export function MCPServersPanel(props: MCPServersPanelProps) {
       fallback={
         <div className="provider-panel flex flex-col" role="alert" aria-live="assertive">
           <div className="mcp-error p-8 text-center text-[#e74c3c]">
-            <h3 className="mt-0 mb-4">Unable to load MCP Servers</h3>
+            <h3 className="mt-0 mb-4">无法加载 MCP 服务器</h3>
             <p className="mb-6 text-[var(--nim-text-muted)]">
-              An unexpected error occurred while loading the MCP servers panel.
-              Please try refreshing the application.
+              加载 MCP 服务器面板时发生意外错误。
+              请尝试刷新应用。
             </p>
             <button
               onClick={() => window.location.reload()}
               className="mcp-retry-button px-4 py-2 bg-[var(--nim-primary)] text-white border-none rounded-md cursor-pointer"
             >
-              Reload Application
+              重新加载应用
             </button>
           </div>
         </div>

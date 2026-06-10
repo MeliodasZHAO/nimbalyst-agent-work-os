@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import { usePostHog } from 'posthog-js/react';
+import { useTranslation } from 'react-i18next';
 import { permissionsChangedVersionAtom } from '../../store/atoms/permissions';
 
 interface ProjectTrustToastProps {
@@ -25,6 +26,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
   onDismiss,
 }) => {
   const posthog = usePostHog();
+  const { t } = useTranslation('dialogs');
   const [isVisible, setIsVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChangingMode, setIsChangingMode] = useState(false);
@@ -196,7 +198,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
     if (!workspacePath || isSubmitting) return;
 
     const confirmed = window.confirm(
-      `Stop trusting "${projectName}"?\n\nThe AI agent won't run any tools in this workspace until you trust it again.`
+      t('revokeConfirm', { projectName })
     );
     if (!confirmed) {
       return;
@@ -257,12 +259,12 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             <h2
               className="project-trust-toast-title text-lg font-semibold m-0 mb-1 text-nim"
             >
-              Trust "{projectName}"?
+              {t('trustTitle', { projectName })}
             </h2>
             <p
               className="project-trust-toast-subtitle text-sm m-0 text-nim-muted"
             >
-              This project wants to use the AI agent
+              {t('trustSubtitle')}
             </p>
           </div>
           <button
@@ -270,7 +272,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             onClick={handleDontTrust}
             disabled={isSubmitting}
           >
-            Don't Trust
+            {t('dontTrust')}
           </button>
         </div>
 
@@ -291,7 +293,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
           </svg>
           <span>
-            Untrusted projects can contain malicious code. Only trust projects from sources you know.
+            {t('trustWarning')}
           </span>
         </div>
 
@@ -299,7 +301,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
         <p
           className="project-trust-toast-description text-sm m-0 mb-3 text-nim-muted"
         >
-          Choose how the agent handles tool calls in this project:
+          {t('chooseMode')}
         </p>
 
         {/* Mode Toggle Buttons */}
@@ -316,7 +318,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             <span
               className="project-trust-toast-mode-label text-sm font-semibold text-nim"
             >
-              Ask
+              {t('ask')}
             </span>
           </button>
           <button
@@ -331,12 +333,12 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             <span
               className="project-trust-toast-mode-label text-sm font-semibold text-nim"
             >
-              Allow Edits
+              {t('allowEdits')}
             </span>
             <span
               className="project-trust-toast-mode-badge text-[11px] font-medium px-2 py-0.5 rounded whitespace-nowrap row-start-2 bg-[color-mix(in_srgb,var(--nim-primary)_15%,transparent)] text-nim-primary"
             >
-              Recommended
+              {t('common:recommended')}
             </span>
           </button>
           <button
@@ -351,7 +353,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             <span
               className="project-trust-toast-mode-label text-sm font-semibold text-nim"
             >
-              Allow All
+              {t('allowAll')}
             </span>
           </button>
         </div>
@@ -365,7 +367,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
               <p
                 className="project-trust-toast-mode-summary text-[13px] m-0 mb-3 leading-normal text-nim-muted"
               >
-                The agent will ask for permission before running commands. When you approve, your choices are saved to <code>.claude/settings.local.json</code> for future sessions.
+                {t('askSummary')}
               </p>
               <ul className="project-trust-toast-features-list list-none m-0 p-0 flex flex-col gap-2">
                 <li
@@ -380,7 +382,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                   >
                     <path d="M13.5 4.5l-7 7-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span><strong className="font-medium text-nim">Approve once</strong> or <strong className="font-medium text-nim">always</strong> for each tool pattern</span>
+                  <span>{t('askBullet1')}</span>
                 </li>
                 <li
                   className="flex items-start gap-2 text-[13px] leading-relaxed text-nim-muted"
@@ -394,7 +396,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                   >
                     <path d="M13.5 4.5l-7 7-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span><strong className="font-medium text-nim">Fine-grained control</strong> - allow "npm test" but block "rm -rf"</span>
+                  <span>{t('askBullet2')}</span>
                 </li>
                 <li
                   className="flex items-start gap-2 text-[13px] leading-relaxed text-nim-muted"
@@ -408,7 +410,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                   >
                     <path d="M13.5 4.5l-7 7-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span><strong className="font-medium text-nim">Permissions shared</strong> with Claude Code CLI in this project</span>
+                  <span>{t('askBullet3')}</span>
                 </li>
               </ul>
             </>
@@ -417,7 +419,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
               <p
                 className="project-trust-toast-mode-summary text-[13px] m-0 mb-3 leading-normal text-[#f59e0b]"
               >
-                The agent will run all file and edit operations without asking. Shell commands and web requests may still require approval.
+                {t('allowEditsSummary')}
               </p>
               <ul className="project-trust-toast-features-list list-none m-0 p-0 flex flex-col gap-2">
                 <li
@@ -433,7 +435,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                     <path d="M8 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>All file read/write/edit operations are automatically approved</span>
+                  <span>{t('allowEditsBullet1')}</span>
                 </li>
                 <li
                   className="flex items-start gap-2 text-[13px] leading-relaxed text-nim-muted"
@@ -448,7 +450,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                     <path d="M8 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>Bash commands and web fetches follow Claude Code's settings</span>
+                  <span>{t('allowEditsBullet2')}</span>
                 </li>
                 <li
                   className="flex items-start gap-2 text-[13px] leading-relaxed text-nim-muted"
@@ -463,7 +465,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                     <path d="M8 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>Only use with projects you fully trust</span>
+                  <span>{t('allowEditsBullet3')}</span>
                 </li>
               </ul>
             </>
@@ -472,7 +474,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
               <p
                 className="project-trust-toast-mode-summary text-[13px] m-0 mb-3 leading-normal text-[#f59e0b]"
               >
-                The agent will run all operations without permission prompts, including shell commands, file operations, and web requests.
+                {t('allowAllSummary')}
               </p>
               <ul className="project-trust-toast-features-list list-none m-0 p-0 flex flex-col gap-2">
                 <li
@@ -488,7 +490,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                     <path d="M8 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>All tool calls are automatically approved</span>
+                  <span>{t('allowAllBullet1')}</span>
                 </li>
                 <li
                   className="flex items-start gap-2 text-[13px] leading-relaxed text-nim-muted"
@@ -503,7 +505,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                     <path d="M8 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>Uses Nimbalyst permissions instead of Claude Code settings</span>
+                  <span>{t('allowAllBullet2')}</span>
                 </li>
                 <li
                   className="flex items-start gap-2 text-[13px] leading-relaxed text-nim-muted"
@@ -518,7 +520,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
                     <path d="M8 5.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <path d="M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  <span>Best for development and testing workflows</span>
+                  <span>{t('allowAllBullet3')}</span>
                 </li>
               </ul>
             </>
@@ -531,7 +533,7 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
             className="project-trust-toast-settings-link text-[13px] p-1 px-2 rounded cursor-pointer transition-colors duration-150 hover:underline bg-transparent border-none text-nim-faint"
             onClick={handleOpenSettings}
           >
-            Advanced settings
+            {t('advancedSettings')}
           </button>
           <div className="project-trust-toast-actions flex gap-2">
             <button
@@ -539,14 +541,14 @@ export const ProjectTrustToast: React.FC<ProjectTrustToastProps> = ({
               onClick={handleDismiss}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('common:cancel')}
             </button>
             <button
               className="project-trust-toast-save text-sm font-medium px-4 py-2 rounded-md cursor-pointer transition-all duration-150 disabled:opacity-70 disabled:cursor-not-allowed hover:brightness-110 bg-nim-primary border-none text-nim-on-primary"
               onClick={handleSave}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Save'}
+              {isSubmitting ? t('common:saving') : t('common:save')}
             </button>
           </div>
         </div>

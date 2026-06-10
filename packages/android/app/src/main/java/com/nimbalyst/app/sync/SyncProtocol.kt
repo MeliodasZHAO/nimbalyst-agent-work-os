@@ -207,8 +207,37 @@ data class SettingsSyncBroadcast(
 data class SyncedSettings(
     val openaiApiKey: String? = null,
     val availableModels: List<SyncedAvailableModel>? = null,
+    val agentWorkOSConfig: SyncedAgentWorkOSConfig? = null,
     val defaultModel: String? = null,
     val version: Int,
+)
+
+data class SyncedAgentWorkOSConfig(
+    val mobilePermissions: SyncedMobilePermissionPolicy? = null,
+)
+
+data class SyncedProjectConfig(
+    val commands: List<SyncedSlashCommand> = emptyList(),
+    val lastCommandsUpdate: Long? = null,
+    val agentWorkOSConfig: SyncedAgentWorkOSConfig? = null,
+    val gitRemoteHash: String? = null,
+)
+
+data class SyncedSlashCommand(
+    val name: String,
+    val description: String? = null,
+    val source: String,
+)
+
+data class SyncedMobilePermissionPolicy(
+    val mode: String? = null,
+    val allowPlanApproval: Boolean? = null,
+    val allowToolPermissionApproval: Boolean? = null,
+    val allowCommitApproval: Boolean? = null,
+    val allowDatabaseRiskApproval: Boolean? = null,
+    val allowSecurityRiskApproval: Boolean? = null,
+    val allowDestructiveRiskApproval: Boolean? = null,
+    val requireDesktopForShipped: Boolean? = null,
 )
 
 data class SyncedAvailableModel(

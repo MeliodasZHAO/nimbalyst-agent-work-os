@@ -12,7 +12,10 @@
  * Call initVoiceModeListeners() once in index.tsx at startup.
  */
 
+import { buildWorkPacketControlSurfaceContext } from '@nimbalyst/runtime';
 import { store, activeTabIdAtom, getFilePathFromKey, makeEditorContext } from '@nimbalyst/runtime/store';
+import { trackerItemsMapAtom } from '@nimbalyst/runtime/plugins/TrackerPlugin/trackerDataAtoms';
+import { getLinkedTrackerRecordsForReferences } from './voiceWorkPacketLinks';
 import {
   voiceActiveSessionIdAtom,
   voiceTranscriptEntriesAtom,
@@ -341,6 +344,19 @@ function computeVoiceFriendly(prompt: { promptType: string; data: any }): boolea
     }
   }
   return true;
+}
+
+function getVoicePromptWorkPacketWarning(sessionId: string): string | null {
+  const sessionMeta = store.get(sessionRegistryAtom).get(sessionId);
+  const linkedTrackerItemIds = sessionMeta?.linkedTrackerItemIds ?? [];
+  if (linkedTrackerItemIds.length === 0) return null;
+
+  const trackerItems = store.get(trackerItemsMapAtom);
+  const linkedRecords = getLinkedTrackerRecordsForReferences(trackerItems, linkedTrackerItemIds);
+  if (linkedRecords.length === 0) return null;
+
+  const context = buildWorkPacketControlSurfaceContext(linkedRecords);
+  return context.warningText ?? null;
 }
 
 /**
@@ -1020,7 +1036,10 @@ export function initVoiceModeListeners(): () => void {
 
       // Forward the prompt content to the voice agent so it can speak it
       lastForwardedPromptId = latestPrompt.promptId;
-      const description = formatPromptForVoice(latestPrompt);
+      const description = [
+        getVoicePromptWorkPacketWarning(voiceSessionId),
+        formatPromptForVoice(latestPrompt),
+      ].filter(Boolean).join('\n\n');
       const voiceFriendly = computeVoiceFriendly(latestPrompt);
       // console.log('[voiceModeListeners] Sending interactive-prompt IPC:', {
       //   sessionId: voiceSessionId,

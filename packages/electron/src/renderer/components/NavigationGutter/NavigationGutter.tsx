@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePostHog } from 'posthog-js/react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MaterialSymbol } from '@nimbalyst/runtime';
@@ -93,6 +94,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
   activeExtensionBottomPanel,
   onExtensionBottomPanelChange,
 }) => {
+  const { t } = useTranslation('navigation');
   const posthog = usePostHog();
   const isDevMode = import.meta.env.DEV || window.IS_DEV_MODE;
   const setActiveSession = useSetAtom(setActiveSessionAtom);
@@ -161,7 +163,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
     {
       id: 'files',
       icon: 'account_tree',
-      label: `Files (${getShortcutDisplay(KeyboardShortcuts.view.filesMode)})`,
+      label: `${t('files')} (${getShortcutDisplay(KeyboardShortcuts.view.filesMode)})`,
       contentMode: 'files',
     },
   ];
@@ -171,7 +173,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
     {
       id: 'agent',
       icon: 'code',
-      label: `Agent (${getShortcutDisplay(KeyboardShortcuts.view.agentMode)})`,
+      label: `${t('agent')} (${getShortcutDisplay(KeyboardShortcuts.view.agentMode)})`,
       contentMode: 'agent',
     },
   ];
@@ -181,7 +183,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
     {
       id: 'tracker-mode',
       icon: 'assignment',
-      label: `Tracker (${getShortcutDisplay(KeyboardShortcuts.view.trackerMode)})`,
+      label: `${t('tracker')} (${getShortcutDisplay(KeyboardShortcuts.view.trackerMode)})`,
       contentMode: 'tracker',
     },
   ];
@@ -191,7 +193,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
     {
       id: 'collab-mode',
       icon: 'cloud_sync',
-      label: `Shared Docs (${getShortcutDisplay(KeyboardShortcuts.view.collabMode)})`,
+      label: `${t('sharedDocs')} (${getShortcutDisplay(KeyboardShortcuts.view.collabMode)})`,
       contentMode: 'collab',
     },
   ];
@@ -208,7 +210,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
     ...(isTerminalAvailable ? [{
       id: 'terminal',
       icon: 'terminal',
-      label: 'Terminal (Ctrl+`)',
+      label: `${t('terminal')} (Ctrl+\`)`,
       onClick: onToggleTerminalPanel,
     }] : []),
   ];
@@ -217,7 +219,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
   const feedbackButton: NavButton = {
     id: 'feedback',
     icon: 'feedback',
-    label: 'Send Feedback',
+    label: t('sendFeedback'),
   };
 
   const handleButtonClick = (button: NavButton) => {
@@ -247,7 +249,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
   };
 
   return (
-    <div className="navigation-gutter w-12 h-screen bg-nim-secondary border-r border-nim flex flex-col items-center py-2 shrink-0" onContextMenu={(e) => {
+    <div className="navigation-gutter w-12 h-full bg-nim-secondary border-r border-nim flex flex-col items-center py-2 shrink-0" onContextMenu={(e) => {
       // Only open background context menu if right-clicking empty space (not a button)
       if ((e.target as HTMLElement).closest('button, [data-panel-id]')) return;
       openContextMenu(e);
@@ -642,7 +644,7 @@ export const NavigationGutter: React.FC<NavigationGutterProps> = ({
               ref={userMenuButtonRef}
               className={`nav-button relative w-9 h-9 flex items-center justify-center border-none rounded-md cursor-pointer transition-all duration-150 p-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-[var(--nim-primary)] focus-visible:outline-offset-2 ${userMenuOpen ? 'bg-nim-tertiary text-nim' : needsSignIn ? 'bg-transparent text-nim-warning hover:bg-nim-tertiary' : 'bg-transparent text-nim-muted hover:bg-nim-tertiary hover:text-nim'}`}
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              aria-label={needsSignIn ? 'User menu (signed out -- sync requires sign in)' : 'User menu'}
+              aria-label={needsSignIn ? t('userMenuSignedOut') : t('userMenu')}
               aria-expanded={userMenuOpen}
               data-signed-in={isSignedIn === null ? undefined : isSignedIn}
               data-needs-sign-in={needsSignIn || undefined}

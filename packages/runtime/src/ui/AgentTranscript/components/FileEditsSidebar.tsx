@@ -475,18 +475,18 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
 
     if (isCommitted) {
       if (operation === 'delete') {
-        return `${relativePath} - Deleted and committed`;
+        return `${relativePath} - 已删除并提交`;
       }
-      return `${relativePath} - Committed`;
+      return `${relativePath} - 已提交`;
     }
 
     // Build tooltip based on operation and git status
     const operationText = {
-      create: 'Created',
-      edit: 'Edited',
-      delete: 'Deleted',
-      rename: 'Renamed'
-    }[operation || 'edit'] || 'Modified';
+      create: '已创建',
+      edit: '已编辑',
+      delete: '已删除',
+      rename: '已重命名'
+    }[operation || 'edit'] || '已修改';
 
     const gitStatusText = status ? ` (${status.status})` : '';
     return `${relativePath} - ${operationText}${gitStatusText}`;
@@ -544,7 +544,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             }}
           >
             <MaterialSymbol icon="open_in_new" size={16} className="text-[var(--nim-text-muted)]" />
-            Open in Files
+            在文件中打开
           </button>
         )}
         {onViewDiff && (
@@ -556,7 +556,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             }}
           >
             <MaterialSymbol icon="difference" size={16} className="text-[var(--nim-text-muted)]" />
-            View Diff
+            查看差异
           </button>
         )}
         {onOpenInExternalEditor && externalEditorName && (
@@ -568,7 +568,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             }}
           >
             <MaterialSymbol icon="open_in_new" size={16} className="text-[var(--nim-text-muted)]" />
-            Open in {externalEditorName}
+            在 {externalEditorName} 中打开
           </button>
         )}
         {(onOpenInFiles || onViewDiff || onOpenInExternalEditor) && (onCopyPath || onRevealInFinder) && (
@@ -583,7 +583,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             }}
           >
             <MaterialSymbol icon="content_copy" size={16} className="text-[var(--nim-text-muted)]" />
-            Copy Path
+            复制路径
           </button>
         )}
         {onRevealInFinder && (
@@ -595,7 +595,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             }}
           >
             <MaterialSymbol icon="folder_open" size={16} className="text-[var(--nim-text-muted)]" />
-            Reveal in Finder
+            在访达中显示
           </button>
         )}
       </div>
@@ -689,7 +689,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             {hasPendingReview && (
               <span
                 className="file-edits-sidebar__pending-dot w-1 h-1 rounded-full bg-[#fbbf24] shrink-0 ml-1"
-                title="Pending review - changes not yet committed"
+                title="待审查 - 更改尚未提交"
               />
             )}
           </div>
@@ -701,7 +701,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             className={`file-edits-sidebar__peek-btn shrink-0 w-5 h-5 flex items-center justify-center rounded text-[var(--nim-text-faint)] hover:text-[var(--nim-primary)] hover:bg-[var(--nim-bg-tertiary)] transition-opacity bg-transparent border-0 cursor-pointer ${
               isPinned ? 'opacity-100 text-[var(--nim-primary)]' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'
             }`}
-            title={isPinned ? 'Hide diff' : 'Show diff'}
+            title={isPinned ? '隐藏差异' : '显示差异'}
             onClick={(e) => {
               e.stopPropagation();
               togglePeek(filePath);
@@ -840,7 +840,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
           <button
             onClick={() => setGroupByDirectory(!groupByDirectory)}
             className={`file-edits-sidebar__control-button flex items-center justify-center w-7 h-7 p-0 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text-muted)] cursor-pointer transition-all hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)] disabled:opacity-40 disabled:cursor-not-allowed ${groupByDirectory ? 'bg-[var(--nim-primary)] text-white border-[var(--nim-primary)]' : ''}`}
-            title="Group by directory"
+            title="按目录分组"
           >
             <MaterialSymbol icon="folder" size={18} />
           </button>
@@ -848,7 +848,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             onClick={expandAll}
             disabled={!groupByDirectory}
             className="file-edits-sidebar__control-button flex items-center justify-center w-7 h-7 p-0 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text-muted)] cursor-pointer transition-all hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)] disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Expand all"
+            title="全部展开"
           >
             <MaterialSymbol icon="unfold_more" size={18} />
           </button>
@@ -856,7 +856,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             onClick={collapseAll}
             disabled={!groupByDirectory}
             className="file-edits-sidebar__control-button flex items-center justify-center w-7 h-7 p-0 border border-[var(--nim-border)] rounded bg-[var(--nim-bg)] text-[var(--nim-text-muted)] cursor-pointer transition-all hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)] disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Collapse all"
+            title="全部折叠"
           >
             <MaterialSymbol icon="unfold_less" size={18} />
           </button>
@@ -887,7 +887,7 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
               )}
             </div>
             <span className="text-[0.8125rem] text-[var(--nim-text-muted)]">
-              Select all ({rootSelectionInfo.uncommittedCount} uncommitted)
+              全选 ({rootSelectionInfo.uncommittedCount} 个未提交)
             </span>
           </div>
         )}
@@ -896,13 +896,13 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
             {scopeMode === 'current-changes' && totalSessionFilesCount && totalSessionFilesCount > 0 ? (
               // Uncommitted Session Edits mode with no uncommitted changes
               <div className="flex flex-col items-center">
-                <div>No uncommitted changes</div>
+                <div>没有未提交的更改</div>
                 {onShowSessionFiles && (
                   <button
                     onClick={onShowSessionFiles}
                     className="mt-2 text-[var(--nim-primary)] hover:underline cursor-pointer bg-transparent border-none text-sm"
                   >
-                    Show all session edits ({totalSessionFilesCount})
+                    显示所有会话编辑 ({totalSessionFilesCount})
                   </button>
                 )}
                 {onShowAllUncommitted && totalUncommittedCount && totalUncommittedCount > 0 && (
@@ -910,51 +910,51 @@ export const FileEditsSidebar: React.FC<FileEditsSidebarProps> = ({
                     onClick={onShowAllUncommitted}
                     className="mt-2 text-[var(--nim-primary)] hover:underline cursor-pointer bg-transparent border-none text-sm"
                   >
-                    Show all uncommitted files ({totalUncommittedCount})
+                    显示所有未提交的文件 ({totalUncommittedCount})
                   </button>
                 )}
               </div>
             ) : scopeMode === 'current-changes' ? (
               // Uncommitted Session Edits mode with no session files at all
               <>
-                <div>No files edited yet</div>
+                <div>还没有编辑文件</div>
                 {onShowAllUncommitted && totalUncommittedCount && totalUncommittedCount > 0 && (
                   <button
                     onClick={onShowAllUncommitted}
                     className="mt-2 text-[var(--nim-primary)] hover:underline cursor-pointer bg-transparent border-none text-sm"
                   >
-                    Show all uncommitted files ({totalUncommittedCount})
+                    显示所有未提交的文件 ({totalUncommittedCount})
                   </button>
                 )}
               </>
             ) : scopeMode === 'session-files' ? (
               // All Session Edits mode with no files
               <>
-                <div>No files edited in this session</div>
+                <div>本次会话中没有编辑文件</div>
                 {onShowAllUncommitted && totalUncommittedCount && totalUncommittedCount > 0 && (
                   <button
                     onClick={onShowAllUncommitted}
                     className="mt-2 text-[var(--nim-primary)] hover:underline cursor-pointer bg-transparent border-none text-sm"
                   >
-                    Show all uncommitted files ({totalUncommittedCount})
+                    显示所有未提交的文件 ({totalUncommittedCount})
                   </button>
                 )}
               </>
             ) : scopeMode === 'all-changes' ? (
               // All Uncommitted Files mode with no files
               <>
-                <div>No uncommitted files</div>
+                <div>没有未提交的文件</div>
                 {onShowSessionFiles && totalSessionFilesCount && totalSessionFilesCount > 0 && (
                   <button
                     onClick={onShowSessionFiles}
                     className="mt-2 text-[var(--nim-primary)] hover:underline cursor-pointer bg-transparent border-none text-sm"
                   >
-                    Show session edits ({totalSessionFilesCount})
+                    显示会话编辑 ({totalSessionFilesCount})
                   </button>
                 )}
               </>
             ) : (
-              'No files edited yet'
+              '还没有编辑文件'
             )}
           </div>
         ) : (

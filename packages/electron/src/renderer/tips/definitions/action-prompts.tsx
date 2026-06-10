@@ -26,7 +26,7 @@ export const actionPromptsTip: TipDefinition = {
   },
   content: {
     icon: PlaylistIcon,
-    title: 'Save reusable prompts as actions',
-    body: 'Create **nimbalyst-local/ai-actions.md** to define one-click prompts. They show up in the composer\'s Actions dropdown -- great for recurring workflows like "review this diff" or "write release notes".',
+    title: '将常用提示词保存为动作',
+    body: '创建 **nimbalyst-local/ai-actions.md** 来定义一键提示词。它们会出现在编辑器的动作下拉菜单中——非常适合"审查这个 diff"或"写发布说明"之类的重复工作流。',
   },
 };

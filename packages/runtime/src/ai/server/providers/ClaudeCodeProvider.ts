@@ -416,6 +416,7 @@ export class ClaudeCodeProvider extends BaseAgentProvider {
   public static setClaudeSettingsPatternChecker(checker: ((workspacePath: string, pattern: string) => Promise<boolean>) | null): void { ClaudeCodeDeps.setClaudeSettingsPatternChecker(checker); }
   public static setTrustChecker(checker: ((workspacePath: string) => { trusted: boolean; mode: 'ask' | 'allow-all' | 'bypass-all' | null }) | null): void { BaseAgentProvider.setTrustChecker(checker); }
   public static setExtensionFileTypesLoader(loader: (() => Set<string>) | null): void { ClaudeCodeDeps.setExtensionFileTypesLoader(loader); }
+  public static setAgentWorkOSMobilePermissionLoader(loader: ((workspacePath: string) => { allowToolPermissionApproval: boolean } | null) | null): void { ClaudeCodeDeps.setAgentWorkOSMobilePermissionLoader(loader); }
 
   private static scheduleWakeupHandler: ((request: ScheduleWakeupRequest) => Promise<void>) | null = null;
   public static setScheduleWakeupHandler(handler: ((request: ScheduleWakeupRequest) => Promise<void>) | null): void {
@@ -3010,6 +3011,9 @@ export class ClaudeCodeProvider extends BaseAgentProvider {
           this.handleExitPlanMode(resolvedSessionId, resolvedInput, resolvedOptions),
         setCurrentMode: (mode) => { this.currentMode = mode; },
         logSecurity: (message, data) => this.logSecurity(message, data),
+        mobilePermissionPolicyResolver: pathForTrust
+          ? () => ClaudeCodeDeps.agentWorkOSMobilePermissionLoader?.(pathForTrust) ?? null
+          : undefined,
       },
       {
         toolName,

@@ -48,9 +48,22 @@ export default defineConfig({
       input: {
         editor: resolve(__dirname, 'editor.html'),
       },
+      // Prevent rollup from failing on Node.js built-in imports (node:crypto etc.)
+      // that get pulled in transitively through @anthropic-ai/sdk when rollup
+      // parses extension-sdk dist files. The editor never calls these APIs in
+      // WKWebView — they land as dead code and tree-shaking removes them.
+      external: (id) => id.startsWith('node:') || id.startsWith('@anthropic-ai/'),
       output: {
         // IIFE format for WKWebView file:// compatibility (no ES module CORS issues)
         format: 'iife',
+        globals: (id) => {
+          // Dead-code external: provide any valid identifier so rollup generates
+          // compilable IIFE wrapper. Tree-shaking eliminates all references
+          // before the bundle ships.
+          if (id.startsWith('node:') || id.startsWith('@anthropic-ai/')) {
+            return '__nimbalyst_unused_' + id.replace(/[^a-zA-Z0-9]/g, '_');
+          }
+        },
       },
     },
   },

@@ -70,7 +70,7 @@ export function ArchiveWorktreeDialog({
         <div className="archive-worktree-dialog-header flex items-center gap-3 px-6 pt-5 pb-4 text-[var(--nim-text)]">
           <MaterialSymbol icon="archive" size={24} />
           <h2 className="m-0 text-lg font-semibold">
-            {isBulk ? `Archive ${worktreeCount} Worktrees` : 'Archive Worktree'}
+            {isBulk ? `归档 ${worktreeCount} 个 Worktree` : '归档 Worktree'}
           </h2>
         </div>
 
@@ -78,8 +78,8 @@ export function ArchiveWorktreeDialog({
           <p className="mb-4 text-sm leading-relaxed text-[var(--nim-text-muted)]">
             {contextMessage ? `${contextMessage} ` : ''}
             {isBulk
-              ? <>Are you sure you want to archive <strong className="font-medium text-[var(--nim-text)]">{worktreeCount} worktrees</strong>?</>
-              : <>Are you sure you want to archive{' '}<strong className="font-medium text-[var(--nim-text)]">{worktreeName}</strong>?</>
+              ? <>确定要归档 <strong className="font-medium text-[var(--nim-text)]">{worktreeCount} 个 Worktree</strong> 吗？</>
+              : <>确定要归档 <strong className="font-medium text-[var(--nim-text)]">{worktreeName}</strong> 吗？</>
             }
           </p>
 
@@ -88,12 +88,12 @@ export function ArchiveWorktreeDialog({
               <MaterialSymbol icon="warning" size={20} className="text-[var(--nim-warning)] shrink-0 mt-0.5" />
               <div>
                 <p className="m-0 text-sm font-medium text-[var(--nim-warning)]">
-                  Uncommitted changes will be lost
+                  未提交的更改将丢失
                 </p>
                 <p className="m-0 mt-1 text-[0.8125rem] text-[var(--nim-text-muted)]">
                   {isBulk
-                    ? <>{uncommittedWorktreeCount} {uncommittedWorktreeCount === 1 ? 'worktree has' : 'worktrees have'} uncommitted changes ({uncommittedFileCount} {uncommittedFileCount === 1 ? 'file' : 'files'} total). These changes will be permanently deleted.</>
-                    : <>This worktree has {uncommittedFileCount === 1 ? '1 file' : `${uncommittedFileCount} files`} with uncommitted changes. These changes will be permanently deleted.</>
+                    ? <>{uncommittedWorktreeCount} 个 Worktree 有未提交的更改（共 {uncommittedFileCount} 个文件）。这些更改将被永久删除。</>
+                    : <>此 Worktree 有 {uncommittedFileCount} 个文件未提交更改。这些更改将被永久删除。</>
                   }
                 </p>
               </div>
@@ -105,15 +105,14 @@ export function ArchiveWorktreeDialog({
               <MaterialSymbol icon="warning" size={20} className="text-[var(--nim-warning)] shrink-0 mt-0.5" />
               <div>
                 <p className="m-0 text-sm font-medium text-[var(--nim-warning)]">
-                  Unmerged commits will be lost
+                  未合并的提交将丢失
                 </p>
                 <p className="m-0 mt-1 text-[0.8125rem] text-[var(--nim-text-muted)]">
                   {isBulk
-                    ? <>{unmergedWorktreeCount} {unmergedWorktreeCount === 1 ? 'worktree has' : 'worktrees have'} unmerged commits{(unmergedCommitCount ?? 0) > 0 ? ` (${unmergedCommitCount} ${unmergedCommitCount === 1 ? 'commit' : 'commits'} total)` : ''}.</>
+                    ? <>{unmergedWorktreeCount} 个 Worktree 有未合并的提交{(unmergedCommitCount ?? 0) > 0 ? `（共 ${unmergedCommitCount} 个提交）` : ''}。</>
                     : (unmergedCommitCount ?? 0) > 0
-                      ? <>This branch has {unmergedCommitCount === 1 ? '1 commit' : `${unmergedCommitCount} commits`} that
-                        {unmergedCommitCount === 1 ? " hasn't" : " haven't"} been merged to the base branch.</>
-                      : <>This branch hasn&apos;t been merged to the base branch.</>
+                      ? <>此分支有 {unmergedCommitCount} 个提交尚未合并到基础分支。</>
+                      : <>此分支尚未合并到基础分支。</>
                   }
                 </p>
               </div>
@@ -122,8 +121,8 @@ export function ArchiveWorktreeDialog({
 
           <p className="archive-worktree-dialog-info m-0 text-[0.8125rem] text-[var(--nim-text-faint)]">
             {isBulk
-              ? 'Archiving will remove all worktrees from disk and mark their associated sessions as archived.'
-              : 'Archiving will remove the worktree from disk and mark all associated sessions as archived.'
+              ? '归档将从磁盘移除所有 Worktree，并将其关联会话标记为已归档。'
+              : '归档将从磁盘移除该 Worktree，并将所有关联会话标记为已归档。'
             }
           </p>
         </div>
@@ -134,7 +133,7 @@ export function ArchiveWorktreeDialog({
             className="nim-btn-secondary"
             onClick={onKeep}
           >
-            {isBulk ? 'Cancel' : 'Keep Worktree'}
+            {isBulk ? '取消' : '保留 Worktree'}
           </button>
           <button
             type="button"
@@ -142,7 +141,7 @@ export function ArchiveWorktreeDialog({
             onClick={onArchive}
           >
             <MaterialSymbol icon="archive" size={16} />
-            <span>{isBulk ? 'Archive All' : 'Archive'}</span>
+            <span>{isBulk ? '全部归档' : '归档'}</span>
           </button>
         </div>
       </div>

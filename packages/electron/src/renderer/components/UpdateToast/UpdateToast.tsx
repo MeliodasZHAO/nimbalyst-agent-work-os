@@ -129,7 +129,7 @@ export function UpdateToast(): React.ReactElement | null {
               data-testid="update-checking-toast"
             >
               <div className="update-toast-spinner w-5 h-5 border-2 border-[var(--nim-bg-tertiary)] border-t-[var(--nim-primary)] rounded-full animate-spin shrink-0" />
-              <div className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-0 pr-0">Checking for updates...</div>
+              <div className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-0 pr-0">正在检查更新...</div>
             </div>
           )}
 
@@ -154,8 +154,8 @@ export function UpdateToast(): React.ReactElement | null {
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </div>
-              <div className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-1 pr-7">You're up to date!</div>
-              <div className="update-toast-subtitle text-xs text-[var(--nim-text-muted)] leading-normal mb-0">Nimbalyst {currentVersion} is the latest version.</div>
+              <div className="update-toast-title text-sm font-semibold text-[var(--nim-text)] mb-1 pr-7">已是最新版本</div>
+              <div className="update-toast-subtitle text-xs text-[var(--nim-text-muted)] leading-normal mb-0">Nimbalyst {currentVersion} 已是最新版本。</div>
             </div>
           )}
 
@@ -204,16 +204,15 @@ export function UpdateToast(): React.ReactElement | null {
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
-              <div className="update-toast-title text-sm font-semibold text-[var(--nim-error)] mb-1 pr-7">Update Error</div>
+              <div className="update-toast-title text-sm font-semibold text-[var(--nim-error)] mb-1 pr-7">更新出错</div>
               <div className="update-toast-subtitle text-xs text-[var(--nim-text-muted)] leading-normal mb-1" data-testid="error-message">{errorMessage}</div>
               <div className="text-xs text-[var(--nim-text-muted)] leading-normal mb-4">
-                You can <a
-                  href="https://nimbalyst.com/download"
+                您可以<a                  href="https://nimbalyst.com/download"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[var(--nim-primary)] hover:underline cursor-pointer"
                   data-testid="manual-download-link"
-                >download the latest version manually</a>.
+                >手动下载最新版本</a>。
               </div>
               <div className="update-toast-actions flex gap-2 flex-wrap">
                 <button
@@ -221,7 +220,7 @@ export function UpdateToast(): React.ReactElement | null {
                   onClick={handleDismiss}
                   data-testid="error-dismiss-btn"
                 >
-                  Dismiss
+                  关闭
                 </button>
               </div>
             </div>

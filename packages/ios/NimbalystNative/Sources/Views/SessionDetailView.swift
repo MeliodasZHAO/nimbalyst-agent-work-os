@@ -1002,7 +1002,7 @@ public struct SessionDetailView: View {
             relativePath = String(filePath.dropFirst(projectId.count + 1))
         } else {
             logger.warning("handleOpenFile: path doesn't match project. filePath=\(filePath), projectId=\(projectId)")
-            withAnimation { fileNotAvailableToast = "This file is on your Mac and not available on this device" }
+            withAnimation { fileNotAvailableToast = "This file is on your desktop and not available on this device" }
             return
         }
 

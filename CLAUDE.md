@@ -197,7 +197,18 @@ Whenever an architectural change is proposed, create an Excalidraw diagram in `n
 
 ## Verifying Development Mode
 
-Before making code changes, use `mcp__nimbalyst-extension-dev__get_environment_info` to verify Nimbalyst is running in dev mode. If the user is running a packaged build, code changes won't take effect — tell them to start the dev server.
+The user runs the **packaged build** (desktop shortcut → `packages/electron/release/win-unpacked/Nimbalyst.exe`), NOT the dev server. Code changes do not take effect until the app is rebuilt.
+
+**After every code change that the user needs to test**, end your message with this rebuild block:
+
+```
+---
+代码已改完。要看到效果，请在项目根目录运行：
+npm run agent-work-os:desktop:win-dir
+构建完成后重启 Nimbalyst 即可。
+```
+
+The rebuild command is `npm run agent-work-os:desktop:win-dir` (builds portable Windows app to `packages/electron/release/win-unpacked/`). The user's desktop shortcut already points to that exe,所以构建完重启就行。
 
 ## Debugging with Log Access Tools
 

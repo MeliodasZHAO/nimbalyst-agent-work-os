@@ -30,6 +30,7 @@ import { createPortal } from 'react-dom';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { usePostHog } from 'posthog-js/react';
 import { MaterialSymbol, ProviderIcon } from '@nimbalyst/runtime';
+import { DispatchMergeDialog } from '../AgenticCoding/DispatchMergeDialog';
 import { RichTranscriptView } from '@nimbalyst/runtime/ui/AgentTranscript/components/RichTranscriptView';
 import type { SessionMeta } from '@nimbalyst/runtime';
 import type { TranscriptViewMessage } from '@nimbalyst/runtime/ai/server/types';
@@ -42,6 +43,8 @@ import {
   childRunStatesAtom,
   getCardType,
   SESSION_PHASE_COLUMNS,
+  dispatchSessionsAtom,
+  dispatchChildCountAtom,
   type SessionPhase,
   type SessionPhaseKey,
   type KanbanCardType,
@@ -433,7 +436,7 @@ interface SessionKanbanCardProps {
   onPeekToggle?: () => void;
 }
 
-function SessionKanbanCard({ session, onSelect, onArchive, onRename, phaseColor, isFocused, isSelected, selectedCount = 1, showPeekOverride, onPeekToggle }: SessionKanbanCardProps) {
+const SessionKanbanCard = React.memo(function SessionKanbanCard({ session, onSelect, onArchive, onRename, phaseColor, isFocused, isSelected, selectedCount = 1, showPeekOverride, onPeekToggle }: SessionKanbanCardProps) {
   const cardType = useMemo(() => getCardType(session), [session]);
   const cardState = useCardState(session.id, cardType);
   const stateStyle = CARD_STATE_STYLES[cardState.state];
@@ -679,7 +682,7 @@ function SessionKanbanCard({ session, onSelect, onArchive, onRename, phaseColor,
       )}
     </>
   );
-}
+});
 
 // ============================================================
 // SessionKanbanColumn
@@ -826,7 +829,7 @@ function SessionKanbanColumn({ phase, label, color, sessions, onSelect, onArchiv
       >
         {sessions.length === 0 ? (
           <div className="flex items-center justify-center py-6 text-nim-disabled text-[11px] italic">
-            No sessions
+            暂无会话
           </div>
         ) : (
           sessions.map(session => (
@@ -1024,6 +1027,30 @@ function UnphasedColumn({ sessions, onSelect, onArchive, onRename, onDropToPhase
 }
 
 // ============================================================
+// DispatchDropdownItem - single entry in the dispatch filter dropdown
+// ============================================================
+
+const DispatchDropdownItem = React.memo(function DispatchDropdownItem({
+  dispatch,
+  onSelect,
+}: {
+  dispatch: SessionMeta;
+  onSelect: () => void;
+}) {
+  const childCount = useAtomValue(dispatchChildCountAtom(dispatch.id));
+  return (
+    <button
+      className="w-full text-left px-2.5 py-1.5 text-[11px] flex items-center gap-2 cursor-pointer transition-colors text-nim-muted hover:bg-nim-tertiary hover:text-nim"
+      onClick={onSelect}
+    >
+      <MaterialSymbol icon="fork_right" size={14} className="text-purple-400 shrink-0" />
+      <span className="flex-1 truncate">{dispatch.title}</span>
+      <span className="text-nim-faint text-[10px] shrink-0">{childCount} tasks</span>
+    </button>
+  );
+});
+
+// ============================================================
 // SessionKanbanToolbar
 // ============================================================
 
@@ -1033,7 +1060,9 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
   const setFilter = useSetAtom(sessionKanbanFilterAtom);
   const totalCount = useAtomValue(sessionKanbanTotalCountAtom);
   const allTags = useAtomValue(sessionKanbanTagsAtom);
+  const dispatches = useAtomValue(dispatchSessionsAtom);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [showDispatchDropdown, setShowDispatchDropdown] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -1132,6 +1161,13 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showTagDropdown]);
 
+  React.useEffect(() => {
+    if (!showDispatchDropdown) return;
+    const handleClick = () => setShowDispatchDropdown(false);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showDispatchDropdown]);
+
   // Compute display value: search text + any in-progress tag query
   const inputValue = showTagDropdown
     ? (filter.search ? filter.search + ' ' : '') + '#' + tagQuery
@@ -1195,6 +1231,45 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
         )}
       </div>
 
+      {/* Dispatch filter dropdown */}
+      {dispatches.length > 0 && (
+        <div className="relative shrink-0">
+          {filter.dispatchId ? (
+            <button
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border cursor-pointer bg-purple-400/[0.12] border-purple-400/30 text-purple-400"
+              onClick={() => setFilter({ ...filter, dispatchId: null })}
+            >
+              <MaterialSymbol icon="fork_right" size={12} />
+              {dispatches.find(d => d.id === filter.dispatchId)?.title || 'Dispatch'}
+              <MaterialSymbol icon="close" size={12} />
+            </button>
+          ) : (
+            <button
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] border border-nim text-nim-faint hover:text-nim cursor-pointer"
+              onClick={() => setShowDispatchDropdown(!showDispatchDropdown)}
+            >
+              <MaterialSymbol icon="fork_right" size={12} />
+              Dispatch
+              <MaterialSymbol icon="expand_more" size={12} />
+            </button>
+          )}
+          {showDispatchDropdown && !filter.dispatchId && (
+            <div className="absolute left-0 top-full mt-1 bg-nim-secondary border border-nim rounded shadow-lg z-50 min-w-[220px] max-h-[240px] overflow-y-auto">
+              {dispatches.map(d => (
+                <DispatchDropdownItem
+                  key={d.id}
+                  dispatch={d}
+                  onSelect={() => {
+                    setFilter({ ...filter, dispatchId: d.id });
+                    setShowDispatchDropdown(false);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Active tag filter chips */}
       {filter.tags.map(tag => (
         <button
@@ -1223,7 +1298,7 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
 
       {/* Count */}
       <span className="text-[11px] text-nim-faint shrink-0">
-        {totalCount} session{totalCount !== 1 ? 's' : ''}
+        {totalCount} 个会话
       </span>
 
       {/* Show completed toggle */}
@@ -1237,7 +1312,7 @@ function SessionKanbanToolbar({ selectedCount, onClearSelection }: { selectedCou
         data-testid="kanban-toggle-complete"
       >
         <MaterialSymbol icon="visibility" size={13} />
-        Complete
+        已完成
       </button>
     </div>
   );
@@ -1285,7 +1360,7 @@ function ColumnHeaderContextMenu({ phase, sessionIds, position, onClose, onSelec
           onMouseLeave={onClose}
         >
           <div className="px-2.5 py-2 text-[0.8125rem] text-[var(--nim-text-faint)] italic">
-            No sessions in column
+            暂无会话 in column
           </div>
         </div>
       </FloatingPortal>
@@ -1450,7 +1525,12 @@ interface SessionKanbanBoardProps {
 export const SessionKanbanBoard: React.FC<SessionKanbanBoardProps> = ({ onSessionSelect, onSessionOpen }) => {
   const posthog = usePostHog();
   const grouped = useAtomValue(sessionsByPhaseAtom);
+  const filter = useAtomValue(sessionKanbanFilterAtom);
+  const totalCount = useAtomValue(sessionKanbanTotalCountAtom);
   const setPhase = useSetAtom(setSessionPhaseAtom);
+
+  // Merge dialog state
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
   const updateSessionStore = useSetAtom(updateSessionStoreAtom);
   const registry = useAtomValue(sessionRegistryAtom);
   const removeSession = useSetAtom(removeSessionFullAtom);
@@ -1994,7 +2074,7 @@ export const SessionKanbanBoard: React.FC<SessionKanbanBoardProps> = ({ onSessio
         <div className="flex-1 flex items-center justify-center text-nim-muted" data-testid="kanban-empty-state">
           <div className="text-center max-w-[300px]">
             <MaterialSymbol icon="view_kanban" size={48} className="opacity-30" />
-            <p className="mt-2 text-sm">No sessions on the board</p>
+            <p className="mt-2 text-sm">看板上暂无会话</p>
             <p className="mt-1 text-xs text-nim-faint">
               Sessions appear here when an AI agent sets a phase, or you can drag sessions from the history sidebar.
             </p>
@@ -2056,6 +2136,40 @@ export const SessionKanbanBoard: React.FC<SessionKanbanBoardProps> = ({ onSessio
           onArchiveAll={handleArchive}
           onMoveAll={handleMoveAllToPhase}
           onRemovePhase={handleRemovePhase}
+        />
+      )}
+
+      {/* Dispatch merge action bar */}
+      {filter.dispatchId && selectedIds.size > 0 && (
+        <div className="dispatch-merge-bar flex items-center gap-3 px-4 py-2 border-t border-nim bg-nim shrink-0">
+          <span className="text-[11px] text-nim-muted">
+            {selectedIds.size} of {totalCount} tasks selected
+          </span>
+          <div className="flex-1" />
+          <button
+            className="flex items-center gap-1 px-3 py-1 rounded text-[11px] font-medium border border-purple-400/40 text-purple-400 bg-purple-400/[0.08] hover:bg-purple-400/[0.15] cursor-pointer transition-colors"
+            onClick={() => setShowMergeDialog(true)}
+          >
+            <MaterialSymbol icon="merge" size={14} />
+            Merge to Branch...
+          </button>
+        </div>
+      )}
+
+      {/* Dispatch merge dialog */}
+      {showMergeDialog && filter.dispatchId && workspacePath && (
+        <DispatchMergeDialog
+          dispatchId={filter.dispatchId}
+          tasks={Array.from(selectedIds).map(sid => {
+            const meta = registry.get(sid);
+            return {
+              sessionId: sid,
+              title: meta?.title || 'Untitled',
+              worktreeId: meta?.worktreeId || '',
+            };
+          }).filter(t => t.worktreeId)}
+          workspacePath={workspacePath}
+          onClose={() => setShowMergeDialog(false)}
         />
       )}
 

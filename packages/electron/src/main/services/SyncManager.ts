@@ -15,8 +15,9 @@
 
 import type { SessionStore } from '@nimbalyst/runtime';
 import type { DeviceInfo } from '@nimbalyst/runtime/sync';
+import type { AgentWorkOSConfig } from '@nimbalyst/runtime/agent-work-os';
 import * as syncModule from '@nimbalyst/runtime/sync';
-import { getSessionSyncConfig, setSessionSyncConfig, getReleaseChannel, getDefaultAIModel, store, type SessionSyncConfig } from '../utils/store';
+import { getSessionSyncConfig, setSessionSyncConfig, getReleaseChannel, getDefaultAIModel, store, getAppSetting, getWorkspaceState, type SessionSyncConfig } from '../utils/store';
 import { logger } from '../utils/logger';
 import { getCredentials } from './CredentialService';
 import { getStytchUserId, isAuthenticated, getPersonalOrgId, getPersonalUserId, resolvePersonalUserId, getPersonalSessionJwt, refreshPersonalSession } from './StytchAuthService';
@@ -32,6 +33,7 @@ import { setSleepPreventionMode, setSyncConnected, shutdownSleepPrevention, type
 import { reconnectAllTrackerSyncs } from './TrackerSyncManager';
 import { BrowserWindow } from 'electron';
 import { timeStartupPhase } from '../utils/startupTiming';
+import { getAgentWorkflowService } from './AgentWorkflowService';
 
 function loadSyncModule() {
   return syncModule;
@@ -1208,6 +1210,14 @@ async function getAvailableModelsForMobile(): Promise<{ models: Array<{ id: stri
   }
 }
 
+function getAgentWorkOSConfigForMobile(): AgentWorkOSConfig | undefined {
+  return getAppSetting<AgentWorkOSConfig>('agentWorkOSConfig');
+}
+
+function getProjectAgentWorkOSConfigForMobile(workspacePath: string): AgentWorkOSConfig | undefined {
+  return getWorkspaceState(workspacePath).agentWorkOSConfig;
+}
+
 /**
  * Sync sensitive settings to mobile devices.
  * Syncs the OpenAI API key, voice mode settings, and available AI models.
@@ -1234,6 +1244,7 @@ export async function syncSettingsToMobile(openaiApiKey?: string): Promise<void>
 
   // Get available AI models for the mobile model picker
   const { models: availableModels, defaultModel } = await getAvailableModelsForMobile();
+  const agentWorkOSConfig = getAgentWorkOSConfigForMobile();
 
   // logger.main.info(`[SyncManager] Syncing settings to mobile devices (version ${settingsVersion}, ${availableModels.length} models)`);
 
@@ -1244,6 +1255,7 @@ export async function syncSettingsToMobile(openaiApiKey?: string): Promise<void>
         voice: voiceModeSettings.voice as 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage' | 'shimmer' | 'verse' | 'marin' | 'cedar' | undefined,
         submitDelayMs: voiceModeSettings.submitDelayMs,
       } : undefined,
+      agentWorkOSConfig,
       availableModels,
       defaultModel,
       version: settingsVersion,
@@ -1258,6 +1270,34 @@ export async function syncSettingsToMobile(openaiApiKey?: string): Promise<void>
 // Project Config Sync (commands, etc.)
 // ============================================================================
 
+type ProjectCommandForMobile = {
+  name: string;
+  description?: string;
+  source: string;
+};
+
+async function getGitRemoteHashForMobile(workspacePath: string): Promise<string | undefined> {
+  const gitRemote = await getNormalizedGitRemote(workspacePath);
+  return gitRemote ? createHash('sha256').update(gitRemote).digest('hex') : undefined;
+}
+
+function normalizeCommandsForMobile(commands: ProjectCommandForMobile[]) {
+  return commands.map(cmd => ({
+    name: cmd.name,
+    description: cmd.description,
+    source: cmd.source as 'builtin' | 'project' | 'user' | 'plugin',
+  }));
+}
+
+async function getCurrentProjectCommandsForMobile(workspacePath: string): Promise<ProjectCommandForMobile[]> {
+  try {
+    return await getAgentWorkflowService(workspacePath).listEntries();
+  } catch (error) {
+    logger.main.warn('[SyncManager] Failed to load project commands while syncing project Agent Work OS config:', error);
+    return [];
+  }
+}
+
 /**
  * Sync slash commands for a workspace to mobile via the index room.
  * Called after commands are discovered/updated.
@@ -1266,7 +1306,7 @@ export async function syncSettingsToMobile(openaiApiKey?: string): Promise<void>
  */
 export async function syncProjectCommandsToMobile(
   workspacePath: string,
-  commands: Array<{ name: string; description?: string; source: string }>
+  commands: ProjectCommandForMobile[]
 ): Promise<void> {
   const provider = state.provider;
   if (!provider) {
@@ -1278,24 +1318,53 @@ export async function syncProjectCommandsToMobile(
   }
 
   try {
-    // Compute gitRemoteHash from the workspace's git remote URL
-    let gitRemoteHash: string | undefined;
-    const gitRemote = await getNormalizedGitRemote(workspacePath);
-    if (gitRemote) {
-      gitRemoteHash = createHash('sha256').update(gitRemote).digest('hex');
-    }
+    const gitRemoteHash = await getGitRemoteHashForMobile(workspacePath);
+    const agentWorkOSConfig = getProjectAgentWorkOSConfigForMobile(workspacePath);
 
     await provider.syncProjectConfig(workspacePath, {
-      commands: commands.map(cmd => ({
-        name: cmd.name,
-        description: cmd.description,
-        source: cmd.source as 'builtin' | 'project' | 'user' | 'plugin',
-      })),
+      commands: normalizeCommandsForMobile(commands),
       lastCommandsUpdate: Date.now(),
+      agentWorkOSConfig,
       gitRemoteHash,
     });
   } catch (error) {
     logger.main.error('[SyncManager] Failed to sync project commands:', error);
+  }
+}
+
+/**
+ * Sync project-level Agent Work OS settings to mobile via the encrypted project config.
+ * Includes the current command manifest so project settings updates do not wipe commands.
+ */
+export async function syncProjectAgentWorkOSConfigToMobile(workspacePath: string): Promise<void> {
+  const provider = state.provider;
+  if (!provider) {
+    return;
+  }
+
+  if (!provider.syncProjectConfig) {
+    return;
+  }
+
+  try {
+    const [commands, gitRemoteHash] = await Promise.all([
+      getCurrentProjectCommandsForMobile(workspacePath),
+      getGitRemoteHashForMobile(workspacePath),
+    ]);
+    const agentWorkOSConfig = getProjectAgentWorkOSConfigForMobile(workspacePath);
+
+    if (!agentWorkOSConfig) {
+      return;
+    }
+
+    await provider.syncProjectConfig(workspacePath, {
+      commands: normalizeCommandsForMobile(commands),
+      lastCommandsUpdate: Date.now(),
+      agentWorkOSConfig,
+      gitRemoteHash,
+    });
+  } catch (error) {
+    logger.main.error('[SyncManager] Failed to sync project Agent Work OS config:', error);
   }
 }
 

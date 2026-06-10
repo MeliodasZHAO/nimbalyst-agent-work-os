@@ -2308,22 +2308,7 @@ export class MessageStreamingHandler {
                 FeatureUsageService.getInstance().recordUsage(FEATURES.SESSION_COMPLETED_WITH_TOOLS);
               }
 
-              // Show community popup after 3 completed sessions that used tools.
-              if (!hadError && toolCallCount > 0) {
-                const count = incrementCompletedSessionsWithTools();
-                if (count === 3 && shouldShowCommunityPopup() && !wasCommunityPopupShownThisLaunch()) {
-                  const senderWindow = BrowserWindow.fromWebContents(event.sender);
-                  if (senderWindow && !senderWindow.isDestroyed()) {
-                    setTimeout(() => {
-                      if (senderWindow.isDestroyed() || wasCommunityPopupShownThisLaunch()) {
-                        return;
-                      }
-                      senderWindow.webContents.send('show-discord-invitation');
-                      markCommunityPopupShown();
-                    }, 2000);
-                  }
-                }
-              }
+              // Community popup disabled for this fork
 
               // AUTO-FETCH CONTEXT USAGE: Previously used /context command to get token usage.
               // Now context window data comes from modelUsage in the result chunk (set above),

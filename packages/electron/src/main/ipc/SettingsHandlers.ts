@@ -23,6 +23,7 @@ import {
     getDeveloperFeatures, setDeveloperFeatures, isDeveloperFeatureAvailable,
     isShowTrayIcon,
     setPreferredAgentLanguage,
+    getAppLanguage, setAppLanguage,
     getMultiProjectMode, setMultiProjectMode,
     getOpenProjectPaths, setOpenProjectPaths,
     getActiveProjectPath, setActiveProjectPath,
@@ -43,7 +44,7 @@ import { SoundNotificationService } from '../services/SoundNotificationService';
 import { autoUpdaterService } from '../services/autoUpdater';
 import type { OnboardingState } from '../utils/store';
 import { getCredentials, resetCredentials, generateQRPairingPayload, isUsingSecureStorage } from '../services/CredentialService';
-import { onSyncStatusChange, updateSleepPrevention } from '../services/SyncManager';
+import { onSyncStatusChange, syncProjectAgentWorkOSConfigToMobile, syncSettingsToMobile, updateSleepPrevention } from '../services/SyncManager';
 import * as StytchAuth from '../services/StytchAuthService';
 import { getRestartSignalPath } from '../utils/appPaths';
 import { TrayManager } from '../tray/TrayManager';
@@ -102,6 +103,19 @@ export function registerSettingsHandlers() {
 
     safeHandle('app-settings:set', (_event, key: string, value: unknown) => {
         setAppSetting(key, value);
+        if (key === 'agentWorkOSConfig') {
+            syncSettingsToMobile().catch(error => {
+                logger.store.warn('[app-settings:set] Failed to sync Agent Work OS settings to mobile:', error);
+            });
+        }
+    });
+
+    safeHandle('agent-work-os:sync-project-config', async (_event, workspacePath: string) => {
+        if (!workspacePath) {
+            throw new Error('workspacePath is required for agent-work-os:sync-project-config');
+        }
+        await syncProjectAgentWorkOSConfigToMobile(workspacePath);
+        return { success: true };
     });
 
     // Spellcheck toggle - controls Chromium's built-in spellchecker for all windows
@@ -1169,6 +1183,18 @@ export function registerSettingsHandlers() {
     safeHandle('tray:set-visible', (_event, visible: boolean) => {
         TrayManager.getInstance().setVisible(visible);
         logger.store.info(`[SettingsHandlers] Tray icon ${visible ? 'shown' : 'hidden'}`);
+    });
+
+    // ============================================================
+    // App Language Settings
+    // ============================================================
+
+    safeHandle('app-language:get', () => {
+        return getAppLanguage();
+    });
+
+    safeHandle('app-language:set', (_event, language: string) => {
+        setAppLanguage(language);
     });
 
     // ============================================================

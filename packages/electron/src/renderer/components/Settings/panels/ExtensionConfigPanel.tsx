@@ -91,7 +91,7 @@ export const ExtensionConfigPanel: React.FC<ExtensionConfigPanelProps> = ({
   if (!config || Object.keys(properties).length === 0) {
     return (
       <div className="extension-config-empty py-8 text-center text-[var(--nim-text-muted)]">
-        <p>This extension has no configurable settings.</p>
+        <p>此扩展没有可配置的设置。</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export const ExtensionConfigPanel: React.FC<ExtensionConfigPanelProps> = ({
   if (loading) {
     return (
       <div className="extension-config-loading py-8 text-center text-[var(--nim-text-muted)]">
-        <p>Loading configuration...</p>
+        <p>正在加载配置...</p>
       </div>
     );
   }
@@ -234,7 +234,7 @@ const ConfigField: React.FC<ConfigFieldProps> = ({
         <div className="config-field config-field-unsupported py-2 flex flex-col gap-1">
           <span className="config-field-label text-sm font-medium text-[var(--nim-text)]">{description || propertyKey}</span>
           <span className="config-field-value text-sm text-[var(--nim-text-muted)] font-mono">{JSON.stringify(value)}</span>
-          <span className="config-field-hint text-xs text-[var(--nim-text-faint)]">Type "{type}" not supported in UI</span>
+          <span className="config-field-hint text-xs text-[var(--nim-text-faint)]">类型 "{type}" 不支持 UI 配置</span>
         </div>
       );
   }

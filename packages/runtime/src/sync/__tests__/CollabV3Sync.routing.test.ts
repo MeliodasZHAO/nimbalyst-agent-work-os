@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { isIndexClientMetadataOnlyUpdateForTest } from '../CollabV3Sync';
+import {
+  isIndexClientMetadataOnlyUpdateForTest,
+  shouldIncludeEncryptedProjectConfig,
+} from '../CollabV3Sync';
 import type { SyncedSessionMetadata } from '../types';
+import { DEFAULT_AGENT_WORK_OS_CONFIG } from '../../agent-work-os/config';
 
 // Routing predicate guards against the v0.63.0 regression where metadata-only
 // updates were silently re-routed to a wire message (`indexClientMetadataPatch`)
@@ -94,5 +98,42 @@ describe('isIndexClientMetadataOnlyUpdate routing predicate', () => {
     it('refuses the patch path when given an empty update', () => {
       expect(isIndexClientMetadataOnlyUpdateForTest(m({}))).toBe(false);
     });
+  });
+});
+
+describe('project config encryption predicate', () => {
+  it('skips encrypted config for git-remote-only project updates', () => {
+    expect(
+      shouldIncludeEncryptedProjectConfig({
+        commands: [],
+        lastCommandsUpdate: 123,
+        gitRemoteHash: 'hash',
+      }),
+    ).toBe(false);
+  });
+
+  it('includes encrypted config when commands are present', () => {
+    expect(
+      shouldIncludeEncryptedProjectConfig({
+        commands: [{ name: 'design', source: 'project' }],
+        lastCommandsUpdate: 123,
+      }),
+    ).toBe(true);
+  });
+
+  it('includes encrypted config for project Agent Work OS overrides without commands', () => {
+    expect(
+      shouldIncludeEncryptedProjectConfig({
+        commands: [],
+        lastCommandsUpdate: 123,
+        agentWorkOSConfig: {
+          ...DEFAULT_AGENT_WORK_OS_CONFIG,
+          mobilePermissions: {
+            ...DEFAULT_AGENT_WORK_OS_CONFIG.mobilePermissions,
+            mode: 'flexible',
+          },
+        },
+      }),
+    ).toBe(true);
   });
 });

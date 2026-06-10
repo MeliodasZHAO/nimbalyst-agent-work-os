@@ -294,7 +294,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(({
         style={{ width: onWidthChange ? width : undefined }}
         data-session-id={sessionId}
       >
-        <p>Failed to load chat session</p>
+        <p>加载聊天会话失败</p>
       </div>
     );
   }
@@ -330,7 +330,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(({
             <button
               className="chat-sidebar-maximize-button flex items-center justify-center w-7 h-7 rounded-md text-nim-muted border-none cursor-pointer transition-colors duration-150 hover:bg-nim-bg-active hover:text-nim bg-transparent"
               onClick={() => onSwitchToAgentMode(sessionId ?? undefined)}
-              title="Open in agent mode"
+              title="在智能体模式中打开"
             >
               <MaterialSymbol icon="zoom_out_map" size={16} />
             </button>
@@ -338,10 +338,10 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(({
           <button
             className="chat-sidebar-new-button flex items-center gap-1 px-3 py-1.5 rounded-md text-[0.8125rem] font-medium bg-nim-primary text-nim-on-primary border-none cursor-pointer transition-opacity duration-150 hover:opacity-90"
             onClick={handleNewSession}
-            title="Start new conversation"
+            title="开始新对话"
           >
             <MaterialSymbol icon="add" size={16} />
-            New
+            新对话
           </button>
         </div>
       </div>

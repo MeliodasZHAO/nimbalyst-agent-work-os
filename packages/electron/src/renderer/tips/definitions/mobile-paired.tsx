@@ -27,10 +27,10 @@ export const mobilePairedTip: TipDefinition = {
   },
   content: {
     icon: PhoneIcon,
-    title: 'Drive sessions from your phone',
-    body: 'Pair the iOS app and prompt your Mac\'s agents from anywhere. The desktop runs the heavy work; you steer it from the couch or the road.',
+    title: '用手机远程控制会话',
+    body: '配对 iOS 应用后，随时随地向 Mac 上的 Agent 发送指令。桌面端负责跑计算，你在沙发上或路上遥控就行。',
     action: {
-      label: 'Open Sync Settings',
+      label: '打开同步设置',
       onClick: () => {
         store.set(openSettingsCommandAtom, { category: 'sync', timestamp: Date.now() });
       },

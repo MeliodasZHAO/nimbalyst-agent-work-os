@@ -115,6 +115,7 @@ import { initThemeFallbackListener } from './store/listeners/themeFallbackListen
 import { initTrackerSyncListeners } from './store/listeners/trackerSyncListeners';
 import { initWorktreeListeners } from './store/listeners/worktreeListeners';
 import { initBlitzListeners } from './store/listeners/blitzListeners';
+import { initDispatchListeners } from './store/listeners/dispatchListeners';
 import { initUpdateListeners } from './store/listeners/updateListeners';
 import { initWalkthroughListeners } from './store/listeners/walkthroughListeners';
 import { initWakeupListeners } from './store/listeners/wakeupListener';
@@ -122,6 +123,8 @@ import { TrackerMode } from './components/TrackerMode';
 import { CollabMode, type CollabModeRef } from './components/CollabMode';
 import { TerminalBottomPanel } from './components/TerminalBottomPanel';
 import { ProjectRail } from './components/ProjectRail';
+import { ProjectTabBar } from './components/ProjectTabBar';
+import { WindowTitleBar } from './components/WindowTitleBar';
 import {
   activeWorkspacePathAtom,
   multiProjectModeAtom,
@@ -306,6 +309,7 @@ export default function App() {
     const cleanupTrackerSync = initTrackerSyncListeners();
     const cleanupWorktree = initWorktreeListeners();
     const cleanupBlitz = initBlitzListeners();
+    const cleanupDispatch = initDispatchListeners();
     const cleanupUpdate = initUpdateListeners();
     const cleanupWalkthrough = initWalkthroughListeners();
     const cleanupWakeup = initWakeupListeners();
@@ -330,6 +334,7 @@ export default function App() {
       cleanupTrackerSync?.();
       cleanupWorktree?.();
       cleanupBlitz?.();
+      cleanupDispatch?.();
       cleanupUpdate?.();
       cleanupWalkthrough?.();
       cleanupWakeup?.();
@@ -385,7 +390,7 @@ export default function App() {
     // Set window title for Workspace Manager
     React.useEffect(() => {
       if (window.electronAPI) {
-        window.electronAPI.setTitle('Project Manager - Nimbalyst');
+        window.electronAPI.setTitle('Nimbalyst 工作台');
       }
     }, []);
     return <WorkspaceManager />;
@@ -1266,20 +1271,9 @@ export default function App() {
     };
   }, []);
 
-  // React to "show Discord invitation" command. The IPC subscription lives
-  // in store/listeners/appCommandListeners.ts.
+  // Discord invitation popup disabled — not relevant for this fork
   const showDiscordInvitationVersion = useAtomValue(showDiscordInvitationRequestAtom);
   const showDiscordInvitationInitialRef = useRef(showDiscordInvitationVersion);
-  useEffect(() => {
-    if (showDiscordInvitationVersion === showDiscordInvitationInitialRef.current) return;
-    console.log('[App] Received show-discord-invitation event');
-    if (!dialogRef.current) return;
-    dialogRef.current.open(DIALOG_IDS.DISCORD_INVITATION, {
-      onDismiss: () => {
-        // No additional action needed - dialog will close automatically
-      }
-    });
-  }, [showDiscordInvitationVersion]);
 
   // NOTE: Windows Claude Code warning and onboarding IPC listeners moved to useOnboarding hook
   // NOTE: show-commands-toast IPC listener removed - commands now via extension-based plugins
@@ -2005,10 +1999,11 @@ export default function App() {
     />
     <WalkthroughProvider currentMode={activeMode}>
     <TipProvider currentMode={activeMode} workspacePath={workspacePath || undefined}>
-    <div data-layout="root-container" className="h-screen flex flex-row">
-      {/* Far-left: project rail (Discord-style) — visible only when
-          multi-project mode is enabled in settings. */}
-      <ProjectRail />
+    <div data-layout="app-shell" className="h-screen flex flex-col">
+    {/* ProjectTabBar includes window controls when visible; otherwise fall back to standalone WindowTitleBar */}
+    {!isMultiProjectMode && <WindowTitleBar />}
+    <ProjectTabBar />
+    <div data-layout="root-container" className="flex-1 flex flex-row overflow-hidden">
       {/* Left: Navigation Gutter - full height */}
       <NavigationGutter
         contentMode={activeMode}
@@ -2335,6 +2330,7 @@ export default function App() {
         onDismiss={() => setForceShowTrustToast(false)}
       />
       {/* FeedbackIntakeDialog is now managed by DialogProvider */}
+    </div>
     </div>
     </TipProvider>
     </WalkthroughProvider>

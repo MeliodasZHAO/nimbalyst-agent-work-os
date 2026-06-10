@@ -429,8 +429,8 @@ export function MetaAgentMode({
         <div className="px-4 py-4 border-b border-nim">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-[var(--nim-text)]">Delegated Sessions</h2>
-              <p className="text-xs text-[var(--nim-text-muted)]">Child sessions created by this meta-agent.</p>
+              <h2 className="text-sm font-semibold text-[var(--nim-text)]">委托的会话</h2>
+              <p className="text-xs text-[var(--nim-text-muted)]">由此元智能体创建的子会话。</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -475,10 +475,10 @@ export function MetaAgentMode({
 
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {loadingChildren && childSessions.length === 0 ? (
-            <div className="text-sm text-[var(--nim-text-muted)] px-2 py-4">Loading child sessions...</div>
+            <div className="text-sm text-[var(--nim-text-muted)] px-2 py-4">正在加载子会话...</div>
           ) : childSessions.length === 0 ? (
             <div className="border border-dashed border-nim rounded-lg p-4 text-sm text-[var(--nim-text-muted)]" data-testid="meta-agent-empty-state">
-              No delegated sessions yet. The meta-agent will populate this dashboard as it spawns child sessions.
+              暂无委托的会话。元智能体在创建子会话后将自动显示在这里。
             </div>
           ) : (
             childSessions.map((session) => (
@@ -575,7 +575,7 @@ export function MetaAgentMode({
           <div className="flex-1 overflow-auto px-5 py-4">
             {timeline.windows.length === 0 ? (
               <div className="rounded-lg border border-dashed border-nim px-4 py-6 text-sm text-[var(--nim-text-muted)]">
-                No delegated sessions yet.
+                暂无委托的会话。
               </div>
             ) : (
               <div className="min-w-[720px]">

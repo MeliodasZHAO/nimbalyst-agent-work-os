@@ -27,7 +27,7 @@ export const mockupDiscoverTip: TipDefinition = {
   },
   content: {
     icon: MockupIcon,
-    title: 'Plan UI in a .mockup.html file',
-    body: 'Files ending in **.mockup.html** render as live, annotatable wireframes alongside source. Ask the agent to "create a mockup for X" to get a starting point you can edit visually.',
+    title: '用 .mockup.html 文件规划 UI',
+    body: '以 **.mockup.html** 结尾的文件会渲染为可标注的实时线框图，与源码并排显示。让 Agent "为 X 创建一个 mockup"来快速生成起点，然后你可以可视化编辑。',
   },
 };

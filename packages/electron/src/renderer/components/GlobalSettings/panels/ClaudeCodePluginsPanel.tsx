@@ -361,7 +361,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
   if (loading) {
     return (
       <div className="provider-panel flex flex-col">
-        <div className="plugin-loading p-8 text-center text-[var(--nim-text-muted)]">Loading Claude Code plugins...</div>
+        <div className="plugin-loading p-8 text-center text-[var(--nim-text-muted)]">加载 Claude Code 插件中...</div>
       </div>
     );
   }
@@ -371,7 +371,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
       <div className="provider-panel flex flex-col">
         <div className="plugin-error p-8 text-center text-[#e74c3c]">
           Error: {error}
-          <button onClick={loadData} className="plugin-retry-button ml-4 px-4 py-2 bg-[var(--nim-primary)] text-white border-none rounded cursor-pointer">Retry</button>
+          <button onClick={loadData} className="plugin-retry-button ml-4 px-4 py-2 bg-[var(--nim-primary)] text-white border-none rounded cursor-pointer">重试</button>
         </div>
       </div>
     );
@@ -385,7 +385,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search plugins..."
+          placeholder="搜索插件..."
           className="plugin-search-input w-full py-3 pl-4 pr-10 border border-[var(--nim-border)] rounded-lg bg-[var(--nim-bg)] text-[var(--nim-text)] text-[0.9375rem] outline-none focus:border-[var(--nim-primary)] placeholder:text-[var(--nim-text-faint)]"
           aria-label="Search Claude Code plugins"
           autoFocus
@@ -440,7 +440,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
                     <div className="plugin-card-footer flex items-center justify-between gap-2">
                       <span className="plugin-card-author text-xs text-[var(--nim-text-faint)]">by {plugin.author}</span>
                       {installed ? (
-                        <span className="plugin-card-badge installed inline-flex items-center px-2 py-1 rounded text-[0.6875rem] font-semibold uppercase tracking-tight bg-[rgba(39,174,96,0.15)] text-[#27ae60]">Installed</span>
+                        <span className="plugin-card-badge installed inline-flex items-center px-2 py-1 rounded text-[0.6875rem] font-semibold uppercase tracking-tight bg-[rgba(39,174,96,0.15)] text-[#27ae60]">已安装</span>
                       ) : (
                         <button
                           className={`plugin-install-button py-1.5 px-3 border-none rounded bg-[var(--nim-primary)] text-white text-xs font-medium cursor-pointer transition-opacity duration-150 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed ${status === 'installing' ? 'installing bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)]' : ''}`}
@@ -450,7 +450,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
                           }}
                           disabled={status === 'installing'}
                         >
-                          {status === 'installing' ? 'Installing...' : 'Install'}
+                          {status === 'installing' ? '安装中...' : '安装'}
                         </button>
                       )}
                     </div>
@@ -465,7 +465,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
       {/* No results */}
       {filteredPlugins.length === 0 && searchQuery && (
         <div className="plugin-no-results p-8 text-center text-[var(--nim-text-faint)] text-[0.9375rem]" role="status" aria-live="polite">
-          No plugins match "{searchQuery}"
+          没有匹配 "{searchQuery}" 的插件
         </div>
       )}
     </div>
@@ -476,12 +476,12 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
       {installedPlugins.length === 0 ? (
         <div className="plugin-empty-state flex flex-col items-center justify-center py-12 px-6 text-center text-[var(--nim-text-faint)]">
           <span className="plugin-empty-icon material-symbols-outlined text-5xl mb-4 opacity-50">extension_off</span>
-          <p className="m-0 mb-6 text-[0.9375rem]">No plugins installed yet</p>
+          <p className="m-0 mb-6 text-[0.9375rem]">暂无已安装的插件</p>
           <button
             className="plugin-empty-cta py-2.5 px-5 rounded-md border-none bg-[var(--nim-primary)] text-white text-sm font-medium cursor-pointer transition-opacity duration-150 hover:opacity-90"
             onClick={() => setViewState('discover')}
           >
-            Browse Plugins
+            浏览插件
           </button>
         </div>
       ) : (
@@ -554,7 +554,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
           <button
             className="plugin-details-close absolute top-4 right-4 w-7 h-7 border-none rounded-full bg-[var(--nim-bg-tertiary)] text-[var(--nim-text-muted)] text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-[var(--nim-text-faint)] hover:text-[var(--nim-bg)]"
             onClick={() => setSelectedPlugin(null)}
-            aria-label="Close"
+            aria-label="关闭"
           >
             x
           </button>
@@ -573,12 +573,12 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
 
           <div className="plugin-details-meta flex flex-col gap-2 mb-6 p-3 bg-[var(--nim-bg-secondary)] rounded-lg">
             <div className="plugin-details-meta-item flex items-center gap-2 text-[0.8125rem]">
-              <span className="plugin-details-meta-label text-[var(--nim-text-faint)]">Category:</span>
+              <span className="plugin-details-meta-label text-[var(--nim-text-faint)]">分类：</span>
               <span className="plugin-details-meta-value text-[var(--nim-text)] font-medium">{CATEGORY_LABELS[selectedPlugin.category.toLowerCase()] || selectedPlugin.category}</span>
             </div>
             {selectedPlugin.homepage && (
               <div className="plugin-details-meta-item flex items-center gap-2 text-[0.8125rem]">
-                <span className="plugin-details-meta-label text-[var(--nim-text-faint)]">Homepage:</span>
+                <span className="plugin-details-meta-label text-[var(--nim-text-faint)]">主页：</span>
                 <a
                   href={selectedPlugin.homepage}
                   target="_blank"
@@ -586,7 +586,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
                   className="plugin-details-link text-[var(--nim-primary)] no-underline cursor-pointer hover:underline"
                   onClick={() => window.electronAPI.openExternal(selectedPlugin.homepage!)}
                 >
-                  View Documentation
+                  查看文档
                 </a>
               </div>
             )}
@@ -595,7 +595,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
           <div className="plugin-details-actions flex items-center gap-3">
             {installed ? (
               <>
-                <span className="plugin-details-installed-badge inline-flex items-center py-1.5 px-3 rounded bg-[rgba(39,174,96,0.15)] text-[#27ae60] text-[0.8125rem] font-medium">Installed</span>
+                <span className="plugin-details-installed-badge inline-flex items-center py-1.5 px-3 rounded bg-[rgba(39,174,96,0.15)] text-[#27ae60] text-[0.8125rem] font-medium">已安装</span>
                 <button
                   className="plugin-uninstall-button py-1.5 px-3 border border-[#e74c3c] rounded bg-transparent text-[#e74c3c] text-xs font-medium cursor-pointer transition-all duration-150 hover:bg-[#e74c3c] hover:text-white"
                   onClick={() => {
@@ -620,7 +620,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
                 onClick={() => handleInstall(selectedPlugin)}
                 disabled={status === 'installing'}
               >
-                {status === 'installing' ? 'Installing...' : 'Install Plugin'}
+                {status === 'installing' ? '安装中...' : '安装插件'}
               </button>
             )}
           </div>
@@ -632,9 +632,9 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
   return (
     <div className="provider-panel flex flex-col">
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
-        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">Claude Code Plugins</h3>
+        <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">Claude Code 插件</h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Discover and install plugins to extend Claude Code's capabilities.
+          发现并安装插件以扩展 Claude Code 的能力。
         </p>
       </div>
 
@@ -648,7 +648,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
           }`}
           onClick={() => setViewState('discover')}
         >
-          Discover
+          发现
         </button>
         <button
           className={`plugin-view-button py-2 px-4 border-none rounded-md text-sm font-medium cursor-pointer transition-all duration-150 ${
@@ -658,7 +658,7 @@ function ClaudeCodePluginsPanelInner({ scope = 'user', workspacePath }: ClaudeCo
           }`}
           onClick={() => setViewState('installed')}
         >
-          Installed ({installedPlugins.length})
+          已安装 ({installedPlugins.length})
         </button>
       </div>
 
@@ -687,16 +687,16 @@ export function ClaudeCodePluginsPanel(props: ClaudeCodePluginsPanelProps) {
       fallback={
         <div className="provider-panel flex flex-col" role="alert" aria-live="assertive">
           <div className="plugin-error p-8 text-center">
-            <h3 className="mt-0 mb-4">Unable to load Claude Code Plugins</h3>
+            <h3 className="mt-0 mb-4">无法加载 Claude Code 插件</h3>
             <p className="mb-6 text-[var(--nim-text-muted)]">
-              An unexpected error occurred while loading the plugins panel.
-              Please try refreshing the application.
+              加载插件面板时发生意外错误。
+              请尝试刷新应用。
             </p>
             <button
               onClick={() => window.location.reload()}
               className="plugin-retry-button py-2 px-4 bg-[var(--nim-primary)] text-white border-none rounded-md cursor-pointer"
             >
-              Reload Application
+              重新加载应用
             </button>
           </div>
         </div>

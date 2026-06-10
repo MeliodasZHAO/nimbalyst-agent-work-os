@@ -11,6 +11,7 @@ import { AlphaFeatureTag, getDefaultAlphaFeatures, ALPHA_FEATURES } from '../../
 import { DeveloperFeatureTag, getDefaultDeveloperFeatures, DEVELOPER_FEATURES } from '../../shared/developerFeatures';
 import { BetaFeatureTag, getDefaultBetaFeatures, enableAllBetaFeatures as enableAllBetaFeaturesUtil, BETA_FEATURES } from '../../shared/betaFeatures';
 import { normalizeCodexProviderConfig, omitModelsField } from '@nimbalyst/runtime/ai/server/utils/modelConfigUtils';
+import type { AgentWorkOSConfig } from '@nimbalyst/runtime/agent-work-os';
 
 // Theme can be a built-in theme or an extension theme ID (format: "extensionId:themeId")
 export type AppTheme = 'dark' | 'light' | 'system' | 'auto' | 'crystal-dark' | string;
@@ -212,6 +213,8 @@ interface AppStoreSchema {
   // seeded only with the project the user picks from the launch screen
   // — additional projects must be added explicitly.
   restorePreviousProjectsOnLaunch?: boolean;
+  // UI language preference (BCP-47 code, e.g. 'zh-CN', 'en')
+  appLanguage?: string;
 }
 
 /**
@@ -432,6 +435,8 @@ export interface WorkspaceState {
   workstreamStates?: Record<string, unknown>;
   // Agent mode file scope mode (shared across all sessions in workspace)
   agentFileScopeMode?: AgentFileScopeMode;
+  // Project-level Agent Work OS overrides. Global defaults live in app-settings.
+  agentWorkOSConfig?: AgentWorkOSConfig;
   // Collab mode tree state (expanded folders and local placeholder folders)
   collabTree?: {
     expandedFolders: string[];
@@ -2273,11 +2278,20 @@ export function setActiveProjectPath(path: string | null): void {
 }
 
 export function getRestorePreviousProjectsOnLaunch(): boolean {
-  return getAppStore().get('restorePreviousProjectsOnLaunch', false);
+  return getAppStore().get('restorePreviousProjectsOnLaunch', true);
 }
 
 export function setRestorePreviousProjectsOnLaunch(enabled: boolean): void {
   getAppStore().set('restorePreviousProjectsOnLaunch', enabled);
+}
+
+// App Language Settings
+export function getAppLanguage(): string {
+  return getAppStore().get('appLanguage', 'zh-CN');
+}
+
+export function setAppLanguage(lang: string): void {
+  getAppStore().set('appLanguage', lang);
 }
 
 export function runMigrations(currentVersion: string): void {

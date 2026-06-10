@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -42,9 +43,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nimbalyst.app.NimbalystApplication
+import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import com.nimbalyst.app.attachments.PendingAttachment
 import com.nimbalyst.app.transcript.TranscriptWebView
@@ -76,16 +79,26 @@ fun SessionDetailScreen(
     var deliveryWarning by remember { mutableStateOf<String?>(null) }
     var deliveryTimeoutJob by remember { mutableStateOf<Job?>(null) }
 
+    val msgImageLoadFailed = stringResource(R.string.status_image_load_failed)
+    val msgPhotoAdded = stringResource(R.string.status_photo_added)
+    val msgCameraCaptured = stringResource(R.string.status_camera_captured)
+    val msgPromptQueued = stringResource(R.string.status_prompt_queued)
+    val msgDeliveryWarning = stringResource(R.string.delivery_warning_body)
+    val msgPromptFailed = stringResource(R.string.status_prompt_failed)
+    val msgInteractiveInvalid = stringResource(R.string.status_interactive_invalid)
+    val msgInteractiveSent = stringResource(R.string.status_interactive_sent)
+    val msgInteractiveFailed = stringResource(R.string.status_interactive_failed)
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val bitmap = decodeBitmap(context, uri)
         if (bitmap == null) {
-            promptStatus = "Failed to load the selected image."
+            promptStatus = msgImageLoadFailed
         } else {
             pendingAttachments = pendingAttachments + PendingAttachment(bitmap = bitmap)
-            promptStatus = "Added photo attachment."
+            promptStatus = msgPhotoAdded
         }
     }
     val cameraPreviewLauncher = rememberLauncherForActivityResult(
@@ -96,7 +109,7 @@ fun SessionDetailScreen(
                 bitmap = bitmap,
                 filename = "camera.jpg"
             )
-            promptStatus = "Captured camera attachment."
+            promptStatus = msgCameraCaptured
         }
     }
 
@@ -157,7 +170,7 @@ fun SessionDetailScreen(
         }
     }
 
-    val sessionTitle = session?.titleDecrypted ?: "Untitled session"
+    val sessionTitle = session?.titleDecrypted ?: stringResource(R.string.session_untitled)
 
     val submitPrompt = { promptText: String, attachments: List<PendingAttachment> ->
         coroutineScope.launch {
@@ -165,6 +178,9 @@ fun SessionDetailScreen(
             draftDebounceJob?.cancel()
             draftDebounceJob = null
             lastSubmitAt = System.currentTimeMillis()
+            // Clear local UI immediately so the field empties on tap, before network round-trip
+            draftPrompt = ""
+            pendingAttachments = emptyList()
             launch { app.syncManager.updateDraftInput(sessionId, "") }
 
             isSendingPrompt = true
@@ -181,22 +197,21 @@ fun SessionDetailScreen(
                 attachments = attachments
             )
             result.onSuccess {
-                draftPrompt = ""
-                pendingAttachments = emptyList()
-                promptStatus = "Prompt queued on desktop."
+                promptStatus = msgPromptQueued
 
                 // Start delivery timeout -- warn if desktop doesn't start executing within 10s
                 deliveryTimeoutJob?.cancel()
                 deliveryTimeoutJob = launch {
                     delay(DELIVERY_TIMEOUT_MS)
                     if (session?.isExecuting != true) {
-                        deliveryWarning = "Your prompt was sent but the desktop hasn't started processing it. Make sure the desktop app is running and connected."
+                        deliveryWarning = msgDeliveryWarning
                     }
                 }
             }.onFailure { error ->
                 // Restore draft so user doesn't lose their text
                 draftPrompt = promptText
-                promptStatus = error.message ?: "Failed to queue prompt."
+                pendingAttachments = attachments
+                promptStatus = error.message ?: msgPromptFailed
             }
             isSendingPrompt = false
         }
@@ -206,11 +221,11 @@ fun SessionDetailScreen(
     if (deliveryWarning != null) {
         AlertDialog(
             onDismissRequest = { deliveryWarning = null },
-            title = { Text("Delivery Warning") },
+            title = { Text(stringResource(R.string.delivery_warning_title)) },
             text = { Text(deliveryWarning ?: "") },
             confirmButton = {
                 TextButton(onClick = { deliveryWarning = null }) {
-                    Text("OK")
+                    Text(stringResource(R.string.action_ok))
                 }
             }
         )
@@ -220,6 +235,7 @@ fun SessionDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .imePadding()
     ) {
         TopAppBar(
             title = {
@@ -241,7 +257,7 @@ fun SessionDetailScreen(
             },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                 }
             }
         )
@@ -266,7 +282,7 @@ fun SessionDetailScreen(
                         ?: ""
                     val action = bridgeMessage.action
                     if (promptId.isBlank() || action.isNullOrBlank()) {
-                        promptStatus = "Transcript sent an invalid interactive response."
+                        promptStatus = msgInteractiveInvalid
                     } else {
                         val result = app.syncManager.handleInteractiveResponse(
                             sessionId = sessionId,
@@ -275,9 +291,9 @@ fun SessionDetailScreen(
                             body = bridgeMessage.raw
                         )
                         result.onSuccess {
-                            promptStatus = "Interactive response sent to desktop."
+                            promptStatus = msgInteractiveSent
                         }.onFailure { error ->
-                            promptStatus = error.message ?: "Failed to send interactive response."
+                            promptStatus = error.message ?: msgInteractiveFailed
                         }
                     }
                 }
@@ -319,7 +335,7 @@ fun SessionDetailScreen(
                     enabled = !isSendingPrompt,
                     minLines = 1,
                     maxLines = 6,
-                    placeholder = { Text("Send prompt to desktop") }
+                    placeholder = { Text(stringResource(R.string.compose_placeholder)) }
                 )
 
                 if (pendingAttachments.isNotEmpty()) {
@@ -341,7 +357,7 @@ fun SessionDetailScreen(
                                     }
                                 }
                             ) {
-                                Text("Remove")
+                                Text(stringResource(R.string.action_remove))
                             }
                         }
                     }
@@ -360,20 +376,20 @@ fun SessionDetailScreen(
                         },
                         enabled = !isSendingPrompt
                     ) {
-                        Text("Photo")
+                        Text(stringResource(R.string.attachment_photo))
                     }
                     OutlinedButton(
                         onClick = { cameraPreviewLauncher.launch(null) },
                         enabled = !isSendingPrompt
                     ) {
-                        Text("Camera")
+                        Text(stringResource(R.string.attachment_camera))
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Button(
                         enabled = !isSendingPrompt && (draftPrompt.isNotBlank() || pendingAttachments.isNotEmpty()),
                         onClick = { submitPrompt(draftPrompt, pendingAttachments) }
                     ) {
-                        Text(if (isSendingPrompt) "Sending..." else "Send")
+                        Text(if (isSendingPrompt) stringResource(R.string.action_sending) else stringResource(R.string.action_send))
                     }
                 }
 

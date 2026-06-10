@@ -32,14 +32,14 @@ export function ClaudePanel({
       <div className="provider-panel-header mb-6 pb-4 border-b border-[var(--nim-border)]">
         <h3 className="provider-panel-title text-xl font-semibold leading-tight mb-2 text-[var(--nim-text)]">Claude Chat</h3>
         <p className="provider-panel-description text-sm leading-relaxed text-[var(--nim-text-muted)]">
-          Chat mode is a quicker, more focused tool that is limited to reading and writing your currently open file.
-          Uses direct API calls with files attached as context for faster responses. Requires an Anthropic API key.
+          聊天模式是一个更快速、更专注的工具，仅限于读写你当前打开的文件。
+          通过直接 API 调用并附加文件作为上下文来获得更快的响应。需要 Anthropic API Key。
         </p>
       </div>
 
       <SettingsToggle
         variant="enable"
-        name="Enable Claude"
+        name="启用 Claude"
         checked={config.enabled}
         onChange={onToggle}
       />
@@ -47,7 +47,7 @@ export function ClaudePanel({
       {config.enabled && (
         <>
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">API Configuration</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">API 配置</h4>
             <div className="api-key-section mt-4">
               <div className="api-key-row flex gap-2 items-center">
                 <input
@@ -67,9 +67,9 @@ export function ClaudePanel({
                   onClick={onTestConnection}
                   disabled={config.testStatus === 'testing'}
                 >
-                  {config.testStatus === 'testing' ? 'Testing...' :
-                   config.testStatus === 'success' ? '✓ Connected' :
-                   config.testStatus === 'error' ? '✗ Failed' : 'Test'}
+                  {config.testStatus === 'testing' ? '测试中...' :
+                   config.testStatus === 'success' ? '✓ 已连接' :
+                   config.testStatus === 'error' ? '✗ 失败' : '测试'}
                 </button>
               </div>
               {config.testMessage && config.testStatus === 'error' && (
@@ -79,27 +79,27 @@ export function ClaudePanel({
           </div>
 
           <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
-            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">Available Models</h4>
+            <h4 className="provider-panel-section-title text-base font-semibold mb-3 text-[var(--nim-text)]">可用模型</h4>
             {loading && (
-              <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">Loading models...</div>
+              <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">加载模型中...</div>
             )}
 
             {!loading && availableModels.length > 0 && (
               <div className="models-section">
                 <div className="models-header flex items-center justify-between mb-3">
-                  <span className="text-sm text-[var(--nim-text-muted)]">Select models to enable:</span>
+                  <span className="text-sm text-[var(--nim-text-muted)]">选择要启用的模型：</span>
                   <div className="models-actions flex gap-2">
                     <button
                       className="models-action-btn text-xs py-1 px-2 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text-muted)] hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] cursor-pointer transition-all"
                       onClick={() => onSelectAllModels(true)}
                     >
-                      Select All
+                      全选
                     </button>
                     <button
                       className="models-action-btn text-xs py-1 px-2 rounded bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] text-[var(--nim-text-muted)] hover:text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] cursor-pointer transition-all"
                       onClick={() => onSelectAllModels(false)}
                     >
-                      Deselect All
+                      全不选
                     </button>
                   </div>
                 </div>
@@ -120,7 +120,7 @@ export function ClaudePanel({
             )}
 
             {!loading && availableModels.length === 0 && apiKeys.anthropic && (
-              <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">No models available. Check your API key and connection.</div>
+              <div className="models-loading text-sm text-[var(--nim-text-muted)] py-2">暂无可用模型。请检查 API Key 和连接状态。</div>
             )}
           </div>
         </>

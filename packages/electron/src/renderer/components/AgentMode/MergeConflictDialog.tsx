@@ -55,18 +55,18 @@ export function MergeConflictDialog({
       >
         <div className="merge-conflict-dialog-header shrink-0 flex items-center gap-3 px-6 pt-5 pb-4 text-[var(--nim-text)]">
           <MaterialSymbol icon="warning" size={24} className="merge-conflict-dialog-icon-warning text-[var(--nim-warning)]" />
-          <h2 className="m-0 text-lg font-semibold">Merge Conflict Detected</h2>
+          <h2 className="m-0 text-lg font-semibold">检测到合并冲突</h2>
         </div>
 
         <div className="merge-conflict-dialog-body flex-1 min-h-0 overflow-y-auto px-6 pb-5">
           <p className="m-0 mb-4 text-sm leading-relaxed text-[var(--nim-text-muted)]">
-            Cannot merge worktree to <strong className="text-[var(--nim-text)] font-medium">{projectName}</strong> because there are unresolved merge conflicts in the main repository.
+            无法将 Worktree 合并到 <strong className="text-[var(--nim-text)] font-medium">{projectName}</strong>，因为主仓库中存在未解决的合并冲突。
           </p>
 
           <div className="merge-conflict-dialog-files mb-4 p-3 rounded-lg bg-[var(--nim-bg-secondary)]">
             <div className="merge-conflict-dialog-files-header flex items-center gap-2 mb-2.5 text-[13px] font-medium text-[var(--nim-text)]">
               <MaterialSymbol icon="description" size={16} />
-              <span>Conflicted Files:</span>
+              <span>冲突文件:</span>
             </div>
             <ul className="merge-conflict-dialog-files-list list-none m-0 p-0 flex flex-col gap-1.5">
               {conflictedFiles.map((file) => (
@@ -81,14 +81,14 @@ export function MergeConflictDialog({
           <div className="merge-conflict-dialog-info flex items-start gap-2.5 p-3 mb-4 rounded-lg bg-[var(--nim-info-light)] text-[var(--nim-info)] text-[13px] leading-snug">
             <MaterialSymbol icon="info" size={16} />
             <p className="m-0 text-[var(--nim-info)]">
-              You must resolve these conflicts in the main repository before the worktree can be merged.
+              您必须先在主仓库中解决这些冲突，然后才能合并 Worktree。
             </p>
           </div>
 
           <div className="merge-conflict-dialog-suggestion flex items-start gap-2.5 p-3 mb-4 rounded-lg bg-[var(--nim-success-light)] text-[var(--nim-success)] text-[13px] leading-snug">
             <MaterialSymbol icon="smart_toy" size={16} />
             <p className="m-0 text-[var(--nim-success)]">
-              An AI agent can help you resolve these conflicts automatically, or you can resolve them manually.
+              AI 智能体可以帮您自动解决这些冲突，或者您可以手动解决。
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export function MergeConflictDialog({
           <div className="merge-conflict-dialog-manual flex flex-col gap-2 p-3 rounded-lg bg-[var(--nim-bg-secondary)] text-[13px]">
             <p className="m-0 flex items-center gap-2 text-[var(--nim-text-muted)]">
               <MaterialSymbol icon="terminal" size={16} />
-              Main repository location:
+              主仓库位置:
             </p>
             <code className="merge-conflict-dialog-path block font-[var(--nim-font-mono)] text-xs text-[var(--nim-text)] bg-[var(--nim-bg-tertiary)] px-2 py-1.5 rounded break-all">{workspacePath}</code>
           </div>
@@ -114,7 +114,7 @@ export function MergeConflictDialog({
             className="merge-conflict-dialog-button merge-conflict-dialog-button--secondary nim-btn-secondary"
             onClick={onCancel}
           >
-            Close
+            关闭
           </button>
           <button
             type="button"
@@ -123,7 +123,7 @@ export function MergeConflictDialog({
             disabled={resolveDisabled}
           >
             <MaterialSymbol icon="smart_toy" size={16} />
-            <span>Resolve with Agent</span>
+            <span>使用智能体解决</span>
           </button>
         </div>
       </div>

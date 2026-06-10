@@ -15,6 +15,7 @@ import { getMcpConfigService } from '../index';
 import { autoMatchTeamForWorkspace } from '../services/TeamService';
 import { initializeTrackerSync } from '../services/TrackerSyncManager';
 import { updateTrackerSchemaWorkspace } from '../services/TrackerSchemaService';
+import { applyHiddenNativeMenuBar } from './windowChrome';
 
 let workspaceManagerWindow: BrowserWindow | null = null;
 
@@ -87,7 +88,8 @@ export function createWorkspaceManagerWindow() {
     height: 700,
     minWidth: 900,
     minHeight: 600,
-    title: 'Project Manager - Nimbalyst',
+    title: 'Nimbalyst 工作台',
+    autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -95,11 +97,23 @@ export function createWorkspaceManagerWindow() {
       webviewTag: false
     },
     show: false,
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    trafficLightPosition: { x: 10, y: 10 },
-    vibrancy: 'sidebar',
+    ...(process.platform === 'darwin'
+        ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 10, y: 10 }, vibrancy: 'sidebar' as const }
+        : { frame: false }),
     backgroundColor: getBackgroundColor()
   });
+
+  applyHiddenNativeMenuBar(workspaceManagerWindow);
+
+  // Notify renderer of maximize state changes (for custom title bar)
+  if (process.platform !== 'darwin') {
+    workspaceManagerWindow.on('maximize', () => {
+      workspaceManagerWindow?.webContents.send('window:maximize-change', true);
+    });
+    workspaceManagerWindow.on('unmaximize', () => {
+      workspaceManagerWindow?.webContents.send('window:maximize-change', false);
+    });
+  }
 
   // Load the main app with a query parameter to indicate Workspace Manager mode
   const loadContent = () => {
@@ -157,10 +171,10 @@ export function createWorkspaceManagerWindow() {
     console.warn('[WorkspaceManager] Window became unresponsive');
     const choice = dialog.showMessageBoxSync(workspaceManagerWindow!, {
       type: 'warning',
-      buttons: ['Reload', 'Keep Waiting'],
+      buttons: ['重新载入', '继续等待'],
       defaultId: 0,
-      message: 'Project Manager is not responding',
-      detail: 'Would you like to reload the window?'
+      message: 'Nimbalyst 工作台暂时没有响应',
+      detail: '是否重新载入这个窗口？'
     });
 
     if (choice === 0 && workspaceManagerWindow && !workspaceManagerWindow.isDestroyed()) {
@@ -304,8 +318,8 @@ export function setupWorkspaceManagerHandlers() {
   // Create workspace dialog
   safeHandle('workspace-manager:create-workspace-dialog', async () => {
     const result = await dialog.showSaveDialog({
-      title: 'Create New Workspace',
-      buttonLabel: 'Create',
+      title: '创建新的工作区',
+      buttonLabel: '创建',
       properties: ['createDirectory', 'showOverwriteConfirmation']
     });
 
@@ -320,7 +334,7 @@ export function setupWorkspaceManagerHandlers() {
         const fs = require('fs');
         const readmePath = join(result.filePath, 'README.md');
         if (!existsSync(readmePath)) {
-          fs.writeFileSync(readmePath, `# ${basename(result.filePath)}\n\nWelcome to your new workspace!\n`);
+          fs.writeFileSync(readmePath, `# ${basename(result.filePath)}\n\n欢迎使用这个新的 Nimbalyst 工作区。\n`);
         }
 
         return { success: true, path: result.filePath };

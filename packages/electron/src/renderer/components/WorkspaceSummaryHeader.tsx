@@ -1,5 +1,7 @@
 import React from 'react';
+import { useAtomValue } from 'jotai';
 import { getFileName } from '../utils/pathUtils';
+import { multiProjectModeAtom } from '../store/atoms/openProjects';
 
 export function generateWorkspaceAccentColor(path: string): string {
   let hash = 0;
@@ -32,6 +34,21 @@ export function WorkspaceSummaryHeader({
   actionsClassName = '',
 }: WorkspaceSummaryHeaderProps) {
   const displayName = workspaceName || getFileName(workspacePath) || 'Workspace';
+  const isMultiProject = useAtomValue(multiProjectModeAtom);
+
+  // In multi-project mode the tab bar already shows project name + accent,
+  // so collapse this header to just the actions row.
+  if (isMultiProject && actions) {
+    return (
+      <div
+        className={`workspace-summary-header px-3 py-1.5 border-b border-[var(--nim-border)] bg-[var(--nim-bg)] shrink-0 ${headerClassName}`.trim()}
+      >
+        <div className={`workspace-summary-header-actions flex items-center gap-1.5 ${actionsClassName}`.trim()}>
+          {actions}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

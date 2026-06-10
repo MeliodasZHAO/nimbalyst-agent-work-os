@@ -12,7 +12,7 @@ export interface TrackerTypeInfo {
 }
 
 /**
- * Get built-in tracker types that support full-document mode
+ * Get fallback tracker types that support full-document mode.
  */
 export function getBuiltInFullDocumentTrackerTypes(): TrackerTypeInfo[] {
   return [
@@ -29,6 +29,31 @@ export function getBuiltInFullDocumentTrackerTypes(): TrackerTypeInfo[] {
       color: '#8b5cf6',
     },
   ];
+}
+
+/**
+ * Get all registered tracker types that support full-document mode.
+ */
+export function getFullDocumentTrackerTypes(): TrackerTypeInfo[] {
+  try {
+    const registry = (window as any).__trackerRegistry || (window as any).trackerRegistry;
+    if (!registry?.getAll) return getBuiltInFullDocumentTrackerTypes();
+
+    const models = registry.getAll();
+    const types = models
+      .filter((model: any) => model?.modes?.fullDocument)
+      .map((model: any) => ({
+        type: model.type,
+        displayName: model.displayName,
+        icon: model.icon,
+        color: model.color,
+      }))
+      .sort((a: TrackerTypeInfo, b: TrackerTypeInfo) => a.displayName.localeCompare(b.displayName));
+
+    return types.length > 0 ? types : getBuiltInFullDocumentTrackerTypes();
+  } catch {
+    return getBuiltInFullDocumentTrackerTypes();
+  }
 }
 
 /**
@@ -115,6 +140,48 @@ function serializeYamlValue(value: any): string {
   return String(value);
 }
 
+const WORK_PACKET_BODY_TEMPLATE = [
+  '',
+  '## Intent',
+  '',
+  '## Scope',
+  '',
+  '## Non-goals',
+  '',
+  '## Success Criteria',
+  '',
+  '## Verification',
+  '',
+  '## Risks',
+  '',
+  '## Capability Route',
+  '',
+  '## Review Gate',
+  '',
+  '## Docs Gate',
+  '',
+].join('\n');
+
+function removeFrontmatter(markdown: string): string {
+  const frontmatterRegex = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+  return markdown.replace(frontmatterRegex, '');
+}
+
+function shouldInsertWorkPacketBodyTemplate(markdown: string): boolean {
+  const body = removeFrontmatter(markdown).trim();
+  if (!body) return true;
+  return /^#\s+[^\n]+$/.test(body);
+}
+
+function applyFullDocumentBodyTemplate(markdown: string, trackerType: string): string {
+  if (trackerType !== 'work-packet' || !shouldInsertWorkPacketBodyTemplate(markdown)) {
+    return markdown;
+  }
+
+  const separator = markdown.endsWith('\n') || markdown.length === 0 ? '' : '\n';
+  return `${markdown}${separator}${WORK_PACKET_BODY_TEMPLATE}`;
+}
+
 /**
  * Apply tracker type to markdown content.
  * For generic types: fields go at the top level, trackerStatus only holds type.
@@ -155,10 +222,13 @@ export function applyTrackerTypeToMarkdown(
   const hasFrontmatter = frontmatterRegex.test(markdown);
 
   if (hasFrontmatter) {
-    return markdown.replace(frontmatterRegex, `---\n${yamlContent}\n---\n`);
-  } else {
-    return `---\n${yamlContent}\n---\n${markdown}`;
+    return applyFullDocumentBodyTemplate(
+      markdown.replace(frontmatterRegex, `---\n${yamlContent}\n---\n`),
+      trackerType,
+    );
   }
+
+  return applyFullDocumentBodyTemplate(`---\n${yamlContent}\n---\n${markdown}`, trackerType);
 }
 
 /**
