@@ -39,8 +39,10 @@ export interface TipTrigger {
  * Action button for a tip card
  */
 export interface TipAction {
-  /** Button label */
+  /** Button label (literal fallback / analytics identifier) */
   label: string;
+  /** i18n key (agent namespace) for the label; overrides `label` when set */
+  labelKey?: string;
   /** What happens on click */
   onClick: () => void;
   /** Style variant */
@@ -53,10 +55,14 @@ export interface TipAction {
 export interface TipContent {
   /** SVG icon rendered in the card header (raw SVG path content) */
   icon?: React.ReactNode;
-  /** Short title */
+  /** Short title (literal fallback / analytics identifier) */
   title: string;
+  /** i18n key (agent namespace) for the title; overrides `title` when set */
+  titleKey?: string;
   /** Body text (supports basic markdown: **bold**) */
   body: string;
+  /** i18n key (agent namespace) for the body; overrides `body` when set */
+  bodyKey?: string;
   /** Primary action button */
   action?: TipAction;
   /** Secondary link/navigation action */

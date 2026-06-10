@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Android: app display name unified to "Nimbalyst"; project list now has an explicit sync button
 
 ### Fixed
+- Mobile keep-awake tip now follows the selected language instead of always showing hardcoded Chinese
 - Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)
 
 ### Removed

@@ -1,10 +1,16 @@
 import { EventEmitter } from 'events';
+import { join, resolve } from 'path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Use a real (platform-neutral) absolute path so path.join/resolve behave the
+// same on CI (POSIX) and on Windows. The previous hard-coded "Z:\..." string
+// only matched Windows separators and broke the Linux/macOS CI runners.
+const PACKAGE_ROOT = resolve('/repo/packages/electron');
 
 const mocks = vi.hoisted(() => ({
   spawn: vi.fn(),
   existsSync: vi.fn(() => true),
-  getPackageRoot: vi.fn(() => 'Z:\\nimbalyst-agent-work-os\\packages\\electron'),
+  getPackageRoot: vi.fn(),
   isPackaged: false,
 }));
 
@@ -57,7 +63,7 @@ describe('AgentWorkOSHandlers', () => {
     vi.clearAllMocks();
     mocks.existsSync.mockReturnValue(true);
     mocks.isPackaged = false;
-    mocks.getPackageRoot.mockReturnValue('Z:\\nimbalyst-agent-work-os\\packages\\electron');
+    mocks.getPackageRoot.mockReturnValue(PACKAGE_ROOT);
   });
 
   it('sanitizes visual check labels for file-safe output names', () => {
@@ -73,11 +79,11 @@ describe('AgentWorkOSHandlers', () => {
 
     expect(spec.command).toBe(process.execPath);
     expect(spec.args).toEqual([
-      'Z:\\nimbalyst-agent-work-os\\packages\\electron\\scripts\\agent-work-os-visual-check.mjs',
+      join(PACKAGE_ROOT, 'scripts', 'agent-work-os-visual-check.mjs'),
       '--label=abc-123',
       '--workspace=Z:\\workspace\\demo',
     ]);
-    expect(spec.cwd).toBe('Z:\\nimbalyst-agent-work-os');
+    expect(spec.cwd).toBe(resolve(PACKAGE_ROOT, '..', '..'));
   });
 
   it('returns parsed report paths from a successful run', async () => {

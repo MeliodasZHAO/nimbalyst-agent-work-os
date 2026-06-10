@@ -85,6 +85,7 @@
   "next": "Next",
   "allTips": "All tips",
   "keepAwakeTitle": "Keep your computer awake for mobile prompts",
+  "keepAwakeBody": "When your computer sleeps it disconnects mobile sync. Keep it awake while plugged in to avoid this.",
   "enableKeepAwake": "Enable Keep-Awake",
   "syncSettings": "Sync Settings",
   "openSyncSettings": "Open Sync Settings",

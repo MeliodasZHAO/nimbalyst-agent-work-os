@@ -4,6 +4,7 @@ import React from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { Provider as JotaiProvider } from 'jotai';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import i18n from '../../i18n';
 import { store } from '../../store';
 import { hasActiveDialogsAtom } from '../../contexts/DialogContext';
 import { developerFeatureSettingsAtom, syncConfigAtom } from '../../store/atoms/appSettings';
@@ -20,7 +21,10 @@ vi.mock('posthog-js/react', () => ({
 }));
 
 describe('TipProvider', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // The app defaults to zh-CN; pin tests to English so assertions on tip copy
+    // are independent of the global default language.
+    await i18n.changeLanguage('en');
     vi.useFakeTimers();
     delete (window as any).PLAYWRIGHT;
 

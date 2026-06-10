@@ -85,6 +85,7 @@
   "next": "下一条",
   "allTips": "所有提示",
   "keepAwakeTitle": "保持电脑唤醒以接收移动端提示",
+  "keepAwakeBody": "电脑进入睡眠会断开手机同步连接。启用充电时保持唤醒可以避免这个问题。",
   "enableKeepAwake": "启用常亮",
   "syncSettings": "同步设置",
   "openSyncSettings": "打开同步设置",

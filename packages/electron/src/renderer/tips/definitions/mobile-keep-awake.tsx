@@ -46,10 +46,13 @@ export const mobileKeepAwakeTip: TipDefinition = {
   },
   content: {
     icon: PowerIcon,
-    title: '保持电脑唤醒以接收手机端指令',
-    body: '电脑进入睡眠会断开手机同步连接。启用充电时保持唤醒可以避免这个问题。',
+    title: 'Keep your computer awake for mobile prompts',
+    titleKey: 'keepAwakeTitle',
+    body: 'When your computer sleeps it disconnects mobile sync. Keep it awake while plugged in to avoid this.',
+    bodyKey: 'keepAwakeBody',
     action: {
-      label: '启用保持唤醒',
+      label: 'Enable Keep-Awake',
+      labelKey: 'enableKeepAwake',
       onClick: () => {
         window.electronAPI.invoke('sync:set-prevent-sleep', 'pluggedIn');
         // Update local atom so the condition immediately reflects the change
@@ -59,7 +62,8 @@ export const mobileKeepAwakeTip: TipDefinition = {
       variant: 'primary',
     },
     secondaryAction: {
-      label: '同步设置',
+      label: 'Sync Settings',
+      labelKey: 'syncSettings',
       onClick: () => {
         store.set(openSettingsCommandAtom, { category: 'sync', timestamp: Date.now() });
       },
