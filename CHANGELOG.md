@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Mobile keep-awake tip now follows the selected language instead of always showing hardcoded Chinese
+- Android: input field now scrolls above the keyboard when typing; draft clears immediately on send instead of after network round-trip
 - Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)
 
 ### Removed

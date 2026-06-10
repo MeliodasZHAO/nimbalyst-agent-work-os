@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -177,6 +178,9 @@ fun SessionDetailScreen(
             draftDebounceJob?.cancel()
             draftDebounceJob = null
             lastSubmitAt = System.currentTimeMillis()
+            // Clear local UI immediately so the field empties on tap, before network round-trip
+            draftPrompt = ""
+            pendingAttachments = emptyList()
             launch { app.syncManager.updateDraftInput(sessionId, "") }
 
             isSendingPrompt = true
@@ -193,8 +197,6 @@ fun SessionDetailScreen(
                 attachments = attachments
             )
             result.onSuccess {
-                draftPrompt = ""
-                pendingAttachments = emptyList()
                 promptStatus = msgPromptQueued
 
                 // Start delivery timeout -- warn if desktop doesn't start executing within 10s
@@ -208,6 +210,7 @@ fun SessionDetailScreen(
             }.onFailure { error ->
                 // Restore draft so user doesn't lose their text
                 draftPrompt = promptText
+                pendingAttachments = attachments
                 promptStatus = error.message ?: msgPromptFailed
             }
             isSendingPrompt = false
@@ -232,6 +235,7 @@ fun SessionDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .imePadding()
     ) {
         TopAppBar(
             title = {
