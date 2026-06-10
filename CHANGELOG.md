@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Mobile keep-awake tip now follows the selected language instead of always showing hardcoded Chinese
 - Android: input field now scrolls above the keyboard when typing; draft clears immediately on send instead of after network round-trip
+- Android: interactive approval responses (tool permission, ask user question, exit plan mode) now reliably execute — the approval was silently dropped when the session WebSocket wasn't yet open; `handleInteractiveResponse` is now a suspend function that awaits the session room connection before writing the tool result. Also adds missing `appendToolResult` calls for `exitPlanModeApprove` and `exitPlanModeDeny`.
 - iOS: editor web bundle build no longer fails when `@anthropic-ai/sdk` is transitively pulled in via extension-sdk; `node:*` and `@anthropic-ai/*` are marked external in the rollup config
 - Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)
 

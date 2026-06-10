@@ -480,7 +480,20 @@ class SyncManager(
         }
     }
 
-    fun handleInteractiveResponse(
+    /**
+     * Ensure the session room WebSocket is connected before writing a tool result.
+     * joinSessionRoom() starts the connection asynchronously; we wait up to 5 s.
+     */
+    private suspend fun awaitSessionRoom(sessionId: String) {
+        if (_state.value.activeSessionId == sessionId && sessionClient.isConnected) return
+        joinSessionRoom(sessionId)
+        repeat(50) {
+            if (sessionClient.isConnected) return
+            delay(100)
+        }
+    }
+
+    suspend fun handleInteractiveResponse(
         sessionId: String,
         action: String,
         promptId: String,
@@ -500,6 +513,7 @@ class SyncManager(
                             "response" to response
                         )
                     ).getOrThrow()
+                    awaitSessionRoom(sessionId)
                     appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
                 }
 
@@ -514,19 +528,23 @@ class SyncManager(
                             "response" to response
                         )
                     ).getOrThrow()
+                    awaitSessionRoom(sessionId)
                     appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
                 }
 
                 "exitPlanModeApprove" -> {
+                    val response = jsonObject("approved" to true)
                     sendSessionControlMessage(
                         sessionId = sessionId,
                         messageType = "prompt_response",
                         payload = jsonObject(
                             "promptType" to "exit_plan_mode",
                             "promptId" to promptId,
-                            "response" to jsonObject("approved" to true)
+                            "response" to response
                         )
                     ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
                 }
 
                 "exitPlanModeDeny" -> {
@@ -543,6 +561,8 @@ class SyncManager(
                             "response" to response
                         )
                     ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
                 }
 
                 "gitCommit" -> {
@@ -573,6 +593,7 @@ class SyncManager(
                             "response" to response
                         )
                     ).getOrThrow()
+                    awaitSessionRoom(sessionId)
                     appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
                 }
 
