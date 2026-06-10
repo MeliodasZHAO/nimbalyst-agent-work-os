@@ -23,6 +23,13 @@ export type ImageCompressor = (
 ) => Promise<{ buffer: Buffer; mimeType: string; wasCompressed: boolean }>;
 export type ExtensionFileTypesLoader = () => Set<string>;
 
+/**
+ * Returns { allowToolPermissionApproval } for the workspace's resolved Agent Work OS mobile
+ * permission policy.  Used by immediateToolDecision to auto-approve tool permission requests
+ * without creating an interactive prompt when the mobile policy opts in.
+ */
+export type AgentWorkOSMobilePermissionLoader = (workspacePath: string) => { allowToolPermissionApproval: boolean } | null;
+
 // ---- Dependency Store ----
 
 /**
@@ -120,6 +127,11 @@ export const ClaudeCodeDeps = {
   // Used in planning mode to allow editing extension-registered file types (e.g., .mockup.html)
   extensionFileTypesLoader: null as ExtensionFileTypesLoader | null,
 
+  // When set, resolves the mobile permission policy for a workspace path and returns
+  // { allowToolPermissionApproval }.  Drives auto-approval in immediateToolDecision so
+  // tool permission prompts are skipped entirely when the policy allows it.
+  agentWorkOSMobilePermissionLoader: null as AgentWorkOSMobilePermissionLoader | null,
+
   // ---- Plan Tracking ----
 
   PLAN_TRACKING_DEFAULT: true as const,
@@ -216,6 +228,10 @@ export const ClaudeCodeDeps = {
 
   setExtensionFileTypesLoader(loader: ExtensionFileTypesLoader | null): void {
     this.extensionFileTypesLoader = loader;
+  },
+
+  setAgentWorkOSMobilePermissionLoader(loader: AgentWorkOSMobilePermissionLoader | null): void {
+    this.agentWorkOSMobilePermissionLoader = loader;
   },
 
   setPlanTrackingEnabled(enabled: boolean): void {

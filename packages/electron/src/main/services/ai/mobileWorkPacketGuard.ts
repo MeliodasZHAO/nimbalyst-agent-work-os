@@ -26,6 +26,12 @@ function loadAgentWorkOSConfig(workspacePath: string) {
   );
 }
 
+/** Returns the resolved mobile permission policy for a workspace. */
+export function getMobilePermissionPolicy(workspacePath: string) {
+  const config = loadAgentWorkOSConfig(workspacePath);
+  return resolveMobilePermissionPolicyForMode(config.mobilePermissions.mode, config.mobilePermissions);
+}
+
 async function loadLinkedTrackerRows(workspacePath: string, trackerReference: string): Promise<any[]> {
   if (trackerReference.startsWith('file:')) {
     const filePath = trackerReference.slice('file:'.length);

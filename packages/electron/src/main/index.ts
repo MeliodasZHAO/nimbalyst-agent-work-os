@@ -127,6 +127,7 @@ import { getRegisteredExtensions } from './extensions/RegisteredFileTypes';
 import { ClaudeCodeProvider, OpenAICodexProvider, OpenAICodexACPProvider, OpenCodeProvider, CopilotCLIProvider } from '@nimbalyst/runtime/ai/server';
 import { matchesAllowPattern } from '@nimbalyst/runtime/ai/server/permissions/toolPermissionHelpers';
 import { resolveCodexPreEditHookScriptPath } from './services/ai/codexPreEditHookPath';
+import { getMobilePermissionPolicy } from './services/ai/mobileWorkPacketGuard';
 import { sessionFileTracker } from './services/SessionFileTracker';
 import { historyManager } from './HistoryManager';
 import { readFileContentOrNull } from './services/ai/aiServiceUtils';
@@ -1786,6 +1787,9 @@ app.whenReady().then(async () => {
     ClaudeCodeProvider.setClaudeSettingsPatternSaver(patternSaver);
     ClaudeCodeProvider.setClaudeSettingsPatternChecker(patternChecker);
     ClaudeCodeProvider.setTrustChecker(trustChecker);
+    ClaudeCodeProvider.setAgentWorkOSMobilePermissionLoader((workspacePath) =>
+      getMobilePermissionPolicy(workspacePath)
+    );
 
     OpenAICodexProvider.setPermissionPatternSaver(patternSaver);
     OpenAICodexProvider.setPermissionPatternChecker(patternChecker);
