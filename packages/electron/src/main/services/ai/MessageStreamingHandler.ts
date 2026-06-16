@@ -395,17 +395,27 @@ export class MessageStreamingHandler {
 
     // Update session title if this is the first user message
     if (session.messages.length === 0 || (session.messages.length === 1 && session.messages[0].type === 'user_message')) {
-      // Generate a provisional title from the first message without locking out auto-naming
-      const title = message.length > 100 ? message.substring(0, 97) + '...' : message;
-      await this.svc.sessionManager.updateSessionTitle(session.id, title, {
-        force: true,
-        markAsNamed: false,
-      });
+      // Only set a provisional title when the session still carries the default
+      // placeholder. Sessions created with a deliberate title -- dispatch
+      // children (deriveDispatchTitle), worktree sessions ("Worktree: …"),
+      // meta-agent sessions -- must keep it; force-overwriting with the raw
+      // first-message prefix here was clobbering those names on the kanban.
+      // Matches the canonical DB default ('New conversation', any casing).
+      const currentTitle = (session.title ?? '').trim();
+      const hasDefaultTitle = currentTitle === '' || /^new conversation$/i.test(currentTitle);
+      if (hasDefaultTitle) {
+        // Generate a provisional title from the first message without locking out auto-naming
+        const title = message.length > 100 ? message.substring(0, 97) + '...' : message;
+        await this.svc.sessionManager.updateSessionTitle(session.id, title, {
+          force: true,
+          markAsNamed: false,
+        });
 
-      // Keep session-history UI in sync with provisional title updates without forcing a full refresh.
-      for (const window of BrowserWindow.getAllWindows()) {
-        if (!window.isDestroyed()) {
-          window.webContents.send('sessions:session-updated', session.id, { title });
+        // Keep session-history UI in sync with provisional title updates without forcing a full refresh.
+        for (const window of BrowserWindow.getAllWindows()) {
+          if (!window.isDestroyed()) {
+            window.webContents.send('sessions:session-updated', session.id, { title });
+          }
         }
       }
     }

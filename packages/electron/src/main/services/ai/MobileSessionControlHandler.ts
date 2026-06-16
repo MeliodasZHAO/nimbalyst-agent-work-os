@@ -77,6 +77,8 @@ interface ExitPlanModeResponse {
   approved: boolean;
   feedback?: string;
   startNewSession?: boolean;
+  cancelled?: boolean;
+  planFilePath?: string;
 }
 
 interface ToolPermissionResponse {
@@ -566,6 +568,27 @@ async function handleExitPlanModeResponse(
     return;
   }
 
+  // "Start new session and implement" (parity with desktop): instead of
+  // continuing in this planning session, hand the approved plan to the dispatch
+  // engine so it runs headless in a fresh worktree, observable on the kanban.
+  // Then stop this planning session.
+  if (response.approved && response.startNewSession) {
+    await dispatchPlanImplementation(sessionId, promptId, response.planFilePath);
+    if ('abort' in provider) {
+      log.info('ExitPlanMode start-new-session from mobile; stopping planning session:', sessionId);
+      (provider as { abort: () => void }).abort();
+    }
+    notifyAllWindows('ai:exitPlanModeResponse', {
+      sessionId,
+      promptId,
+      approved: true,
+      startNewSession: true,
+      answeredBy: 'mobile',
+    });
+    TrayManager.getInstance().onPromptResolved(sessionId);
+    return;
+  }
+
   // Call resolveExitPlanModeConfirmation on the provider to resolve the SDK's pending promise
   if ('resolveExitPlanModeConfirmation' in provider) {
     log.info('Resolving ExitPlanMode confirmation:', promptId, 'approved:', response.approved);
@@ -582,6 +605,14 @@ async function handleExitPlanModeResponse(
       );
   }
 
+  // "Stop for now" (cancel): after resolving the plan as denied, abort the
+  // session so the agent stops — parity with desktop stopExitPlanModeSession,
+  // which denies then calls ai:cancelRequest.
+  if (response.cancelled && 'abort' in provider) {
+    log.info('ExitPlanMode cancelled from mobile; aborting session:', sessionId);
+    (provider as { abort: () => void }).abort();
+  }
+
   // Notify renderer to update the UI
   notifyAllWindows('ai:exitPlanModeResponse', {
     sessionId,
@@ -593,6 +624,93 @@ async function handleExitPlanModeResponse(
   });
 
   TrayManager.getInstance().onPromptResolved(sessionId);
+}
+
+/**
+ * Dispatch an approved plan as a headless implementation task — parity with the
+ * desktop "start new session and implement" option. The plan text is read from
+ * the persisted exit_plan_mode_request message so the dispatched session (which
+ * has no view of the planning conversation) gets a fully self-contained prompt.
+ */
+async function dispatchPlanImplementation(
+  sessionId: string,
+  promptId: string,
+  planFilePathFromMobile?: string,
+): Promise<void> {
+  try {
+    const { AISessionsRepository } = await import('@nimbalyst/runtime/storage/repositories/AISessionsRepository');
+    const session = await AISessionsRepository.get(sessionId);
+    if (!session?.workspacePath) {
+      log.error('[Mobile] dispatchPlanImplementation: no workspace for session', sessionId);
+      return;
+    }
+
+    const { plan, planFilePath } = await readExitPlanRequest(sessionId, promptId);
+    const prompt = buildDispatchPlanPrompt(plan, planFilePath || planFilePathFromMobile);
+
+    const { dispatchTasks } = await import('../AgentWorkOSDispatcher');
+    await dispatchTasks({
+      workspacePath: session.workspacePath,
+      tasks: [{
+        title: 'Implement approved plan',
+        prompt,
+        provider: 'auto',
+        priority: 'medium',
+      }],
+    });
+    log.info('[Mobile] Dispatched plan implementation for session', sessionId);
+  } catch (error) {
+    log.error('[Mobile] dispatchPlanImplementation failed:', error);
+  }
+}
+
+/** Read the persisted exit_plan_mode_request to recover the plan text + file path. */
+async function readExitPlanRequest(
+  sessionId: string,
+  promptId: string,
+): Promise<{ plan: string; planFilePath: string }> {
+  try {
+    const { getDatabase } = await import('../../database/initialize');
+    const db = getDatabase();
+    if (!db) return { plan: '', planFilePath: '' };
+    const { rows } = await db.query<{ content: string }>(
+      `SELECT content FROM ai_agent_messages
+       WHERE session_id = $1 AND content LIKE '%exit_plan_mode_request%'
+       ORDER BY created_at DESC LIMIT 10`,
+      [sessionId],
+    );
+    const parsed = rows
+      .map((row) => { try { return JSON.parse(row.content); } catch { return null; } })
+      .filter((o): o is { type?: string; requestId?: string; planSummary?: string; planFilePath?: string } =>
+        o != null && o.type === 'exit_plan_mode_request');
+    // Prefer the exact request; fall back to the most recent plan request.
+    const match = parsed.find((o) => o.requestId === promptId) ?? parsed[0];
+    if (match) {
+      return { plan: String(match.planSummary ?? ''), planFilePath: String(match.planFilePath ?? '') };
+    }
+  } catch (error) {
+    log.warn('[Mobile] readExitPlanRequest failed:', error);
+  }
+  return { plan: '', planFilePath: '' };
+}
+
+/** Build a self-contained implementation prompt embedding the plan. */
+function buildDispatchPlanPrompt(plan: string, planFilePath?: string): string {
+  const parts = [
+    'Implement the following approved plan end-to-end in this isolated worktree.',
+    'It was produced in a separate planning session, so everything you need is below.',
+  ];
+  if (plan.trim()) {
+    parts.push('', '## Plan', plan.trim());
+  }
+  if (planFilePath) {
+    parts.push('', `(Original plan file in the source workspace: ${planFilePath})`);
+  }
+  if (!plan.trim() && !planFilePath) {
+    parts.push('', 'No plan text was recovered; ask the user to restate the plan if needed.');
+  }
+  parts.push('', 'When the work is ready for review, summarize what changed and how to verify it.');
+  return parts.join('\n');
 }
 
 /**

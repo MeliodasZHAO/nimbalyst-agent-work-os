@@ -33,6 +33,7 @@ import {
   projectActivitySummaryAtom,
 } from '../store/atoms/sessionActivity';
 import { MaterialSymbol } from '@nimbalyst/runtime';
+import { HelpTooltip } from '../help';
 import { generateWorkspaceAccentColor } from './WorkspaceSummaryHeader';
 
 const isWindows = navigator.userAgent.includes('Windows');
@@ -140,13 +141,6 @@ export function ProjectTabBar() {
     [recentProjects, openProjectPaths]
   );
 
-  const refreshRecents = useCallback(async () => {
-    try {
-      const recents = await window.electronAPI?.invoke?.('settings:get-recent-projects');
-      if (Array.isArray(recents)) setRecentProjects(recents);
-    } catch {}
-  }, []);
-
   const handleActivate = useCallback((path: string) => {
     if (path === activePath) return;
     setActivePath(path);
@@ -185,15 +179,6 @@ export function ProjectTabBar() {
     setContextMenu({ project, x: e.clientX, y: e.clientY });
   }, []);
 
-  const handleAddClick = useCallback(() => {
-    if (atCap) {
-      window.alert('已达到最大项目数 (8)，请先关闭一个项目或在新窗口中打开。');
-      return;
-    }
-    refreshRecents();
-    setAddMenuOpen(true);
-  }, [atCap, refreshRecents]);
-
   const handleOpenFolder = useCallback(async () => {
     setAddMenuOpen(false);
     try {
@@ -209,6 +194,28 @@ export function ProjectTabBar() {
       console.error('[ProjectTabBar] open folder failed:', err);
     }
   }, [addProject]);
+
+  const handleAddClick = useCallback(async () => {
+    if (atCap) {
+      window.alert('已达到最大项目数 (8)，请先关闭一个项目或在新窗口中打开。');
+      return;
+    }
+    // Fetch recents first: when there are none to offer, the dropdown would
+    // contain a single "Open folder" item -- skip the extra click and open
+    // the system folder picker directly.
+    let recents: Array<{ path: string; name: string; timestamp?: number }> = [];
+    try {
+      const fetched = await window.electronAPI?.invoke?.('settings:get-recent-projects');
+      if (Array.isArray(fetched)) recents = fetched;
+    } catch {}
+    setRecentProjects(recents);
+    const hasRecents = recents.some((r) => !openProjectPaths.has(r.path));
+    if (!hasRecents) {
+      void handleOpenFolder();
+      return;
+    }
+    setAddMenuOpen(true);
+  }, [atCap, openProjectPaths, handleOpenFolder]);
 
   const handleOpenRecent = useCallback(async (path: string, name: string) => {
     setAddMenuOpen(false);
@@ -314,20 +321,23 @@ export function ProjectTabBar() {
         })}
 
         {/* Add project button */}
-        <button
-          ref={(el) => {
-            addButtonRef.current = el;
-            addRefs.setReference(el);
-          }}
-          type="button"
-          className="project-tab-add flex items-center justify-center w-7 h-7 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag]"
-          onClick={handleAddClick}
-          title={atCap ? '已达到最大项目数 (8)' : '添加项目'}
-          disabled={atCap}
-          data-testid="project-tab-add"
-        >
-          <MaterialSymbol icon="add" size={14} />
-        </button>
+        <HelpTooltip testId="project-tab-add" placement="bottom">
+          <button
+            ref={(el) => {
+              addButtonRef.current = el;
+              addRefs.setReference(el);
+            }}
+            type="button"
+            className="project-tab-add flex items-center justify-center w-7 h-7 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag]"
+            onClick={handleAddClick}
+            // Disabled buttons don't fire mouse events, so the cap state keeps a native title
+            title={atCap ? '已达到最大项目数 (8)' : undefined}
+            disabled={atCap}
+            data-testid="project-tab-add"
+          >
+            <MaterialSymbol icon="add" size={14} />
+          </button>
+        </HelpTooltip>
 
         {/* Spacer for window dragging */}
         <span className="flex-1" />
@@ -342,7 +352,7 @@ export function ProjectTabBar() {
           <div
             ref={addRefs.setFloating}
             style={addFloatingStyles}
-            className="project-tab-add-menu z-50 min-w-[220px] max-w-[320px] rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg)] shadow-lg py-1"
+            className="project-tab-add-menu z-50 min-w-[260px] max-w-[360px] rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg)] shadow-[0_12px_32px_rgba(0,0,0,0.45)] py-1"
             {...getAddFloatingProps()}
           >
             <button

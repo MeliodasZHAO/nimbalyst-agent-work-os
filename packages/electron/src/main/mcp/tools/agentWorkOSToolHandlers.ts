@@ -6,6 +6,7 @@
  */
 
 import { dispatchTasks, type DispatchTask } from '../../services/AgentWorkOSDispatcher';
+import { mapDispatchArgs } from './dispatchArgs';
 import type { DispatchResult } from '../../../shared/ipc/types';
 
 type McpToolResult = {
@@ -17,7 +18,7 @@ export const agentWorkOSToolSchemas = [
   {
     name: 'agent_work_os_dispatch',
     description:
-      'Dispatch multiple tasks for parallel execution. Each task gets its own git worktree and AI session with an independent prompt. Use this when the user asks to do multiple things at once, or when tasks are independent and can run in parallel.',
+      'Dispatch tasks for isolated execution. Each task gets its own git worktree and AI session with an independent prompt. Two uses: (1) a SINGLE task to move substantial or experimental work into an isolated worktree so it cannot contaminate the user\'s working tree; (2) MULTIPLE independent tasks (no shared files, no ordering) to run in parallel. Task prompts must be fully self-contained -- the new sessions cannot see the current conversation.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -29,7 +30,8 @@ export const agentWorkOSToolSchemas = [
             properties: {
               title: {
                 type: 'string',
-                description: 'Short title for this task (shown in UI).',
+                description:
+                  'A specific, self-explanatory title for this task, shown side-by-side with other tasks on the kanban. Use 3-8 words, verb-first (e.g. "Add retry to upload handler", "Fix login page split layout"). Do NOT use vague placeholders like "Task", "Untitled", "Fix", or a bare number.',
               },
               prompt: {
                 type: 'string',
@@ -48,6 +50,16 @@ export const agentWorkOSToolSchemas = [
                 type: 'string',
                 enum: ['tiny', 'small', 'medium', 'large'],
                 description: 'Estimated task complexity. Affects resource allocation.',
+              },
+              effortLevel: {
+                type: 'string',
+                enum: ['low', 'medium', 'high', 'xhigh', 'max'],
+                description: 'Reasoning effort for this task\'s session (default "high"). Set "max"/"xhigh" for hard, high-risk, or deep-reasoning work; leave unset for routine tasks. Pair with model "claude-code:opus" for the hardest tasks.',
+              },
+              priority: {
+                type: 'string',
+                enum: ['high', 'medium', 'low'],
+                description: 'Scheduling priority. When more tasks are dispatched than the concurrency limit, higher-priority tasks start first. Defaults to "medium".',
               },
               createWorkPacket: {
                 type: 'boolean',
@@ -110,14 +122,7 @@ export async function handleAgentWorkOSDispatch(
     };
   }
 
-  const tasks: DispatchTask[] = (args.tasks || []).map((t: any) => ({
-    title: t.title || 'Untitled task',
-    prompt: t.prompt || '',
-    provider: t.provider || 'auto',
-    model: t.model,
-    complexity: t.complexity,
-    createWorkPacket: t.createWorkPacket ?? false,
-  }));
+  const tasks: DispatchTask[] = mapDispatchArgs(args);
 
   if (tasks.length === 0) {
     return {

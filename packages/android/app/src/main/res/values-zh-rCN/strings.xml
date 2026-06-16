@@ -157,4 +157,25 @@
     <!-- Notifications -->
     <string name="notif_firebase_not_configured">Android 尚未配置 Firebase。添加 google-services.json 以启用推送。</string>
     <string name="notif_fcm_failed">获取 FCM 令牌失败。</string>
+    <!-- Bottom navigation -->
+    <string name="nav_projects">项目</string>
+    <string name="nav_inbox">待办</string>
+    <string name="nav_board">看板</string>
+
+    <!-- Inbox -->
+    <string name="inbox_title">待办</string>
+    <string name="inbox_waiting_section">等待你回应（%1$d）</string>
+    <string name="inbox_running_section">正在运行（%1$d）</string>
+    <string name="inbox_unread_section">未读更新（%1$d）</string>
+    <string name="inbox_empty">全部处理完啦——暂时没有需要你关注的会话。</string>
+
+    <!-- Board -->
+    <string name="board_title">看板</string>
+    <string name="board_empty">看板上还没有会话。在桌面端为会话设置阶段后，这里会同步显示。</string>
+    <string name="phase_backlog">待处理</string>
+    <string name="phase_planning">规划中</string>
+    <string name="phase_implementing">实现中</string>
+    <string name="phase_validating">验证中</string>
+    <string name="phase_complete">已完成</string>
+    <string name="badge_needs_response">等你回应</string>
 </resources>

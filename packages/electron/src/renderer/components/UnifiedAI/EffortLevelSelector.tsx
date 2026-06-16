@@ -8,6 +8,17 @@ interface EffortLevelSelectorProps {
   onLevelChange: (level: EffortLevel) => void;
 }
 
+// Display-layer labels; EFFORT_LEVELS keys/labels stay canonical for the wire.
+const EFFORT_LEVEL_LABELS: Record<EffortLevel, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
+  xhigh: '超高',
+  max: '最大',
+};
+
+const effortLabel = (key: EffortLevel, fallback: string) => EFFORT_LEVEL_LABELS[key] ?? fallback;
+
 export function EffortLevelSelector({ level, onLevelChange }: EffortLevelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -43,7 +54,7 @@ export function EffortLevelSelector({ level, onLevelChange }: EffortLevelSelecto
         aria-label={`Effort level: ${currentLevel.label}`}
       >
         <MaterialSymbol icon="psychology" size={12} />
-        <span>{currentLevel.label}</span>
+        <span>{effortLabel(currentLevel.key, currentLevel.label)}</span>
         <MaterialSymbol icon="expand_more" size={14} className={`transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -55,7 +66,7 @@ export function EffortLevelSelector({ level, onLevelChange }: EffortLevelSelecto
               className={`flex items-center justify-between gap-2 px-2 py-1.5 w-full border-none rounded text-xs cursor-pointer transition-[background] duration-150 text-left text-[var(--nim-text)] hover:bg-[var(--nim-bg-hover)] ${l.key === level ? 'bg-[var(--nim-bg-secondary)] text-[var(--nim-primary)]' : ''}`}
               onClick={() => { onLevelChange(l.key); setIsOpen(false); }}
             >
-              <span>{l.label}</span>
+              <span>{effortLabel(l.key, l.label)}</span>
               {l.key === level && <MaterialSymbol icon="check" size={14} />}
             </button>
           ))}

@@ -597,6 +597,118 @@ class SyncManager(
                     appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
                 }
 
+                "askUserQuestionCancel" -> {
+                    val response = JsonObject().apply {
+                        add("answers", JsonObject())
+                        addProperty("cancelled", true)
+                    }
+                    sendSessionControlMessage(
+                        sessionId = sessionId,
+                        messageType = "prompt_response",
+                        payload = jsonObject(
+                            "promptType" to "ask_user_question",
+                            "promptId" to promptId,
+                            "response" to response
+                        )
+                    ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
+                }
+
+                "requestUserInputSubmit" -> {
+                    val answers = body.getAsJsonObject("answers") ?: JsonObject()
+                    val response = JsonObject().apply { add("answers", answers.deepCopy()) }
+                    sendSessionControlMessage(
+                        sessionId = sessionId,
+                        messageType = "prompt_response",
+                        payload = jsonObject(
+                            "promptType" to "request_user_input",
+                            "promptId" to promptId,
+                            "response" to response
+                        )
+                    ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
+                }
+
+                "requestUserInputCancel" -> {
+                    val response = JsonObject().apply {
+                        add("answers", JsonObject())
+                        addProperty("cancelled", true)
+                    }
+                    sendSessionControlMessage(
+                        sessionId = sessionId,
+                        messageType = "prompt_response",
+                        payload = jsonObject(
+                            "promptType" to "request_user_input",
+                            "promptId" to promptId,
+                            "response" to response
+                        )
+                    ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
+                }
+
+                "toolPermissionCancel" -> {
+                    // Mobile cancel maps to a deny decision: declines the tool and
+                    // unblocks the agent without aborting the whole turn.
+                    val response = jsonObject("decision" to "deny", "scope" to "once")
+                    sendSessionControlMessage(
+                        sessionId = sessionId,
+                        messageType = "prompt_response",
+                        payload = jsonObject(
+                            "promptType" to "tool_permission",
+                            "promptId" to promptId,
+                            "response" to response
+                        )
+                    ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
+                }
+
+                "exitPlanModeStartNewSession" -> {
+                    // "Start new session and implement": approve + signal the desktop
+                    // to spin up a fresh implementation session via the dispatch
+                    // engine. We do NOT appendToolResult(approved:true) here — the
+                    // desktop aborts this planning session, so feeding it an approval
+                    // could race into same-session implementation. The desktop reads
+                    // the plan from the persisted exit_plan_mode_request message.
+                    val response = jsonObject("approved" to true).apply {
+                        addProperty("startNewSession", true)
+                        body.get("planFilePath")?.takeIf { !it.isJsonNull }?.asString?.let {
+                            addProperty("planFilePath", it)
+                        }
+                    }
+                    sendSessionControlMessage(
+                        sessionId = sessionId,
+                        messageType = "prompt_response",
+                        payload = jsonObject(
+                            "promptType" to "exit_plan_mode",
+                            "promptId" to promptId,
+                            "response" to response
+                        )
+                    ).getOrThrow()
+                }
+
+                "exitPlanModeCancel" -> {
+                    // "Stop for now": deny the plan and signal cancellation so the
+                    // desktop aborts the waiting session (parity with desktop).
+                    val response = jsonObject("approved" to false).apply {
+                        addProperty("cancelled", true)
+                    }
+                    sendSessionControlMessage(
+                        sessionId = sessionId,
+                        messageType = "prompt_response",
+                        payload = jsonObject(
+                            "promptType" to "exit_plan_mode",
+                            "promptId" to promptId,
+                            "response" to response
+                        )
+                    ).getOrThrow()
+                    awaitSessionRoom(sessionId)
+                    appendToolResult(sessionId, promptId, gson.toJson(response)).getOrThrow()
+                }
+
                 else -> throw IllegalArgumentException("Unsupported interactive action: $action")
             }
 

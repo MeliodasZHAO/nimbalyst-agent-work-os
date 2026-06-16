@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { usePostHog } from 'posthog-js/react';
 import { MaterialSymbol } from '@nimbalyst/runtime';
+import { isAgentProvider } from '@nimbalyst/runtime/ai/server/types';
 import { FloatingPortal, useFloatingMenu } from '../../hooks/useFloatingMenu';
 import {
   actionPromptsAtomFamily,
@@ -22,6 +24,47 @@ interface ActionPromptsDropdownProps {
    * the action still does something useful.
    */
   onLaunchNewSession?: (action: ActionPrompt) => void | Promise<void>;
+  /**
+   * Provider of the current session. Used by the built-in cross-model review
+   * action to pick a reviewer from a DIFFERENT provider (writer blind spots
+   * don't transfer across models).
+   */
+  currentProvider?: string | null;
+}
+
+/**
+ * Prompt body for the built-in cross-model review action. The launch handler
+ * appends an "Originating session: @@[...]" reference so the reviewer can pull
+ * context from the session under review.
+ */
+const CROSS_MODEL_REVIEW_BODY = `Act as an independent code reviewer for work done by another agent session (referenced below).
+
+1. Run \`git status\` and \`git diff\` (plus \`git log\` for recent commits on this branch) to see exactly what changed.
+2. Review the changes for: correctness bugs, missed edge cases, data-consistency problems, security issues, and deviations from this project's conventions (check CLAUDE.md and the docs it references).
+3. Be adversarial: try to refute the implementation's assumptions rather than confirm them.
+4. Do NOT modify any code. Deliver a review report -- findings ordered by severity, each with file:line references and a concrete suggested fix. End with a clear verdict: approve, approve-with-nits, or request-changes.`;
+
+/**
+ * Pick a reviewer model from a different agent provider than the writer.
+ * Falls back to the writer's provider default (still useful -- fresh context)
+ * when no other agent provider is configured.
+ */
+async function pickCrossModelReviewModel(currentProvider?: string | null): Promise<string | undefined> {
+  try {
+    const response = await window.electronAPI.aiGetModels();
+    if (response?.success && response.grouped) {
+      for (const [provider, models] of Object.entries(response.grouped as Record<string, Array<{ id: string }>>)) {
+        if (provider !== currentProvider && isAgentProvider(provider) && models.length > 0) {
+          return models[0].id;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[ActionPromptsDropdown] Failed to pick cross-model reviewer:', err);
+  }
+  // Same provider, default model -- a fresh session still avoids the
+  // writer-session's accumulated context bias.
+  return undefined;
 }
 
 function firstLinePreview(body: string, maxLen = 80): string {
@@ -31,7 +74,8 @@ function firstLinePreview(body: string, maxLen = 80): string {
   return trimmed.slice(0, maxLen - 1) + '…';
 }
 
-export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSession }: ActionPromptsDropdownProps) {
+export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSession, currentProvider }: ActionPromptsDropdownProps) {
+  const { t } = useTranslation('agent');
   const state = useAtomValue(actionPromptsAtomFamily(workspacePath));
   const setState = useSetAtom(actionPromptsAtomFamily(workspacePath));
   const posthog = usePostHog();
@@ -117,8 +161,37 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
     [onInsert, onLaunchNewSession, menu, posthog, actions.length]
   );
 
-  const handleSeed = useCallback(async () => {
+  /**
+   * Built-in: launch a review session on a different provider/model than the
+   * one that wrote the changes. Model is resolved at click time so it always
+   * reflects the currently-enabled providers.
+   */
+  const handleCrossModelReview = useCallback(async () => {
+    menu.setIsOpen(false);
+    if (!onLaunchNewSession) {
+      // No launcher wired up -- fall back to inserting the prompt body.
+      onInsert(CROSS_MODEL_REVIEW_BODY);
+      return;
+    }
+    const model = await pickCrossModelReviewModel(currentProvider);
+    const action: ActionPrompt = {
+      id: 'builtin-cross-model-review',
+      label: 'Cross-model review',
+      body: CROSS_MODEL_REVIEW_BODY,
+      config: { launch: 'new-session', model, foreground: true, autoSubmit: true, worktree: false },
+    };
+    void onLaunchNewSession(action);
     try {
+      posthog?.capture('cross_model_review_launched', {
+        writerProvider: currentProvider ?? null,
+        reviewerModel: model ?? null,
+      });
+    } catch {
+      // analytics is best-effort
+    }
+  }, [onLaunchNewSession, onInsert, menu, currentProvider, posthog]);
+
+  const handleSeed = useCallback(async () => {    try {
       await window.electronAPI?.invoke?.('action-prompts:open-file', { workspacePath });
       // Refresh list — the file watcher will also broadcast, but we kick a
       // refresh now so the dropdown reflects the seeded content immediately.
@@ -176,7 +249,7 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
     }
   }, [highlightedIndex, menu.isOpen]);
 
-  const buttonLabel = useMemo(() => 'Actions', []);
+  const buttonLabel = t('actions');
 
   return (
     <>
@@ -210,7 +283,7 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
             className="action-prompts-dropdown-panel z-[1000] min-w-[260px] max-w-[360px] rounded-lg p-1 bg-[var(--nim-bg)] border border-[var(--nim-border)] shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
           >
             <div className="action-prompts-dropdown-header px-2 py-1.5 text-[10px] uppercase tracking-wider text-[var(--nim-text-faint)] flex items-center justify-between">
-              <span>{state.fileExists ? 'From ai-actions.md' : 'Action prompts'}</span>
+              <span>{state.fileExists ? t('fromAiActions') : t('actionPrompts')}</span>
               {state.fileExists && (
                 <span className="text-[10px] text-[var(--nim-text-disabled)]">
                   {actions.length}
@@ -218,11 +291,33 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
               )}
             </div>
 
+            {/* Built-in actions */}
+            <div className="action-prompts-dropdown-builtins py-1">
+              <button
+                type="button"
+                onClick={() => void handleCrossModelReview()}
+                data-testid="action-prompt-cross-model-review"
+                className="action-prompts-dropdown-item flex items-start gap-2 w-full text-left px-2 py-1.5 rounded border-none cursor-pointer text-[var(--nim-text)] bg-transparent hover:bg-[var(--nim-bg-hover)]"
+              >
+                <span className="flex flex-col items-start gap-0.5 min-w-0 flex-1">
+                  <span className="text-[12px] font-medium leading-tight">{t('crossModelReview')}</span>
+                  <span className="text-[11px] text-[var(--nim-text-muted)] leading-tight truncate w-full">
+                    {t('crossModelReviewDesc')}
+                  </span>
+                </span>
+                <MaterialSymbol
+                  icon="rate_review"
+                  size={14}
+                  className="shrink-0 mt-0.5 text-[var(--nim-text-faint)]"
+                />
+              </button>
+            </div>
+            <div className="h-px my-1 bg-[var(--nim-border)]" />
+
             {showSeedCta && (
               <div className="px-2 py-2 flex flex-col gap-2">
                 <p className="text-xs text-[var(--nim-text-muted)] leading-snug">
-                  No <code>ai-actions.md</code> in this workspace yet. Seed it with a few example
-                  prompts you can edit.
+                  {t('noAiActionsYet')}
                 </p>
                 <button
                   type="button"
@@ -230,15 +325,14 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
                   onClick={handleSeed}
                   data-testid="action-prompts-seed-button"
                 >
-                  Create ai-actions.md with examples
+                  {t('createAiActionsWithExamples')}
                 </button>
               </div>
             )}
 
             {state.fileExists && !hasActions && (
               <div className="px-2 py-3 text-xs text-[var(--nim-text-muted)] leading-snug">
-                <code>ai-actions.md</code> has no <code>## Heading</code> sections yet. Open the file
-                and add one to get started.
+                {t('aiActionsNoSections')}
               </div>
             )}
 
@@ -247,7 +341,7 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
                 {actions.map((action, idx) => {
                   const isLauncher = action.config?.launch === 'new-session';
                   const launcherSubtitle = isLauncher
-                    ? `Opens new session${action.config?.model ? ` · ${action.config.model}` : ''}`
+                    ? `${t('opensNewSession')}${action.config?.model ? ` · ${action.config.model}` : ''}`
                     : null;
                   return (
                     <button
@@ -291,7 +385,7 @@ export function ActionPromptsDropdown({ workspacePath, onInsert, onLaunchNewSess
                 data-testid="action-prompts-edit-link"
               >
                 <MaterialSymbol icon="edit" size={12} />
-                <span>{state.fileExists ? 'Edit actions…' : 'Open ai-actions.md…'}</span>
+                <span>{state.fileExists ? t('editActions') : t('openAiActions')}</span>
               </button>
             </div>
           </div>

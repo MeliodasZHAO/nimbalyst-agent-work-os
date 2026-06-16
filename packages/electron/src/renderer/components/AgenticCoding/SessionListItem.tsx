@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo, memo } from '
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MaterialSymbol, ProviderIcon } from '@nimbalyst/runtime';
 import { getRelativeTimeString } from '../../utils/dateFormatting';
+import { displaySessionTitle } from '../../utils/sessionTitle';
 import { sessionOrChildProcessingAtom, sessionUnreadAtom, sessionPendingPromptAtom, sessionHasPendingInteractivePromptAtom, reparentSessionAtom, refreshSessionListAtom, sessionShareAtom, sessionWakeupAtom, sessionLastActivityAtom } from '../../store';
 import { convertToWorkstreamAtom } from '../../store/atoms/sessions';
 import { SessionContextMenu } from './SessionContextMenu';
@@ -382,8 +383,9 @@ export const SessionListItem = memo<SessionListItemProps>(({
     }
   }, [isRenaming]);
 
-  // Get the first line of the title (truncate if too long)
-  const displayTitle = title || '未命名会话';
+  // Get the first line of the title (truncate if too long).
+  // 'New conversation' DB defaults are localized at display time.
+  const displayTitle = title ? displaySessionTitle(title) : '未命名会话';
   const truncatedTitle = displayTitle.length > 40
     ? displayTitle.substring(0, 40) + '...'
     : displayTitle;

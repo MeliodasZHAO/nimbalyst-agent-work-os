@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Agent Work OS: mobile permission policy `flexible`/`custom` with `allowToolPermissionApproval` now auto-approves tool permission requests without showing interactive prompts
 - Agent Work OS interaction skills: `/agent-os`, `/agent-os-create`, `/agent-os-gate`, `/agent-os-launch`, `/agent-os-hotfix`, `/agent-os-tweak` for CC agent-side Work Packet management
+- Agent Work OS: dispatched tasks now self-assess difficulty — the triage prompt judges complexity from real code, sets a per-task model and reasoning `effortLevel`, and uses in-session subagent/`Workflow` orchestration for deep, unsplittable work
+- Agent Work OS: concurrency-limited, priority-ordered dispatch queue with queued tasks visible on the kanban and a tracker "auto-implement" action
 - i18n: Chinese translations for dialogs, settings panels, session history, keyboard shortcuts, and update toasts
 - Android: Chinese localization across all in-app screens (follows system language) with a custom app launcher icon
 - README rewritten in Chinese with Agent Work OS feature overview
@@ -26,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Android: interactive approval responses (tool permission, ask user question, exit plan mode) now reliably execute — the approval was silently dropped when the session WebSocket wasn't yet open; `handleInteractiveResponse` is now a suspend function that awaits the session room connection before writing the tool result. Also adds missing `appendToolResult` calls for `exitPlanModeApprove` and `exitPlanModeDeny`.
 - iOS: editor web bundle build no longer fails when `@anthropic-ai/sdk` is transitively pulled in via extension-sdk; `node:*` and `@anthropic-ai/*` are marked external in the rollup config
 - Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)
+- Session kanban now shows derived and localized session titles instead of the raw "New conversation" default
+- Provisional first-message titles no longer overwrite a deliberately-named session (dispatch/worktree/meta-agent sessions keep their titles)
+- Auto-updater no longer surfaces an update error on local unpacked builds that ship no update manifest
 
 ### Removed
 <!-- Removed features go here -->

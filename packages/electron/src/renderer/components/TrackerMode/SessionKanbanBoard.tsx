@@ -60,6 +60,7 @@ import {
   sessionListWorkspaceAtom,
 } from '../../store/atoms/sessions';
 import { transcriptEventSignalAtom } from '../../store/atoms/sessionTranscript';
+import { displaySessionTitle } from '../../utils/sessionTitle';
 import { SessionContextMenu } from '../AgenticCoding/SessionContextMenu';
 import { ArchiveWorktreeDialog } from '../AgentMode/ArchiveWorktreeDialog';
 import { useArchiveWorktreeDialog } from '../../hooks/useArchiveWorktreeDialog';
@@ -447,6 +448,14 @@ const SessionKanbanCard = React.memo(function SessionKanbanCard({ session, onSel
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekIconRef = useRef<HTMLSpanElement>(null);
 
+  // Child sessions are shown flat on the board; resolve the parent's title so
+  // the card can show where this session was spawned from.
+  const registry = useAtomValue(sessionRegistryAtom);
+  const parentSession = session.parentSessionId
+    ? registry.get(session.parentSessionId)
+    : undefined;
+  const parentTitle = parentSession ? displaySessionTitle(parentSession.title) : undefined;
+
   // Context menu state
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -575,12 +584,23 @@ const SessionKanbanCard = React.memo(function SessionKanbanCard({ session, onSel
               />
             ) : (
               <div className="text-xs font-medium text-nim leading-snug line-clamp-2">
-                {session.title}
+                {displaySessionTitle(session.title)}
               </div>
             )}
           </div>
           <CardStatusBadge info={cardState} />
         </div>
+
+        {/* Parent marker for child sessions shown flat on the board */}
+        {parentTitle && (
+          <div
+            className="session-kanban-card-parent flex items-center gap-1 text-[10px] text-nim-faint mb-1 min-w-0"
+            title={`Spawned from: ${parentTitle}`}
+          >
+            <MaterialSymbol icon="subdirectory_arrow_right" size={12} />
+            <span className="truncate">{parentTitle}</span>
+          </div>
+        )}
 
         {/* Child session count (workstream/worktree only) */}
         {cardType !== 'session' && session.childCount > 0 && (

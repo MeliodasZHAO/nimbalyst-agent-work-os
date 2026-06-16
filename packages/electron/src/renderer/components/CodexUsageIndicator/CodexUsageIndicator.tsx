@@ -17,6 +17,7 @@ import {
 } from '../../store/atoms/codexUsageAtoms';
 import { CodexUsagePopover } from './CodexUsagePopover';
 import { refreshCodexUsage } from '../../store/listeners/codexUsageListeners';
+import { HelpTooltip } from '../../help';
 
 const RING_RADIUS = 12;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -61,24 +62,29 @@ export const CodexUsageIndicator: React.FC<CodexUsageIndicatorProps> = ({ classN
   const effectiveSessionColor = limitsAvailable ? sessionColor : 'muted';
   const strokeColor = colorClasses[effectiveSessionColor] || colorClasses.muted;
 
-  const tooltipContent = usage?.error
-    ? `Codex usage unavailable: ${usage.error}`
+  // Dynamic usage line shown inside the HelpTooltip (Chinese, localized)
+  const usageDetail = usage?.error
+    ? `用量信息不可用：${usage.error}`
     : usage
       ? limitsAvailable
-        ? `Codex: ${Math.round(utilization)}% (resets ${formatResetTime(usage.fiveHour.resetsAt)})`
-        : 'Codex usage (limits unavailable)'
-      : 'Codex usage unavailable';
+        ? `当前会话：${Math.round(utilization)}%（${formatResetTime(usage.fiveHour.resetsAt)} 后重置）`
+        : '额度信息暂不可用'
+      : '用量信息不可用';
 
   return (
     <div className={`relative ${className || ''}`}>
-      <button
-        ref={buttonRef}
-        onClick={handleClick}
-        title={tooltipContent}
-        className="relative w-9 h-9 flex items-center justify-center bg-transparent border-none rounded-md cursor-pointer transition-all duration-150 p-0 hover:bg-nim-tertiary active:scale-95 focus-visible:outline-2 focus-visible:outline-[var(--nim-primary)] focus-visible:outline-offset-2"
-        aria-label="Codex Usage"
-        data-testid="codex-usage-indicator"
+      <HelpTooltip
+        testId="codex-usage-indicator"
+        placement="right"
+        extraContent={<span className="text-xs text-[var(--nim-text)]">{usageDetail}</span>}
       >
+        <button
+          ref={buttonRef}
+          onClick={handleClick}
+          className="relative w-9 h-9 flex items-center justify-center bg-transparent border-none rounded-md cursor-pointer transition-all duration-150 p-0 hover:bg-nim-tertiary active:scale-95 focus-visible:outline-2 focus-visible:outline-[var(--nim-primary)] focus-visible:outline-offset-2"
+          aria-label="Codex Usage"
+          data-testid="codex-usage-indicator"
+        >
         <svg
           width="32"
           height="32"
@@ -112,7 +118,8 @@ export const CodexUsageIndicator: React.FC<CodexUsageIndicatorProps> = ({ classN
         <span className="absolute inset-0 flex items-center justify-center text-[9px] font-semibold text-nim">
           {limitsAvailable ? `${Math.round(utilization)}%` : '--'}
         </span>
-      </button>
+        </button>
+      </HelpTooltip>
 
       {isPopoverOpen && (
         <CodexUsagePopover

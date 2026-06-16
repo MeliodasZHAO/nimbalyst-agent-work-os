@@ -8,17 +8,115 @@
 import log from 'electron-log/main';
 import { BrowserWindow } from 'electron';
 import { safeHandle } from '../utils/ipcRegistry';
-import { dispatchTasks, type DispatchPayload } from '../services/AgentWorkOSDispatcher';
+import { dispatchTasks, type DispatchPayload, type DispatchTask } from '../services/AgentWorkOSDispatcher';
+import type { DispatchPriority } from '../services/DispatchQueue';
 import { WorkspaceHasNoCommitsError, GitWorktreeService } from '../services/GitWorktreeService';
 import { getDatabase } from '../database/initialize';
 import { createWorktreeStore } from '../services/WorktreeStore';
 import { AISessionsRepository } from '@nimbalyst/runtime/storage/repositories/AISessionsRepository';
+import { rowToTrackerItem } from '../mcp/tools/trackerToolHandlers';
 import { archiveWorktree } from './WorktreeHandlers';
 import type { DispatchResult, SelectiveMergePayload, SelectiveMergeResult } from '../../shared/ipc/types';
 
 const logger = log.scope('AgentWorkOSDispatchHandlers');
 
+/** Map a tracker priority string onto a dispatch scheduling priority. */
+function toDispatchPriority(raw: unknown): DispatchPriority {
+  const p = String(raw ?? '').toLowerCase();
+  if (p === 'critical' || p === 'urgent' || p === 'high') return 'high';
+  if (p === 'low' || p === 'minor') return 'low';
+  return 'medium';
+}
+
+/** Build a self-contained implementation prompt from a tracker item. */
+function buildTaskPrompt(item: { title?: string; description?: string }): string {
+  const parts = [
+    'Implement the following tracker item end-to-end in this isolated worktree.',
+    '',
+    `Title: ${item.title ?? '(untitled)'}`,
+  ];
+  if (item.description?.trim()) {
+    parts.push('', 'Details:', item.description.trim());
+  }
+  parts.push(
+    '',
+    'When the work is ready for review, summarize what changed and how to verify it.',
+  );
+  return parts.join('\n');
+}
+
 export function registerAgentWorkOSDispatchHandlers(): void {
+  /**
+   * Auto-implement one or more tracker items: turn each into a dispatch task
+   * that runs in its own worktree (gated by the dispatch concurrency queue).
+   */
+  safeHandle(
+    'agent-work-os:auto-implement',
+    async (
+      _event,
+      payload: { workspacePath: string; trackerItemId?: string; trackerItemIds?: string[] },
+    ): Promise<DispatchResult> => {
+      try {
+        const { workspacePath } = payload;
+        if (!workspacePath) throw new Error('workspacePath is required');
+
+        const ids = payload.trackerItemIds?.length
+          ? payload.trackerItemIds
+          : payload.trackerItemId
+            ? [payload.trackerItemId]
+            : [];
+        if (ids.length === 0) throw new Error('At least one trackerItemId is required');
+
+        const db = getDatabase();
+        if (!db) throw new Error('Database not initialized');
+
+        const tasks: DispatchTask[] = [];
+        const touchedItems: any[] = [];
+
+        for (const id of ids) {
+          const { rows } = await db.query<any>(
+            `SELECT * FROM tracker_items WHERE id = $1 AND workspace = $2`,
+            [id, workspacePath],
+          );
+          if (!rows[0]) {
+            logger.warn('auto-implement: tracker item not found', { id });
+            continue;
+          }
+          const item = rowToTrackerItem(rows[0]);
+          tasks.push({
+            title: item.title || 'Untitled task',
+            prompt: buildTaskPrompt(item),
+            provider: 'auto',
+            priority: toDispatchPriority(item.priority),
+            trackerItemId: id,
+            createWorkPacket: false,
+          });
+          touchedItems.push(item);
+        }
+
+        if (tasks.length === 0) {
+          return { success: false, dispatchId: '', tasks: [], error: 'No matching tracker items found' };
+        }
+
+        const result = await dispatchTasks({ workspacePath, tasks });
+
+        // Mark items in-progress and refresh the kanban / tracker views.
+        for (const item of touchedItems) {
+          await markTrackerItemInProgress(db, item.id, workspacePath);
+        }
+        notifyTrackerItemsChanged(touchedItems);
+
+        return result;
+      } catch (error) {
+        logger.error('auto-implement failed:', error);
+        const message = error instanceof WorkspaceHasNoCommitsError
+          ? error.message
+          : (error instanceof Error ? error.message : 'auto-implement failed');
+        return { success: false, dispatchId: '', tasks: [], error: message };
+      }
+    },
+  );
+
   /**
    * Dispatch multiple tasks — each gets its own worktree, session, and prompt.
    */
@@ -343,4 +441,45 @@ export function registerAgentWorkOSDispatchHandlers(): void {
       }
     },
   );
+}
+
+/**
+ * Set a tracker item's status to in-progress via a defensive read-modify-write
+ * of its data JSON. (data->'key' diverges between PGLite and SQLite, so we read
+ * the whole data column and parse it.)
+ */
+async function markTrackerItemInProgress(
+  db: { query: <T = any>(sql: string, params?: any[]) => Promise<{ rows: T[] }> },
+  itemId: string,
+  workspacePath: string,
+): Promise<void> {
+  try {
+    const { rows } = await db.query<{ data: any }>(
+      `SELECT data FROM tracker_items WHERE id = $1 AND workspace = $2`,
+      [itemId, workspacePath],
+    );
+    if (!rows[0]) return;
+    const data = typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : (rows[0].data ?? {});
+    data.status = 'in-progress';
+    await db.query(
+      `UPDATE tracker_items SET data = $1, updated = NOW() WHERE id = $2 AND workspace = $3`,
+      [JSON.stringify(data), itemId, workspacePath],
+    );
+  } catch (error) {
+    logger.warn('Failed to mark tracker item in-progress', { itemId, error });
+  }
+}
+
+/** Broadcast a tracker-items-changed event so open kanban/tracker views refresh. */
+function notifyTrackerItemsChanged(items: any[]): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) {
+      window.webContents.send('document-service:tracker-items-changed', {
+        added: [],
+        updated: items,
+        removed: [],
+        timestamp: new Date(),
+      });
+    }
+  }
 }

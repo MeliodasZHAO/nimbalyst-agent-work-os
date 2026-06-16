@@ -67,6 +67,13 @@ export function ContextUsageDisplay({
   // Calculate percentage used (only meaningful with context window)
   const percentage = hasContextWindow ? Math.round((displayTokens / displayContextWindow) * 100) : 0;
 
+  // Context can legitimately exceed the window when the user switches to a
+  // model with a smaller window mid-session (e.g. 243k of history, then
+  // switching from a 1M model to a 200k one). The number is honest -- the SDK
+  // auto-compacts on the next message -- but without explanation it reads as
+  // a bug, so we surface a hint.
+  const overWindow = hasContextWindow && displayTokens > displayContextWindow;
+
   // Format numbers with k suffix for thousands
   const formatTokensShort = (tokens: number): string => {
     if (tokens >= 1_000_000) {
@@ -113,7 +120,7 @@ export function ContextUsageDisplay({
     return usedCategories.reduce((sum, cat) => sum + cat.width, 0);
   }, [usedCategories]);
 
-  const enableTooltip = hasTokenData && (formattedCategories.length > 0 || inputTokens > 0 || outputTokens > 0);
+  const enableTooltip = hasTokenData && (formattedCategories.length > 0 || inputTokens > 0 || outputTokens > 0 || overWindow);
   const shouldShowTooltip = tooltipVisible && enableTooltip;
 
   // Clear any pending hide timeout
@@ -157,7 +164,9 @@ export function ContextUsageDisplay({
 
   const label = hasTokenData
     ? hasContextWindow
-      ? `Context usage ${formatTokensShort(displayTokens)} of ${formatTokensShort(displayContextWindow)} tokens (${percentage}%)`
+      ? overWindow
+        ? `Context usage ${formatTokensShort(displayTokens)} of ${formatTokensShort(displayContextWindow)} tokens (${percentage}%) — exceeds the selected model's window; it will be auto-compacted on your next message`
+        : `Context usage ${formatTokensShort(displayTokens)} of ${formatTokensShort(displayContextWindow)} tokens (${percentage}%)`
       : `Token usage: ${formatTokensShort(displayTokens)} total tokens`
     : 'Token usage data not available yet';
 
@@ -220,6 +229,13 @@ export function ContextUsageDisplay({
               </span>
             )}
           </div>
+
+          {/* Over-window notice: context bigger than the selected model's window */}
+          {overWindow && (
+            <div className="tooltip-over-window text-[11px] leading-snug text-orange-400 bg-[rgba(255,165,0,0.08)] border border-[rgba(255,165,0,0.25)] rounded-md p-2 mb-2.5 whitespace-normal">
+              Context exceeds the selected model's window (e.g. after switching from a larger-window model). It will be automatically compacted when you send your next message.
+            </div>
+          )}
 
           {/* Expandable help section */}
           {helpExpanded && helpContent && (

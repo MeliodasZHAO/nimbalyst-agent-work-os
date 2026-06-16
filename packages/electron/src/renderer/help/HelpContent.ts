@@ -132,6 +132,26 @@ export const HelpContent: Record<string, HelpEntry> = {
     shortcut: KeyboardShortcuts.window.kanbanView,
   },
 
+  'new-dropdown-button': {
+    title: '新建',
+    body: '创建新的智能体会话、隔离的 Git 工作树会话或终端。工作树会话在独立的代码副本中运行，互不干扰。',
+  },
+
+  'project-tab-add': {
+    title: '添加项目',
+    body: '打开本地文件夹作为新项目标签。最多可同时打开 8 个项目。',
+  },
+
+  'claude-usage-indicator': {
+    title: 'Claude 用量',
+    body: '当前 5 小时窗口的 Claude 套餐用量。点击查看详细额度与重置时间。',
+  },
+
+  'codex-usage-indicator': {
+    title: 'Codex 用量',
+    body: '当前 5 小时窗口的 Codex 套餐用量。点击查看详细额度与重置时间。',
+  },
+
   // ============================================================================
   // Agent Mode - Layout Controls
   // ============================================================================

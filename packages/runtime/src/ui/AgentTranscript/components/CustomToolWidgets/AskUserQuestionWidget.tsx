@@ -251,6 +251,9 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasResponded, setHasResponded] = useState(false);
   const [localResult, setLocalResult] = useState<{ answers: Record<string, string>; cancelled?: boolean } | null>(null);
+  // Set when submit/cancel fails so the user gets visible feedback instead of
+  // a card stuck in a fake "Submitted" state (silent-failure bug, 2026-06-11).
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const otherInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   // Handle option toggle
@@ -342,6 +345,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
     setLocalResult({ answers });
     setHasResponded(true);
 
@@ -353,6 +357,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
       console.error('[AskUserQuestionWidget] Failed to submit:', error);
       setLocalResult(null);
       setHasResponded(false);
+      setSubmitError('提交失败：会话暂时无法接收回答。请重试，或直接在下方输入框回复。');
     } finally {
       setIsSubmitting(false);
     }
@@ -363,6 +368,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
     if (!host || hasResponded || !isPending) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
     setLocalResult({ answers: {}, cancelled: true });
     setHasResponded(true);
 
@@ -371,6 +377,10 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
       clearAskUserQuestionDraft(questionId);
     } catch (error) {
       console.error('[AskUserQuestionWidget] Failed to cancel:', error);
+      // Roll back the optimistic "cancelled" state so the card stays usable.
+      setLocalResult(null);
+      setHasResponded(false);
+      setSubmitError('取消失败，请重试。');
     } finally {
       setIsSubmitting(false);
     }
@@ -395,7 +405,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
 
   // Show completed state
   if (displayResult || hasResponded) {
-    const statusText = displayCancelled ? 'Question Cancelled' : 'Questions Answered';
+    const statusText = displayCancelled ? '提问已取消' : '提问已回答';
 
     return (
       <div
@@ -422,7 +432,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Submitted
+              已提交
             </span>
           )}
           {displayCancelled && (
@@ -433,7 +443,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Cancelled
+              已取消
             </span>
           )}
         </div>
@@ -447,7 +457,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-nim-primary bg-[color-mix(in_srgb,var(--nim-primary)_12%,transparent)] py-0.5 px-2 rounded-full">{question.header}</span>
                   {question.multiSelect && (
-                    <span className="text-[0.6875rem] text-nim-faint italic">Multiple selection</span>
+                    <span className="text-[0.6875rem] text-nim-faint italic">可多选</span>
                   )}
                 </div>
                 <div className="text-sm text-nim leading-normal mb-3">
@@ -491,7 +501,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
                 </div>
                 {answer && (
                   <div className="mt-2 pt-2 border-t border-nim text-xs text-nim-muted italic">
-                    Selected: {answer}
+                    已选择：{answer}
                   </div>
                 )}
               </div>
@@ -524,10 +534,10 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
           </svg>
         </div>
         <span className="text-sm font-semibold text-nim flex-1">
-          Questions from Claude
+          来自 Claude 的提问
         </span>
         {!host && (
-          <span data-testid="ask-user-question-pending" className="text-xs text-nim-muted">Waiting...</span>
+          <span data-testid="ask-user-question-pending" className="text-xs text-nim-muted">等待中…</span>
         )}
       </div>
 
@@ -540,7 +550,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-nim-primary bg-[color-mix(in_srgb,var(--nim-primary)_12%,transparent)] py-0.5 px-2 rounded-full">{question.header}</span>
                 {question.multiSelect && (
-                  <span className="text-[0.6875rem] text-nim-faint italic">Select multiple</span>
+                  <span className="text-[0.6875rem] text-nim-faint italic">可多选</span>
                 )}
               </div>
               <div className="text-sm text-nim leading-normal mb-3">
@@ -612,7 +622,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
                         </svg>
                       )}
                     </div>
-                    <span className="text-[0.8125rem] font-medium text-nim leading-snug">Other</span>
+                    <span className="text-[0.8125rem] font-medium text-nim leading-snug">其他</span>
                   </button>
                   {otherSelected[question.question] && (
                     <div className="px-2.5 pb-2">
@@ -627,7 +637,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
                             handleSubmit();
                           }
                         }}
-                        placeholder="Type your answer..."
+                        placeholder="输入你的回答…"
                         disabled={isSubmitting}
                         rows={2}
                         className="w-full px-2.5 py-2 rounded border border-nim bg-nim text-sm text-nim placeholder-nim-faint resize-y focus:outline-none focus:border-nim-primary disabled:opacity-50"
@@ -640,6 +650,16 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
           );
         })}
 
+        {/* Submit/cancel failure feedback */}
+        {submitError && (
+          <div
+            data-testid="ask-user-question-error"
+            className="text-xs text-nim-error bg-[color-mix(in_srgb,var(--nim-error)_10%,transparent)] border border-[color-mix(in_srgb,var(--nim-error)_35%,transparent)] rounded px-2.5 py-2"
+          >
+            {submitError}
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="flex gap-2 justify-end pt-2 border-t border-nim">
           <button
@@ -649,7 +669,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
             disabled={isSubmitting || !host}
             className="px-3 py-1.5 rounded-md text-[13px] cursor-pointer border border-nim transition-colors duration-150 hover:bg-nim-hover bg-nim-tertiary text-nim-muted disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            取消
           </button>
           <button
             type="button"
@@ -658,7 +678,7 @@ export const AskUserQuestionWidget: React.FC<CustomToolWidgetProps> = ({
             disabled={!allAnswered || isSubmitting || !host}
             className="px-4 py-1.5 rounded-md text-[13px] font-medium cursor-pointer border-none transition-colors duration-150 hover:opacity-90 bg-nim-primary text-nim-on-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+            {isSubmitting ? '提交中…' : '提交'}
           </button>
         </div>
       </div>

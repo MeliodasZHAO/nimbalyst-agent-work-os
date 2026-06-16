@@ -113,8 +113,9 @@ fun SessionDetailScreen(
         }
     }
 
-    val sessions by app.repository.observeActiveSessions().collectAsState(initial = emptyList())
-    val session = sessions.firstOrNull { it.id == sessionId }
+    // Observe only this session -- subscribing to the full session table made
+    // every unrelated index update recompose the detail screen.
+    val session by app.repository.observeSession(sessionId).collectAsState(initial = null)
     val messages by app.repository.observeMessagesForSession(sessionId)
         .collectAsState(initial = emptyList())
     val queuedPrompts by app.repository.observeQueuedPromptsForSession(sessionId)
@@ -246,9 +247,9 @@ fun SessionDetailScreen(
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium
                     )
-                    if (session != null) {
+                    session?.let { current ->
                         Text(
-                            text = "${session.provider ?: "unknown"} -- ${session.mode ?: "agent"}",
+                            text = "${current.provider ?: "unknown"} -- ${current.mode ?: "agent"}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

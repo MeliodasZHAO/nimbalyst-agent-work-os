@@ -2000,6 +2000,11 @@ export const sessionListRootAtom = atom<SessionListItem[]>((get) => {
 
   return Array.from(registry.values())
     .filter(s => {
+      // Never show another workspace's sessions. During a project-tab switch
+      // the registry briefly holds the previous project's entries; without
+      // this guard they stay on screen under the new project's tab and the
+      // user can't tell which project they're talking to.
+      if (s.workspaceId && workspacePath && s.workspaceId !== workspacePath) return false;
       if (!showArchived && s.isArchived) return false;
       // Meta-agent sessions are included - they're rendered via MetaAgentGroup in SessionHistory
       if (s.agentRole === 'meta-agent') return true;
@@ -2022,9 +2027,12 @@ export const sessionListRootAtom = atom<SessionListItem[]>((get) => {
  */
 export const sessionListChatAtom = atom<SessionMeta[]>((get) => {
   const registry = get(sessionRegistryAtom);
+  const workspacePath = get(sessionListWorkspaceAtom) || '';
 
   return Array.from(registry.values())
     .filter(s => {
+      // Same cross-workspace guard as sessionListRootAtom
+      if (s.workspaceId && workspacePath && s.workspaceId !== workspacePath) return false;
       if (s.agentRole === 'meta-agent') return false;
       // Exclude worktree sessions
       if (s.worktreeId) return false;
@@ -2074,6 +2082,14 @@ export const refreshSessionListAtom = atom(
         includeArchived: showArchived,
       });
 
+      // Discard stale responses. The user may have switched projects while
+      // this IPC was in flight; sessions:list can take seconds (git status on
+      // a large repo), and letting an old workspace's late response clobber
+      // the registry shows the WRONG project's sessions under the new tab.
+      if (get(sessionListWorkspaceAtom) !== workspacePath) {
+        return;
+      }
+
       if (result.success && Array.isArray(result.sessions)) {
         // Map IPC results directly into registry (single pass, no intermediate type)
         const registry = new Map<string, SessionMeta>();
@@ -2122,7 +2138,11 @@ export const refreshSessionListAtom = atom(
     } catch (error) {
       console.error('[sessions] Failed to refresh session list:', error);
     } finally {
-      set(sessionListLoadingAtom, false);
+      // A stale refresh (workspace switched mid-flight) must not clear the
+      // loading flag owned by the newer workspace's in-flight refresh.
+      if (get(sessionListWorkspaceAtom) === workspacePath) {
+        set(sessionListLoadingAtom, false);
+      }
     }
   }
 );

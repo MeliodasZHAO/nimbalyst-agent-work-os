@@ -161,4 +161,25 @@
     <!-- Notifications -->
     <string name="notif_firebase_not_configured">Firebase is not configured for Android. Add google-services.json to enable push.</string>
     <string name="notif_fcm_failed">Failed to get FCM token.</string>
+    <!-- Bottom navigation -->
+    <string name="nav_projects">Projects</string>
+    <string name="nav_inbox">Inbox</string>
+    <string name="nav_board">Board</string>
+
+    <!-- Inbox -->
+    <string name="inbox_title">Inbox</string>
+    <string name="inbox_waiting_section">Waiting for you (%1$d)</string>
+    <string name="inbox_running_section">Running (%1$d)</string>
+    <string name="inbox_unread_section">Unread updates (%1$d)</string>
+    <string name="inbox_empty">All caught up - no sessions need your attention right now.</string>
+
+    <!-- Board -->
+    <string name="board_title">Board</string>
+    <string name="board_empty">No sessions on the board yet. Set a phase on desktop and it will show up here.</string>
+    <string name="phase_backlog">Backlog</string>
+    <string name="phase_planning">Planning</string>
+    <string name="phase_implementing">Implementing</string>
+    <string name="phase_validating">Validating</string>
+    <string name="phase_complete">Complete</string>
+    <string name="badge_needs_response">Needs your response</string>
 </resources>

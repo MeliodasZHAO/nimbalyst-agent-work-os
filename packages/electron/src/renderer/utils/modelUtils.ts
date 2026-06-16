@@ -63,19 +63,42 @@ function formatVariantLabel(variant: ClaudeCodeVariant): string {
   return CLAUDE_CODE_MODEL_LABELS[variant] ?? variant.charAt(0).toUpperCase() + variant.slice(1);
 }
 
+/**
+ * Returns the raw custom model ID for claude-code models outside the curated
+ * variant list (e.g. 'claude-fable-5'), or null for known variants / other providers.
+ */
+export function extractClaudeCodeCustomModel(modelId?: string): string | null {
+  if (!modelId) return null;
+  const parsed = ModelIdentifier.tryParse(modelId);
+  if (parsed && parsed.provider === 'claude-code'
+    && !(CLAUDE_CODE_VARIANTS as readonly string[]).includes(parsed.baseVariant)) {
+    return parsed.baseVariant;
+  }
+  return null;
+}
+
 export function getClaudeCodeModelLabel(modelId?: string): string {
-  const variant = extractClaudeCodeVariant(modelId) ?? 'sonnet';
   const parsed = modelId ? ModelIdentifier.tryParse(modelId) : null;
-  const version = CLAUDE_CODE_VARIANT_VERSIONS[variant];
   const suffix = parsed?.isExtendedContext ? ' (1M)' : '';
+  const customModel = extractClaudeCodeCustomModel(modelId);
+  if (customModel) {
+    // Custom model ID: show it verbatim instead of mislabeling it as Sonnet
+    return `Claude Agent · ${customModel}${suffix}`;
+  }
+  const variant = extractClaudeCodeVariant(modelId) ?? 'sonnet';
+  const version = CLAUDE_CODE_VARIANT_VERSIONS[variant];
   return `Claude Agent · ${formatVariantLabel(variant)} ${version}${suffix}`;
 }
 
 export function getClaudeCodeModelShortLabel(modelId?: string): string {
-  const variant = extractClaudeCodeVariant(modelId) ?? 'sonnet';
   const parsed = modelId ? ModelIdentifier.tryParse(modelId) : null;
-  const version = CLAUDE_CODE_VARIANT_VERSIONS[variant];
   const suffix = parsed?.isExtendedContext ? ' (1M)' : '';
+  const customModel = extractClaudeCodeCustomModel(modelId);
+  if (customModel) {
+    return `${customModel}${suffix}`;
+  }
+  const variant = extractClaudeCodeVariant(modelId) ?? 'sonnet';
+  const version = CLAUDE_CODE_VARIANT_VERSIONS[variant];
   return `${formatVariantLabel(variant)} ${version}${suffix}`;
 }
 

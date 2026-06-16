@@ -108,7 +108,7 @@ export const PromptsMenuButton: React.FC<PromptsMenuButtonProps> = ({
             ))}
           </ul>
         ) : (
-          <div className="prompts-empty py-6 px-4 text-center text-[var(--nim-text-faint)] text-[13px]">No prompts in this session</div>
+          <div className="prompts-empty py-6 px-4 text-center text-[var(--nim-text-faint)] text-[13px]">本会话还没有提示词</div>
         )}
       </div>
     </FloatingPortal>
@@ -121,7 +121,7 @@ export const PromptsMenuButton: React.FC<PromptsMenuButtonProps> = ({
         className={buttonClassName || 'floating-transcript-button pointer-events-auto w-9 h-9 rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer flex items-center justify-center transition-all relative shadow-sm hover:bg-[var(--nim-bg-tertiary)] active:scale-95'}
         aria-label="Prompts Menu"
         aria-expanded={showMenu}
-        title="Show prompts in this session"
+        title="查看本会话的提示词"
         {...getReferenceProps({
           onClick: () => setShowMenu(open => !open),
         })}
@@ -241,7 +241,7 @@ export const FloatingTranscriptActions: React.FC<FloatingTranscriptActionsProps>
                 }}
               >
                 <MaterialSymbol icon="close" size={14} />
-                Remove from board
+                从看板移除
               </button>
             </>
           )}
@@ -264,7 +264,7 @@ export const FloatingTranscriptActions: React.FC<FloatingTranscriptActionsProps>
             className="floating-transcript-button pointer-events-auto h-9 rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer flex items-center gap-1.5 px-2.5 transition-all relative shadow-sm hover:bg-[var(--nim-bg-tertiary)] active:scale-95 text-[12px]"
             aria-label="Set phase"
             aria-expanded={showPhaseMenu}
-            title={currentPhase ? `Phase: ${currentPhaseCol?.label || currentPhase}` : 'Set kanban phase'}
+            title={currentPhase ? `阶段：${currentPhaseCol?.label || currentPhase}` : '设置看板阶段'}
             {...getReferenceProps({
               onClick: () => setShowPhaseMenu(open => !open),
             })}
@@ -277,7 +277,7 @@ export const FloatingTranscriptActions: React.FC<FloatingTranscriptActionsProps>
             ) : (
               <>
                 <MaterialSymbol icon="view_kanban" size={16} />
-                <span className="text-[var(--nim-text-faint)]">Phase</span>
+                <span className="text-[var(--nim-text-faint)]">阶段</span>
               </>
             )}
           </button>
@@ -297,7 +297,7 @@ export const FloatingTranscriptActions: React.FC<FloatingTranscriptActionsProps>
           className="floating-transcript-button pointer-events-auto w-9 h-9 rounded-md border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] cursor-pointer flex items-center justify-center transition-all relative shadow-sm hover:bg-[var(--nim-bg-tertiary)] active:scale-95"
           onClick={onToggleSidebar}
           aria-label={isSidebarCollapsed ? 'Show file history' : 'Hide file history'}
-          title={isSidebarCollapsed ? 'Show file history' : 'Hide file history'}
+          title={isSidebarCollapsed ? '显示文件历史' : '隐藏文件历史'}
         >
           {isSidebarCollapsed ? (
             <MaterialSymbol icon="schedule" size={20} />

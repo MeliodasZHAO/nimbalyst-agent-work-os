@@ -723,7 +723,7 @@ describe('AskUserQuestionWidget', () => {
     );
     expect(screen.getByTestId('ask-user-question-widget')).toBeDefined();
     expect(screen.getByTestId('ask-user-question-widget').dataset.state).toBe('pending');
-    expect(screen.getByText('Waiting...')).toBeDefined();
+    expect(screen.getByText('等待中…')).toBeDefined();
     // Regression: even without a host, the question options must render so the
     // user can read them. Previously the no-host branch returned a bare
     // "Waiting..." header with no body, which left the widget looking broken
@@ -765,8 +765,8 @@ describe('AskUserQuestionWidget', () => {
         />
       </Wrapper>
     );
-    expect(screen.getByText('Questions Answered')).toBeDefined();
-    expect(screen.getByText('Submitted')).toBeDefined();
+    expect(screen.getByText('提问已回答')).toBeDefined();
+    expect(screen.getByText('已提交')).toBeDefined();
   });
 
   it('renders cancelled state', () => {
@@ -794,8 +794,8 @@ describe('AskUserQuestionWidget', () => {
         />
       </Wrapper>
     );
-    expect(screen.getByText('Question Cancelled')).toBeDefined();
-    expect(screen.getByText('Cancelled')).toBeDefined();
+    expect(screen.getByText('提问已取消')).toBeDefined();
+    expect(screen.getByText('已取消')).toBeDefined();
   });
 
   it('returns null when no questions', () => {

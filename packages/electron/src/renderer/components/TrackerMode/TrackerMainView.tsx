@@ -554,7 +554,22 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
     }
   }, [workspacePath, defaultModel, aiProviderSettings, loadAgentWorkOSConfigInputs, persistWorkPacketLaunchEvidence, createReviewerForWorktreeSession, refreshSessionList, setSelectedWorkstream, setWindowMode]);
 
-  // Base item sets from atoms
+  // Auto-implement: hand the tracker item to the dispatch queue, which opens an
+  // isolated worktree and runs an agent on it (gated by the concurrency limit
+  // and priority). Unlike handleLaunchWorktreeSession, all the worktree/session
+  // creation happens in the main process — the renderer just fires the request.
+  const handleAutoImplement = useCallback(async (trackerItemId: string) => {
+    if (!workspacePath) return;
+    const result = await window.electronAPI.invoke('agent-work-os:auto-implement', {
+      workspacePath,
+      trackerItemId,
+    });
+    if (!result?.success) {
+      console.error('[TrackerMainView] auto-implement failed:', result?.error);
+    }
+  }, [workspacePath]);
+
+
   const activeItems = useAtomValue(trackerItemsByTypeAtom(filterType));
   const archivedItems = useAtomValue(archivedTrackerItemsAtom(filterType));
 
@@ -837,12 +852,12 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
       });
       if (result.success) {
         const parts: string[] = [];
-        if (result.imported) parts.push(`${result.imported} imported`);
-        if (result.skipped) parts.push(`${result.skipped} skipped`);
-        if (result.errors?.length) parts.push(`${result.errors.length} errors`);
-        setImportStatus(parts.join(', ') || 'No items found');
+        if (result.imported) parts.push(`导入 ${result.imported} 条`);
+        if (result.skipped) parts.push(`跳过 ${result.skipped} 条`);
+        if (result.errors?.length) parts.push(`${result.errors.length} 条出错`);
+        setImportStatus(parts.join('，') || '未找到可导入的条目');
       } else {
-        setImportStatus(`Failed: ${result.error}`);
+        setImportStatus(`导入失败：${result.error}`);
       }
     } catch (error) {
       setImportStatus('Import failed');
@@ -857,16 +872,16 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
     const activeTracker = filterType !== 'all'
       ? trackerTypes.find(t => t.type === filterType)
       : null;
-    const typeName = activeTracker ? activeTracker.displayNamePlural : 'Items';
+    const typeName = activeTracker ? activeTracker.displayNamePlural : '条目';
 
     const parts: string[] = [];
-    if (activeFilters.includes('archived')) parts.push('Archived');
-    if (activeFilters.includes('mine')) parts.push('My');
-    if (activeFilters.includes('high-priority')) parts.push('High Priority');
-    if (activeFilters.includes('recently-updated')) parts.push('Recent');
+    if (activeFilters.includes('archived')) parts.push('已归档');
+    if (activeFilters.includes('mine')) parts.push('我的');
+    if (activeFilters.includes('high-priority')) parts.push('高优先级');
+    if (activeFilters.includes('recently-updated')) parts.push('最近更新');
 
     if (parts.length === 0) {
-      return activeTracker ? activeTracker.displayNamePlural : 'All Items';
+      return activeTracker ? activeTracker.displayNamePlural : '全部条目';
     }
     return `${parts.join(' ')} ${typeName}`;
   }, [filterType, activeFilters, trackerTypes]);
@@ -890,7 +905,7 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
           <input
             ref={setSearchInputNode}
             type="text"
-            placeholder="Search or type # to filter by tag..."
+            placeholder="搜索或输入 # 按标签筛选..."
             value={showTagDropdown
               ? (searchQuery ? searchQuery + ' ' : '') + '#' + tagQuery
               : searchQuery}
@@ -1033,7 +1048,7 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
           <button
             className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-nim-muted border border-nim rounded hover:bg-nim-tertiary hover:text-nim transition-colors"
             onClick={() => setImportMenuOpen(!importMenuOpen)}
-            title="Import from files"
+            title="从文件导入"
           >
             <MaterialSymbol icon="upload_file" size={14} />
             Import
@@ -1176,6 +1191,7 @@ export const TrackerMainView: React.FC<TrackerMainViewProps> = ({
               onSwitchToAgentMode={handleSwitchToAgentMode}
               onLaunchSession={handleLaunchSession}
               onLaunchWorktreeSession={handleLaunchWorktreeSession}
+              onAutoImplement={handleAutoImplement}
               onArchive={handleArchiveItem}
               onDelete={handleDeleteItem}
             />
@@ -1305,7 +1321,7 @@ const QuickAddOverlay: React.FC<QuickAddOverlayProps> = ({ type, tracker, onSubm
             // Prevent global keyboard shortcuts from intercepting while typing
             e.stopPropagation();
           }}
-          placeholder={`New ${displayName.toLowerCase()}...`}
+          placeholder={`输入${displayName}标题，回车创建…`}
           className="flex-1 min-w-0 px-3 py-1.5 bg-nim border border-nim rounded text-sm text-nim placeholder:text-nim-faint focus:outline-none focus:border-[var(--nim-primary)]"
           data-testid="tracker-quick-add-input"
         />
@@ -1313,12 +1329,13 @@ const QuickAddOverlay: React.FC<QuickAddOverlayProps> = ({ type, tracker, onSubm
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
+          title="优先级：决定该条目在列表和筛选中的排序权重"
           className="px-2 py-1.5 bg-nim border border-nim rounded text-sm text-nim focus:outline-none focus:border-[var(--nim-primary)] shrink-0"
         >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
+          <option value="low">低优先级</option>
+          <option value="medium">中优先级</option>
+          <option value="high">高优先级</option>
+          <option value="critical">紧急</option>
         </select>
 
         <button
@@ -1327,14 +1344,14 @@ const QuickAddOverlay: React.FC<QuickAddOverlayProps> = ({ type, tracker, onSubm
           className="px-3 py-1.5 rounded text-sm font-medium text-white border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 shrink-0"
           style={{ backgroundColor: color }}
         >
-          Add
+          添加
         </button>
 
         <button
           type="button"
           onClick={onClose}
           className="p-1 rounded hover:bg-nim-tertiary text-nim-muted shrink-0"
-          title="Cancel (Esc)"
+          title="取消 (Esc)"
         >
           <MaterialSymbol icon="close" size={18} />
         </button>

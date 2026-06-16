@@ -13,6 +13,7 @@
  */
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MaterialSymbol } from '@nimbalyst/runtime';
 import {
@@ -111,7 +112,8 @@ const TeammateSection: React.FC<TeammateSectionProps> = React.memo(({
   onToggle,
   onTeammateClick,
 }) => {
-  const runningCount = entries.filter(t => t.status === 'running' || t.status === 'idle').length;
+  const { t } = useTranslation('agent');
+  const runningCount = entries.filter(entry => entry.status === 'running' || entry.status === 'idle').length;
 
   return (
     <div>
@@ -125,7 +127,7 @@ const TeammateSection: React.FC<TeammateSectionProps> = React.memo(({
           className="text-[var(--nim-text-muted)] shrink-0"
         />
         <MaterialSymbol icon="group" size={16} className="text-[var(--nim-text-muted)] shrink-0" />
-        <span className="text-xs font-medium text-[var(--nim-text)]">Teammates</span>
+        <span className="text-xs font-medium text-[var(--nim-text)]">{t('teammates')}</span>
         <span className="ml-auto text-[11px] text-[var(--nim-text-muted)] font-mono">
           {runningCount}/{entries.length}
         </span>
@@ -161,7 +163,8 @@ const TaskSection: React.FC<TaskSectionProps> = React.memo(({
   onToggle,
   className,
 }) => {
-  const runningCount = tasks.filter(t => t.status === 'running').length;
+  const { t } = useTranslation('agent');
+  const runningCount = tasks.filter(task => task.status === 'running').length;
 
   return (
     <div className={className}>
@@ -175,7 +178,7 @@ const TaskSection: React.FC<TaskSectionProps> = React.memo(({
           className="text-[var(--nim-text-muted)] shrink-0"
         />
         <MaterialSymbol icon="swap_horiz" size={16} className="text-[var(--nim-text-muted)] shrink-0" />
-        <span className="text-xs font-medium text-[var(--nim-text)]">Sub-agents</span>
+        <span className="text-xs font-medium text-[var(--nim-text)]">{t('subAgents')}</span>
         <span className="ml-auto text-[11px] text-[var(--nim-text-muted)] font-mono">
           {runningCount}/{tasks.length}
         </span>

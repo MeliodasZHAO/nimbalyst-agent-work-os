@@ -13,6 +13,20 @@ export function supportsWorkspaceSlashCommands(provider?: string | null): boolea
   return provider === 'claude-code' || provider === 'openai-codex';
 }
 
+/**
+ * Commands handled locally by Nimbalyst (intercepted in AIInput before the
+ * message reaches the SDK subprocess, which can't handle them itself).
+ */
+const LOCAL_COMMANDS: SlashCommandEntry[] = [
+  {
+    name: 'model',
+    description: 'Switch the model for this session (e.g. /model claude-fable-5)',
+    argumentHint: '<model-id>',
+    source: 'builtin',
+    kind: 'command',
+  },
+];
+
 export async function fetchSlashCommandEntries(options: {
   workspacePath?: string;
   sessionId?: string;
@@ -32,13 +46,18 @@ export async function fetchSlashCommandEntries(options: {
       provider: resolvedProvider,
     });
     if (workflowResult?.success && Array.isArray(workflowResult.workflows)) {
-      return workflowResult.workflows;
+      // Local commands take precedence over same-named SDK entries
+      const localNames = new Set(LOCAL_COMMANDS.map(c => c.name));
+      return [
+        ...LOCAL_COMMANDS,
+        ...workflowResult.workflows.filter((w: SlashCommandEntry) => !localNames.has(w.name)),
+      ];
     }
   } catch (workflowError) {
     console.warn('[slashCommandAutocomplete] Failed to get agent workflows:', workflowError);
   }
 
-  return [];
+  return LOCAL_COMMANDS;
 }
 
 function getCommandIcon(command: SlashCommandEntry): string {
@@ -55,6 +74,7 @@ function getCommandIcon(command: SlashCommandEntry): string {
       'diff': 'difference',
       'init': 'restart_alt',
       'mcp': 'hub',
+      'model': 'memory',
       'output-style:new': 'palette',
       'pr-comments': 'comment',
       'release-notes': 'description',
