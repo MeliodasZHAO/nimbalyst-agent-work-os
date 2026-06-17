@@ -17,6 +17,7 @@ import {
   offset,
   flip,
   shift,
+  type VirtualElement,
 } from '@floating-ui/react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
@@ -135,6 +136,20 @@ export function ProjectTabBar() {
   const ctxRole = useRole(ctxContext, { role: 'menu' });
   const { getFloatingProps: getCtxFloatingProps } = useInteractions([ctxDismiss, ctxRole]);
 
+  // 虚拟锚点跟随右键坐标；只在 contextMenu 变化时设置，避免 ref 回调里每 render
+  // setReference 触发的无限重渲染(React #185)。
+  React.useEffect(() => {
+    if (!contextMenu) {
+      ctxRefs.setPositionReference(null);
+      return;
+    }
+    const { x, y } = contextMenu;
+    const virtual: VirtualElement = {
+      getBoundingClientRect: () => DOMRect.fromRect({ x, y, width: 0, height: 0 }),
+    };
+    ctxRefs.setPositionReference(virtual);
+  }, [contextMenu, ctxRefs]);
+
   const openProjectPaths = useMemo(() => new Set(openProjects.map((p) => p.path)), [openProjects]);
   const filteredRecents = useMemo(
     () => recentProjects.filter((r) => !openProjectPaths.has(r.path)).slice(0, 8),
@@ -245,6 +260,13 @@ export function ProjectTabBar() {
     } catch (err) {
       console.error('[ProjectTabBar] show-in-finder failed:', err);
     }
+  }, [contextMenu, closeContextMenu]);
+
+  const handleCtxCopyPath = useCallback(() => {
+    if (!contextMenu) return;
+    const path = contextMenu.project.path;
+    closeContextMenu();
+    void window.electronAPI?.copyToClipboard?.(path);
   }, [contextMenu, closeContextMenu]);
 
   const handleCtxClose = useCallback(() => {
@@ -391,14 +413,7 @@ export function ProjectTabBar() {
       {contextMenu && (
         <FloatingPortal>
           <div
-            ref={(el) => {
-              ctxRefs.setFloating(el);
-              if (el) {
-                ctxRefs.setReference({
-                  getBoundingClientRect: () => DOMRect.fromRect({ x: contextMenu.x, y: contextMenu.y, width: 0, height: 0 }),
-                });
-              }
-            }}
+            ref={ctxRefs.setFloating}
             style={ctxFloatingStyles}
             className="project-tab-context-menu z-50 min-w-[180px] rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg)] shadow-lg py-1"
             {...getCtxFloatingProps()}
@@ -416,6 +431,13 @@ export function ProjectTabBar() {
               onClick={handleCtxReveal}
             >
               {revealLabel}
+            </button>
+            <button
+              type="button"
+              className="w-full px-3 py-1.5 text-left text-[13px] text-[var(--nim-text)] bg-transparent border-none cursor-pointer hover:bg-[var(--nim-bg-hover)]"
+              onClick={handleCtxCopyPath}
+            >
+              复制项目路径
             </button>
             <div className="h-px bg-[var(--nim-border)] mx-2 my-1" />
             <button

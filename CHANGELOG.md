@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session kanban now shows derived and localized session titles instead of the raw "New conversation" default
 - Provisional first-message titles no longer overwrite a deliberately-named session (dispatch/worktree/meta-agent sessions keep their titles)
 - Auto-updater no longer surfaces an update error on local unpacked builds that ship no update manifest
+- Right-clicking a project tab no longer crashes (fixed the React #185 infinite re-render in the floating-ui context menu); the menu also gains a "Copy project path" item
 
 ### Removed
 <!-- Removed features go here -->
