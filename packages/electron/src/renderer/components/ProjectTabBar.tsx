@@ -27,6 +27,7 @@ import {
   isOpenProjectsAtCapAtom,
   addOpenProjectAtom,
   closeOpenProjectAtom,
+  reorderOpenProjectAtom,
   type OpenProject,
 } from '../store/atoms/openProjects';
 import {
@@ -98,11 +99,17 @@ export function ProjectTabBar() {
   const atCap = useAtomValue(isOpenProjectsAtCapAtom);
   const addProject = useSetAtom(addOpenProjectAtom);
   const closeProject = useSetAtom(closeOpenProjectAtom);
+  const reorderProject = useSetAtom(reorderOpenProjectAtom);
   const activity = useAtomValue(globalSessionActivityAtom);
   const activitySummary = useAtomValue(projectActivitySummaryAtom);
 
   const [contextMenu, setContextMenu] = useState<{ project: OpenProject; x: number; y: number } | null>(null);
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
+
+  // Tab drag-to-reorder state. `dragPath` is the tab being dragged; `dragOverPath`
+  // is the tab currently hovered as a drop target (shows the insertion indicator).
+  const [dragPath, setDragPath] = useState<string | null>(null);
+  const [dragOverPath, setDragOverPath] = useState<string | null>(null);
 
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [recentProjects, setRecentProjects] = useState<Array<{ path: string; name: string; timestamp?: number }>>([]);
@@ -296,19 +303,52 @@ export function ProjectTabBar() {
           const processingCount = summary?.processing ?? 0;
           const isOnlyProject = openProjects.length <= 1;
           const accentColor = generateWorkspaceAccentColor(project.path);
+          const isDragging = project.path === dragPath;
+          const showDropIndicator =
+            dragOverPath === project.path && dragPath !== null && dragPath !== project.path;
 
           return (
             <button
               key={project.path}
               type="button"
+              draggable
               className={`project-tab group flex items-center gap-1.5 h-[34px] px-3 border-none cursor-pointer text-[13px] font-medium transition-all duration-100 shrink-0 min-w-[60px] [-webkit-app-region:no-drag] ${
                 isActive
                   ? 'bg-[var(--nim-bg)] text-[var(--nim-text)] rounded-t-md'
                   : 'bg-transparent text-[var(--nim-text-faint)] hover:text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-tertiary)] rounded-t-md'
-              }`}
-              style={isActive ? { borderBottom: `2px solid ${accentColor}` } : undefined}
+              } ${isDragging ? 'opacity-50' : ''}`}
+              style={{
+                ...(isActive ? { borderBottom: `2px solid ${accentColor}` } : {}),
+                ...(showDropIndicator ? { boxShadow: 'inset 2px 0 0 0 var(--nim-primary)' } : {}),
+              }}
               onClick={() => handleActivate(project.path)}
               onContextMenu={(e) => handleContextMenu(project, e)}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', project.path);
+                setDragPath(project.path);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (project.path !== dragPath) setDragOverPath(project.path);
+              }}
+              onDragLeave={() => {
+                setDragOverPath((cur) => (cur === project.path ? null : cur));
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const sourcePath = e.dataTransfer.getData('text/plain') || dragPath;
+                if (sourcePath && sourcePath !== project.path) {
+                  reorderProject({ sourcePath, targetPath: project.path });
+                }
+                setDragPath(null);
+                setDragOverPath(null);
+              }}
+              onDragEnd={() => {
+                setDragPath(null);
+                setDragOverPath(null);
+              }}
               title={project.path}
               data-testid={`project-tab-${project.path}`}
             >

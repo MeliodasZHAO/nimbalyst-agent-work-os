@@ -6,6 +6,7 @@ import {
   activeOpenProjectAtom,
   addOpenProjectAtom,
   closeOpenProjectAtom,
+  reorderOpenProjectAtom,
   isOpenProjectsAtCapAtom,
   attachWorkspaceSwitchCleanup,
   type OpenProject,
@@ -126,6 +127,57 @@ describe('openProjects atoms', () => {
 
       expect(jotaiStore.get(openProjectsAtom).map((p) => p.path)).toEqual(['/ws/a']);
       expect(jotaiStore.get(activeWorkspacePathAtom)).toBe('/ws/a');
+    });
+  });
+
+  describe('reorderOpenProjectAtom', () => {
+    it('moves a project toward the end (drag right)', () => {
+      jotaiStore.set(addOpenProjectAtom, project('/ws/a'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/b'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/c'));
+
+      jotaiStore.set(reorderOpenProjectAtom, { sourcePath: '/ws/a', targetPath: '/ws/c' });
+
+      expect(jotaiStore.get(openProjectsAtom).map((p) => p.path)).toEqual(['/ws/b', '/ws/c', '/ws/a']);
+    });
+
+    it('moves a project toward the start (drag left)', () => {
+      jotaiStore.set(addOpenProjectAtom, project('/ws/a'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/b'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/c'));
+
+      jotaiStore.set(reorderOpenProjectAtom, { sourcePath: '/ws/c', targetPath: '/ws/a' });
+
+      expect(jotaiStore.get(openProjectsAtom).map((p) => p.path)).toEqual(['/ws/c', '/ws/a', '/ws/b']);
+    });
+
+    it('does not change the active project', () => {
+      jotaiStore.set(addOpenProjectAtom, project('/ws/a'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/b'));
+      jotaiStore.set(activeWorkspacePathAtom, '/ws/a');
+
+      jotaiStore.set(reorderOpenProjectAtom, { sourcePath: '/ws/b', targetPath: '/ws/a' });
+
+      expect(jotaiStore.get(activeWorkspacePathAtom)).toBe('/ws/a');
+      expect(jotaiStore.get(openProjectsAtom).map((p) => p.path)).toEqual(['/ws/b', '/ws/a']);
+    });
+
+    it('is a no-op when source equals target', () => {
+      jotaiStore.set(addOpenProjectAtom, project('/ws/a'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/b'));
+
+      jotaiStore.set(reorderOpenProjectAtom, { sourcePath: '/ws/a', targetPath: '/ws/a' });
+
+      expect(jotaiStore.get(openProjectsAtom).map((p) => p.path)).toEqual(['/ws/a', '/ws/b']);
+    });
+
+    it('is a no-op when a path is not in the rail', () => {
+      jotaiStore.set(addOpenProjectAtom, project('/ws/a'));
+      jotaiStore.set(addOpenProjectAtom, project('/ws/b'));
+
+      jotaiStore.set(reorderOpenProjectAtom, { sourcePath: '/ws/a', targetPath: '/ws/missing' });
+
+      expect(jotaiStore.get(openProjectsAtom).map((p) => p.path)).toEqual(['/ws/a', '/ws/b']);
     });
   });
 

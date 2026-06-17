@@ -23,7 +23,7 @@ function renderBar() {
     { path: '/p/other', name: 'other', openedAt: 0 },
   ]);
   store.set(activeWorkspacePathAtom, '/p/other');
-  return render(<Provider store={store}><ProjectTabBar /></Provider>);
+  return { store, ...render(<Provider store={store}><ProjectTabBar /></Provider>) };
 }
 
 describe('ProjectTabBar 右键菜单', () => {
@@ -42,5 +42,41 @@ describe('ProjectTabBar 右键菜单', () => {
     fireEvent.contextMenu(screen.getByTestId('project-tab-/p/aimo'));
     fireEvent.click(screen.getByText('复制项目路径'));
     expect((window as any).electronAPI.copyToClipboard).toHaveBeenCalledWith('/p/aimo');
+  });
+});
+
+describe('ProjectTabBar 拖拽重排', () => {
+  function makeDataTransfer() {
+    const store: Record<string, string> = {};
+    return {
+      effectAllowed: '',
+      dropEffect: '',
+      setData(type: string, val: string) { store[type] = val; },
+      getData(type: string) { return store[type] ?? ''; },
+    };
+  }
+
+  it('把一个 tab 拖到另一个 tab 上会重排 openProjects', () => {
+    const { store } = renderBar(); // 初始顺序 [aimo, other]
+    const aimo = screen.getByTestId('project-tab-/p/aimo');
+    const other = screen.getByTestId('project-tab-/p/other');
+    const dataTransfer = makeDataTransfer();
+
+    fireEvent.dragStart(aimo, { dataTransfer });
+    fireEvent.dragOver(other, { dataTransfer });
+    fireEvent.drop(other, { dataTransfer });
+
+    expect(store.get(openProjectsAtom).map((p) => p.path)).toEqual(['/p/other', '/p/aimo']);
+  });
+
+  it('拖到自己身上不改变顺序', () => {
+    const { store } = renderBar();
+    const aimo = screen.getByTestId('project-tab-/p/aimo');
+    const dataTransfer = makeDataTransfer();
+
+    fireEvent.dragStart(aimo, { dataTransfer });
+    fireEvent.drop(aimo, { dataTransfer });
+
+    expect(store.get(openProjectsAtom).map((p) => p.path)).toEqual(['/p/aimo', '/p/other']);
   });
 });
