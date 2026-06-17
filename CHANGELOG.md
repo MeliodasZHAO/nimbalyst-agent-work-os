@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project tab bar resized to browser-like proportions (taller tabs, larger text, accent-color active indicator)
 - iOS: all "your Mac" references replaced with "your desktop" for cross-platform correctness
 - Android: app display name unified to "Nimbalyst"; project list now has an explicit sync button
+- Dispatch concurrency now uses a global ceiling (default 12) plus an optional per-project cap (default unlimited, configurable in Advanced settings); a project at its cap no longer head-of-line blocks other projects' queued tasks
 
 ### Fixed
 - Mobile keep-awake tip now follows the selected language instead of always showing hardcoded Chinese

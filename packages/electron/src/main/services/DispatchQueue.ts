@@ -32,7 +32,22 @@ export type DispatchPriority = 'high' | 'medium' | 'low';
 
 const PRIORITY_RANK: Record<DispatchPriority, number> = { high: 0, medium: 1, low: 2 };
 
-export const DEFAULT_DISPATCH_MAX_CONCURRENT = 3;
+// Global ceiling across ALL projects. This is the only hard throttle and exists
+// purely to protect the account-level Claude/Codex API rate limit -- running many
+// full agent sessions at once otherwise triggers 429s that slow/fail everything.
+// Generous by default; <= 0 means unlimited.
+export const DEFAULT_DISPATCH_MAX_CONCURRENT = 12;
+
+// Per-project cap. 0 (the default) means UNLIMITED per project: a single project
+// can run as many dispatch sessions as the global ceiling allows -- 8 worktrees in
+// one project is a floor, not a ceiling. Raise to a positive number only to stop
+// one greedy project from starving others.
+export const DEFAULT_DISPATCH_PER_PROJECT_CONCURRENT = 0;
+
+/** Treat <= 0 as "no limit". */
+function normalizeLimit(value: number): number {
+  return value > 0 ? value : Number.POSITIVE_INFINITY;
+}
 
 export interface QueueEntry {
   sessionId: string;
@@ -49,8 +64,10 @@ export type SettleEventType = 'session:completed' | 'session:error' | 'session:i
 export interface DispatchQueueDeps {
   /** Build the worktree, queue the prompt, and emit `dispatch:session-ready`. */
   materialize: (entry: QueueEntry) => Promise<void>;
-  /** Current concurrency limit. */
-  getMaxConcurrent: () => number;
+  /** Global concurrency ceiling across all projects (<= 0 means unlimited). */
+  getGlobalMaxConcurrent: () => number;
+  /** Per-project concurrency cap (<= 0 means unlimited). */
+  getPerProjectMaxConcurrent: () => number;
   /** Subscribe to session lifecycle events; returns an unsubscribe fn. */
   subscribeSessionEvents: (
     listener: (event: { type: string; sessionId: string }) => void,
@@ -99,23 +116,46 @@ export class DispatchQueue {
     };
   }
 
-  /** Promote the highest-priority waiting entries into open slots. */
+  /**
+   * Promote waiting entries into open slots, honoring two limits:
+   *  - the global ceiling (total running across all projects), and
+   *  - the per-project cap (running for a single workspace).
+   * When a project is at its per-project cap we skip its waiting entries and
+   * promote another project's instead, so one busy project never head-of-line
+   * blocks the others.
+   */
   private pump(): void {
-    const max = this.deps.getMaxConcurrent();
-    while (this.running.size < max && this.waiting.length > 0) {
-      const entry = this.takeNext();
+    const globalMax = normalizeLimit(this.deps.getGlobalMaxConcurrent());
+    const perProjectMax = normalizeLimit(this.deps.getPerProjectMaxConcurrent());
+    while (this.running.size < globalMax) {
+      const entry = this.takeNextEligible(perProjectMax);
+      if (!entry) break;
       // Reserve the slot synchronously so concurrent pump() calls see it.
       this.running.set(entry.sessionId, entry);
       this.scheduleMaterialize(entry);
     }
   }
 
-  /** Remove and return the highest-priority waiting entry. */
-  private takeNext(): QueueEntry {
-    let bestIdx = 0;
-    for (let i = 1; i < this.waiting.length; i++) {
-      if (compareEntries(this.waiting[i], this.waiting[bestIdx]) < 0) bestIdx = i;
+  /**
+   * Remove and return the highest-priority waiting entry whose project is below
+   * the per-project cap, or undefined if every waiting entry's project is full.
+   */
+  private takeNextEligible(perProjectMax: number): QueueEntry | undefined {
+    if (this.waiting.length === 0) return undefined;
+
+    const runningPerProject = new Map<string, number>();
+    for (const e of this.running.values()) {
+      runningPerProject.set(e.workspacePath, (runningPerProject.get(e.workspacePath) ?? 0) + 1);
     }
+
+    let bestIdx = -1;
+    for (let i = 0; i < this.waiting.length; i++) {
+      const candidate = this.waiting[i];
+      if ((runningPerProject.get(candidate.workspacePath) ?? 0) >= perProjectMax) continue;
+      if (bestIdx === -1 || compareEntries(candidate, this.waiting[bestIdx]) < 0) bestIdx = i;
+    }
+
+    if (bestIdx === -1) return undefined;
     return this.waiting.splice(bestIdx, 1)[0];
   }
 
@@ -193,8 +233,11 @@ export function getDispatchQueue(): DispatchQueue {
         }
         return materializer(entry);
       },
-      getMaxConcurrent: () =>
+      getGlobalMaxConcurrent: () =>
         getAppSetting<number>('dispatchMaxConcurrent') ?? DEFAULT_DISPATCH_MAX_CONCURRENT,
+      getPerProjectMaxConcurrent: () =>
+        getAppSetting<number>('dispatchPerProjectMaxConcurrent') ??
+        DEFAULT_DISPATCH_PER_PROJECT_CONCURRENT,
       subscribeSessionEvents: listener =>
         getSessionStateManager().subscribe(event =>
           listener({ type: event.type, sessionId: event.sessionId }),

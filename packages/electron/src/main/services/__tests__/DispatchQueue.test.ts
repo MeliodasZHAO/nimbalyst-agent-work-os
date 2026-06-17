@@ -3,7 +3,7 @@ import { DispatchQueue, type QueueEntry, type SettleEventType } from '../Dispatc
 import { deriveDispatchTitle } from '../dispatchTitle';
 
 /** Capture the queue's settle listener so tests can fire session events. */
-function makeHarness(maxConcurrent: number) {
+function makeHarness(globalMax: number, perProjectMax: number = Number.POSITIVE_INFINITY) {
   let listener: ((e: { type: string; sessionId: string }) => void) | null = null;
   const materialized: string[] = [];
   const settled: Array<{ sessionId: string; type: SettleEventType }> = [];
@@ -15,7 +15,8 @@ function makeHarness(maxConcurrent: number) {
   });
   const queue = new DispatchQueue({
     materialize,
-    getMaxConcurrent: () => maxConcurrent,
+    getGlobalMaxConcurrent: () => globalMax,
+    getPerProjectMaxConcurrent: () => perProjectMax,
     subscribeSessionEvents: l => {
       listener = l;
       return () => {
@@ -28,8 +29,13 @@ function makeHarness(maxConcurrent: number) {
   return { queue, materialize, materialized, settle, onSettle, settled };
 }
 
-function entry(sessionId: string, priority: QueueEntry['priority'], enqueuedAt: number): QueueEntry {
-  return { sessionId, dispatchId: 'd1', workspacePath: '/ws', priority, enqueuedAt };
+function entry(
+  sessionId: string,
+  priority: QueueEntry['priority'],
+  enqueuedAt: number,
+  workspacePath = '/ws',
+): QueueEntry {
+  return { sessionId, dispatchId: 'd1', workspacePath, priority, enqueuedAt };
 }
 
 describe('DispatchQueue', () => {
@@ -129,7 +135,8 @@ describe('DispatchQueue', () => {
     });
     const queue = new DispatchQueue({
       materialize,
-      getMaxConcurrent: () => 1,
+      getGlobalMaxConcurrent: () => 1,
+      getPerProjectMaxConcurrent: () => Number.POSITIVE_INFINITY,
       subscribeSessionEvents: l => {
         listener = l;
         return () => undefined;
@@ -143,6 +150,59 @@ describe('DispatchQueue', () => {
 
     // 'a' failed and released its slot, so 'b' should now be running.
     expect(queue.getSnapshot().running.map(e => e.sessionId)).toEqual(['b']);
+  });
+
+  it('with the default unlimited per-project cap, a single project runs its whole batch (8 is a floor)', () => {
+    // Generous global ceiling, per-project unlimited (the default).
+    const { queue } = makeHarness(12);
+    queue.enqueue(Array.from({ length: 8 }, (_, i) => entry(`s${i}`, 'medium', i, '/proj')));
+
+    expect(queue.getSnapshot().running).toHaveLength(8);
+    expect(queue.getSnapshot().waiting).toHaveLength(0);
+  });
+
+  it('enforces the per-project cap while leaving global room for other projects', () => {
+    const { queue } = makeHarness(10, 2);
+    queue.enqueue([
+      entry('a1', 'medium', 1, '/a'),
+      entry('a2', 'medium', 2, '/a'),
+      entry('a3', 'medium', 3, '/a'),
+      entry('b1', 'medium', 4, '/b'),
+      entry('b2', 'medium', 5, '/b'),
+      entry('b3', 'medium', 6, '/b'),
+    ]);
+
+    // Each project capped at 2 → 4 running total (global ceiling 10 not reached),
+    // one entry per project still waiting.
+    const running = queue.getSnapshot().running.map(e => e.sessionId).sort();
+    expect(running).toEqual(['a1', 'a2', 'b1', 'b2']);
+    expect(queue.getSnapshot().waiting.map(e => e.sessionId).sort()).toEqual(['a3', 'b3']);
+  });
+
+  it('does not let one full project head-of-line block another project', () => {
+    const { queue } = makeHarness(10, 2);
+    // /a has three HIGH-priority entries; /b has one LOW-priority entry.
+    queue.enqueue([
+      entry('a1', 'high', 1, '/a'),
+      entry('a2', 'high', 2, '/a'),
+      entry('a3', 'high', 3, '/a'),
+      entry('b1', 'low', 4, '/b'),
+    ]);
+
+    // /a fills its 2 slots; its 3rd waits because /a is full. /b's lower-priority
+    // entry runs anyway rather than starving behind a3.
+    const running = queue.getSnapshot().running.map(e => e.sessionId).sort();
+    expect(running).toEqual(['a1', 'a2', 'b1']);
+    expect(queue.getSnapshot().waiting.map(e => e.sessionId)).toEqual(['a3']);
+  });
+
+  it('the global ceiling caps total running even when per-project would allow more', () => {
+    // Per-project unlimited, but global ceiling of 3 binds.
+    const { queue } = makeHarness(3);
+    queue.enqueue(Array.from({ length: 5 }, (_, i) => entry(`s${i}`, 'medium', i, '/proj')));
+
+    expect(queue.getSnapshot().running).toHaveLength(3);
+    expect(queue.getSnapshot().waiting).toHaveLength(2);
   });
 });
 

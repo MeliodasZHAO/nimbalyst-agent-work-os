@@ -195,6 +195,10 @@ interface AppStoreSchema {
   historyMaxSnapshots?: number; // Max snapshots per file (default: 250)
   // Preferred interactive terminal shell on Windows. 'auto' uses detection priority.
   preferredTerminalShell?: PreferredTerminalShell;
+  // Dispatch concurrency: global ceiling across all projects (0 = unlimited) and
+  // per-project cap (0 = unlimited). Read by the main-process DispatchQueue.
+  dispatchMaxConcurrent?: number;
+  dispatchPerProjectMaxConcurrent?: number;
   // Last known app version (for migrations)
   lastKnownVersion?: string;
   // Extension marketplace install tracking
