@@ -79,4 +79,29 @@ describe('ProjectTabBar 拖拽重排', () => {
 
     expect(store.get(openProjectsAtom).map((p) => p.path)).toEqual(['/p/aimo', '/p/other']);
   });
+
+  it('往右拖时指示线落在目标右侧', () => {
+    renderBar(); // 初始 [aimo(0), other(1)]
+    const aimo = screen.getByTestId('project-tab-/p/aimo');
+    const other = screen.getByTestId('project-tab-/p/other');
+    const dataTransfer = makeDataTransfer();
+
+    fireEvent.dragStart(aimo, { dataTransfer });
+    fireEvent.dragOver(other, { dataTransfer });
+
+    expect(other.style.boxShadow).toContain('inset -2px');
+  });
+
+  it('往左拖时指示线落在目标左侧', () => {
+    renderBar();
+    const aimo = screen.getByTestId('project-tab-/p/aimo');
+    const other = screen.getByTestId('project-tab-/p/other');
+    const dataTransfer = makeDataTransfer();
+
+    fireEvent.dragStart(other, { dataTransfer });
+    fireEvent.dragOver(aimo, { dataTransfer });
+
+    expect(aimo.style.boxShadow).toContain('inset 2px');
+    expect(aimo.style.boxShadow).not.toContain('inset -2px');
+  });
 });

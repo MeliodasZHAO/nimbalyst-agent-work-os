@@ -297,7 +297,7 @@ export function ProjectTabBar() {
         className="project-tab-bar flex items-center h-10 bg-[var(--nim-bg-secondary)] [-webkit-app-region:drag] select-none shrink-0 pl-1 pr-1 gap-px overflow-x-auto"
         data-testid="project-tab-bar"
       >
-        {openProjects.map((project) => {
+        {openProjects.map((project, index) => {
           const isActive = project.path === activePath;
           const summary = activitySummary.get(project.path);
           const processingCount = summary?.processing ?? 0;
@@ -306,6 +306,11 @@ export function ProjectTabBar() {
           const isDragging = project.path === dragPath;
           const showDropIndicator =
             dragOverPath === project.path && dragPath !== null && dragPath !== project.path;
+          // Insertion line follows drag direction to match the arrayMove landing:
+          // dragging a tab from the LEFT drops it AFTER this one (line on the
+          // right); from the RIGHT drops it BEFORE (line on the left).
+          const dragIndex = dragPath ? openProjects.findIndex((p) => p.path === dragPath) : -1;
+          const dropOnRight = showDropIndicator && dragIndex !== -1 && dragIndex < index;
 
           return (
             <button
@@ -319,7 +324,9 @@ export function ProjectTabBar() {
               } ${isDragging ? 'opacity-50' : ''}`}
               style={{
                 ...(isActive ? { borderBottom: `2px solid ${accentColor}` } : {}),
-                ...(showDropIndicator ? { boxShadow: 'inset 2px 0 0 0 var(--nim-primary)' } : {}),
+                ...(showDropIndicator
+                  ? { boxShadow: dropOnRight ? 'inset -2px 0 0 0 var(--nim-primary)' : 'inset 2px 0 0 0 var(--nim-primary)' }
+                  : {}),
               }}
               onClick={() => handleActivate(project.path)}
               onContextMenu={(e) => handleContextMenu(project, e)}
