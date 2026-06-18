@@ -127,7 +127,9 @@ interface AIInputProps {
  */
 // Constants for prompt box resize
 const MIN_PROMPT_HEIGHT = 36;
-const MAX_PROMPT_HEIGHT = 600;
+// Hard ceiling for manual resize. Kept well under window height so the
+// prompt box can never swallow the transcript.
+const MAX_PROMPT_HEIGHT = 320;
 const DEFAULT_MAX_PROMPT_HEIGHT = 200;
 
 export const AIInput = forwardRef<AIInputRef, AIInputProps>(
@@ -328,7 +330,10 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
           const workspaceState = await window.electronAPI.invoke('workspace:get-state', workspacePath);
           const savedHeight = workspaceState?.aiPanel?.promptBoxHeight;
           if (savedHeight !== undefined) {
-            setUserSetHeight(savedHeight);
+            // Clamp persisted values from before the ceiling was lowered (600 → 320)
+            setUserSetHeight(typeof savedHeight === 'number'
+              ? Math.min(savedHeight, MAX_PROMPT_HEIGHT)
+              : savedHeight);
           }
         } catch (err) {
           console.error('[AIInput] Failed to load prompt box height:', err);
@@ -417,22 +422,22 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
       }
     }));
 
-    // Auto-resize textarea (use RAF to batch DOM operations)
-    // If user has manually resized (userSetHeight is set), use that height
-    // Otherwise, auto-size based on content up to DEFAULT_MAX_PROMPT_HEIGHT
+    // Auto-resize textarea (use RAF to batch DOM operations).
+    // Auto-grow is ALWAYS on: the box tracks content height as you type.
+    // A manual drag (userSetHeight) only adjusts the envelope instead of
+    // freezing the height (the old behavior, which permanently killed
+    // auto-grow after a single drag): the box never shrinks below the dragged
+    // height, and dragging past the default raises the growth ceiling.
+    // Double-click on the resize handle resets to pure auto mode.
     useEffect(() => {
       if (!textareaRef.current) return;
 
       const textarea = textareaRef.current;
       const rafId = requestAnimationFrame(() => {
-        if (userSetHeight !== null) {
-          // User has manually set the height - use it directly
-          textarea.style.height = `${userSetHeight}px`;
-        } else {
-          // Auto-size based on content
-          textarea.style.height = 'auto';
-          textarea.style.height = `${Math.min(textarea.scrollHeight, DEFAULT_MAX_PROMPT_HEIGHT)}px`;
-        }
+        const floor = userSetHeight ?? MIN_PROMPT_HEIGHT;
+        const ceiling = Math.max(DEFAULT_MAX_PROMPT_HEIGHT, userSetHeight ?? 0);
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, floor), ceiling)}px`;
       });
 
       return () => cancelAnimationFrame(rafId);
@@ -697,6 +702,26 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
       setSelectedOption(null);
     }, [typeaheadMatch, value, onChange, pushSnapshot, captureSnapshot]);
 
+    // Intercept slash commands that the embedded SDK can't handle itself.
+    // `/model <id>` mirrors the Claude Code CLI: the SDK subprocess rejects it
+    // with "isn't available in this environment", so we map it to the same
+    // model-change path as the model picker. Returns true if handled locally.
+    const tryHandleLocalCommand = useCallback((raw: string): boolean => {
+      if (!enableSlashCommands || !onModelChange) return false;
+      const match = raw.trim().match(/^\/model\s+(\S+)$/i);
+      if (!match) return false;
+
+      const arg = match[1].toLowerCase();
+      // Accept either a full "provider:model" ID or a bare model/variant name,
+      // which is scoped to the session's current (agent) provider.
+      const modelId = arg.includes(':')
+        ? arg
+        : `${currentProvider || 'claude-code'}:${arg}`;
+      onModelChange(modelId);
+      onChange('');
+      return true;
+    }, [enableSlashCommands, onModelChange, currentProvider, onChange]);
+
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
       const currentOptions = typeaheadMatch?.trigger === '@@' ? sessionMentionOptions
         : typeaheadMatch?.trigger === '@' ? fileMentionOptions
@@ -884,6 +909,7 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
       if (e.key === 'Enter' && !e.shiftKey && !isTypeaheadVisible && !e.nativeEvent.isComposing) {
         e.preventDefault();
         if (value.trim() && !disabled && processingAttachments.length === 0) {
+          if (tryHandleLocalCommand(value)) return;
           onSend(value);
         }
       }
@@ -1164,8 +1190,10 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
       }
     }, [value, onChange, onAttachmentRemove, pushSnapshot, captureSnapshot]);
 
+    // Intercept slash commands the SDK can't handle (see tryHandleLocalCommand above).
     const handleSend = () => {
       if (value.trim() && !disabled && processingAttachments.length === 0) {
+        if (tryHandleLocalCommand(value)) return;
         onSend(value);
       }
     };
@@ -1217,7 +1245,8 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
         <div
           className={`ai-chat-input-resize-handle absolute -top-[3px] left-0 right-0 h-1.5 cursor-row-resize z-10 before:content-[''] before:absolute before:top-0.5 before:left-0 before:right-0 before:h-0.5 before:transition-colors before:duration-150 ${isResizing ? 'before:bg-[var(--nim-primary)]' : ''} hover:before:bg-[var(--nim-primary)]`}
           onMouseDown={handleResizeMouseDown}
-          title="Drag to resize prompt box"
+          onDoubleClick={() => setUserSetHeight(null)}
+          title="Drag to resize prompt box (double-click to reset auto-size)"
         />
 
         {/* Pending voice command with countdown */}
@@ -1295,6 +1324,7 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
                     workspacePath={workspacePath}
                     onInsert={handleActionPromptInsert}
                     onLaunchNewSession={onLaunchActionInNewSession}
+                    currentProvider={currentProvider ?? provider ?? null}
                   />
                 </span>
               </HelpTooltip>
@@ -1367,7 +1397,9 @@ export const AIInput = forwardRef<AIInputRef, AIInputProps>(
             rows={1}
             style={{
               minHeight: `${MIN_PROMPT_HEIGHT}px`,
-              maxHeight: `${userSetHeight ?? DEFAULT_MAX_PROMPT_HEIGHT}px`,
+              // Growth ceiling: the default cap, or the dragged height when
+              // the user pulled the box past it (see auto-resize effect).
+              maxHeight: `${Math.max(DEFAULT_MAX_PROMPT_HEIGHT, userSetHeight ?? 0)}px`,
             }}
           />
           {isMemoryMode ? (

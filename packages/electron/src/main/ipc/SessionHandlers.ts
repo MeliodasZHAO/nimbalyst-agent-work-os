@@ -25,6 +25,7 @@ import {
 } from '../services/ai/gitCommitProposalPromptUtils';
 import { enrichTranscriptMessagesWithToolCallDiffs } from '../services/TranscriptToolCallEnricher';
 import { setSessionPendingPrompt } from '../services/ai/pendingPromptPersistence';
+import { applySessionMetadataUpdate } from '../services/sessionMetadataBroadcast';
 
 // Initialize session manager
 const sessionManager = new SessionManager();
@@ -453,28 +454,9 @@ export async function registerSessionHandlers() {
     // Update session metadata with extended fields
     safeHandle('sessions:update-session-metadata', async (event, sessionId: string, updates: any) => {
         try {
-            // Extract sessionType and metadata from updates
-            const { sessionType, ...metadataFields } = updates;
-
-            // Build update payload
-            const updatePayload: any = {};
-            if (sessionType !== undefined) {
-                updatePayload.sessionType = sessionType;
-            }
-            if (Object.keys(metadataFields).length > 0) {
-                updatePayload.metadata = metadataFields;
-            }
-
-            await AISessionsRepository.updateMetadata(sessionId, updatePayload);
-
-            // Notify all windows about the update
-            const { BrowserWindow } = await import('electron');
-            BrowserWindow.getAllWindows().forEach(window => {
-                if (!window.isDestroyed()) {
-                    window.webContents.send('sessions:session-updated', sessionId, metadataFields);
-                }
-            });
-
+            // Persist (wrapping loose fields into the metadata JSON blob) and
+            // broadcast sessions:session-updated — see sessionMetadataBroadcast.
+            await applySessionMetadataUpdate(sessionId, updates);
             return { success: true };
         } catch (error) {
             console.error('[SessionHandlers] Failed to update session metadata:', error);

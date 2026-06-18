@@ -143,6 +143,33 @@ export const closeOpenProjectAtom = atom(
   }
 );
 
+/**
+ * Reorder the rail: move the project at `sourcePath` into the slot currently
+ * held by `targetPath` (browser-style tab drag). No-op when either path is
+ * missing or the two are equal. Does not change the active project.
+ *
+ * The reordered array is persisted by the existing `openProjectsAtom`
+ * subscriber (it stores the ordered `paths`), so the new order survives
+ * restart with no extra work.
+ */
+export const reorderOpenProjectAtom = atom(
+  null,
+  (get, set, payload: { sourcePath: string; targetPath: string }) => {
+    const { sourcePath, targetPath } = payload;
+    if (sourcePath === targetPath) return;
+
+    const current = get(openProjectsAtom);
+    const from = current.findIndex((p) => p.path === sourcePath);
+    const to = current.findIndex((p) => p.path === targetPath);
+    if (from === -1 || to === -1) return;
+
+    const next = [...current];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    set(openProjectsAtom, next);
+  }
+);
+
 // ---------------------------------------------------------------------------
 // Persistence
 // ---------------------------------------------------------------------------

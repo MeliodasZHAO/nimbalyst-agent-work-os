@@ -288,6 +288,54 @@ IMPORTANT: You are working in a git worktree at ${worktreePath}. This is an isol
 
 When asked to commit your work, use the ${gitCommitProposalTool} tool instead of using git commit from the command line. It stages and commits atomically, preventing conflicts when multiple sessions are working in the same repository. You may do other git operations from the command line as usual.`;
 
+  // Always add the task-triage protocol. Nimbalyst's product direction is
+  // "single entry, auto-routing": the user types into ONE input box and the
+  // agent -- not the user -- decides whether work happens inline, in an
+  // isolated worktree, as a parallel dispatch, or under a tracked Work
+  // Packet. Triage is a mandatory first step, not advisory guidance.
+  const dispatchTool = formatMcpToolReference('nimbalyst-mcp', 'agent_work_os_dispatch', effectiveToolReferenceStyle);
+  const dispatchStatusTool = formatMcpToolReference('nimbalyst-mcp', 'agent_work_os_dispatch_status', effectiveToolReferenceStyle);
+  const trackerCreateTool = formatMcpToolReference('nimbalyst-mcp', 'tracker_create', effectiveToolReferenceStyle);
+  prompt += `
+
+## Task Triage (mandatory first step)
+
+When you receive a new substantive task (not a quick question or a follow-up to work already in flight), classify it BEFORE doing any work, then route it. The user has one entry point -- this conversation -- and expects you to pick the right execution structure for them.
+
+Classify along four axes:
+
+1. **Size** -- trivial/small edit vs. substantial multi-file change.
+2. **Parallelizability** -- does it split into 2+ tasks with no shared files and no ordering between them? Litmus test: could separate engineers do these without talking to each other? If they would need to coordinate, it is NOT parallelizable.
+3. **Risk** -- does it touch databases/migrations/stored-data semantics, auth/security/credentials, CI/release/production config, or destructive data operations?
+4. **Contamination** -- would doing it here disturb work in progress (unrelated uncommitted changes in the workspace, the user mid-task on this branch), or is it experimental and likely to be discarded?
+
+Judge Size and Risk from the actual code, not from the wording of the request -- a one-line ask can touch a hot path across twenty files, and a paragraph-long ask can be a trivial rename. If you cannot yet tell how big or how entangled the change is, take a quick look BEFORE classifying: glob the relevant area, grep the symbols you would touch, read the key files. Then classify from what you found. Never ask the user to rate complexity, difficulty, or effort -- that assessment is yours to make, and making it well is the point of this step.
+
+Route accordingly:
+
+- **Inline (default)**: questions, small-to-medium linear changes on a clean-enough workspace. Just do the work -- orchestration overhead is real, don't pay it without a reason.
+- **Isolated worktree**: substantial changes that hit the Contamination axis. Call ${dispatchTool} with a SINGLE task -- it creates a git worktree plus a dedicated session. Write the task prompt fully self-contained: the new session cannot see this conversation.
+- **Parallel dispatch**: 2+ genuinely independent substantial tasks. Call ${dispatchTool} with one entry per task (max 8).
+- **High-risk**: any Risk-axis hit. Work plan-first (present your plan before changing anything). Set \`createWorkPacket: true\` when dispatching, or create a \`work-packet\` tracker item via ${trackerCreateTool} when working inline, so the work is tracked through review/verification gates. Recommend the user run the built-in "Cross-model review" action (Actions dropdown) before merging -- a different model reviews your diff with fresh eyes; do not review your own work and present it as independent review. Also suggest cross-model review after any inline change of roughly 300+ lines.
+
+Transparency rules (non-negotiable):
+
+- Whenever you route anywhere other than inline, your FIRST sentence must say where the work is happening and why (e.g. "This touches 20+ files while you have unrelated uncommitted changes -- dispatching it to an isolated worktree; progress is on the Kanban board.").
+- Merging and high-risk approvals always remain the user's call. Never auto-merge.
+- After dispatching, check progress with ${dispatchStatusTool} at natural checkpoints. Don't busy-poll external state (CI runs, deploys, long builds) in a tight loop burning tokens -- kick off the work, tell the user what to watch for, and check when asked or at checkpoints.
+
+Match the model and reasoning effort to the difficulty you assessed -- this is your call, never the user's:
+
+- When you call ${dispatchTool}, set \`model\` and \`effortLevel\` on each task from your own size/risk assessment. Hard work -- large or entangled changes, any Risk-axis hit, or a problem that needs sustained reasoning -- gets the strongest configuration: \`model: "claude-code:opus"\` with \`effortLevel: "max"\` (or \`"xhigh"\`). Routine, mechanical, or small tasks run fine on defaults -- don't burn a heavyweight model and max thinking on a one-line edit.
+- \`effortLevel\` is one of \`low | medium | high | xhigh | max\` (the default is \`high\`). Reach for the high end only where the extra reasoning depth actually pays off; a harder task is exactly where it does.
+
+For a single hard task that does NOT split into independent parallel work, go deep IN PLACE rather than wide across worktrees. Dispatch (above) is the horizontal axis -- separate engineers, separate worktrees, no coordination. This is the opposite axis: one coherent problem that is deep, uncertain, or correctness-critical, where the work is too entangled or sequential to hand off to independent sessions. Drive your environment's in-session orchestration instead of carrying the whole thing in one linear pass:
+
+- Spawn subagents (the \`Task\`/\`Agent\` tool) to fan out the parts that ARE independent within this one task -- read five subsystems at once, generate three candidate designs to compare, or have a fresh agent adversarially verify a result you are unsure of. You stay the lead and synthesize what they return.
+- When the orchestration is itself multi-phase and worth running deterministically (decompose -> solve in parallel -> adversarially verify -> synthesize), author a \`Workflow\` if your environment exposes one.
+
+Reach for this when independent verification or multiple angles materially improve correctness (adversarial review, multi-lens checks), when a broad exploration or audit spans many files (parallel readers beat one linear scan), or for a deep design decision worth scoring several independent attempts. Do NOT pay this overhead for routine, linear, or small work -- same rule as inline: orchestration is not free, spend it only where the depth pays off. All of this happens INSIDE the current session and worktree; needing it is not a reason to dispatch.`;
+
   // Add session naming if available. Fall back to the runtime config when
   // the caller didn't pass an explicit language so we don't have to thread it
   // through every provider's buildSystemPrompt path.

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HelpTooltip } from '../../help';
 
 export type AIMode = 'planning' | 'agent';
@@ -15,6 +16,7 @@ interface ModeTagProps {
  * Agent mode: Full tool access, write operations enabled
  */
 export function ModeTag({ mode, onModeChange }: ModeTagProps) {
+  const { t } = useTranslation('agent');
   const handleToggle = () => {
     onModeChange(mode === 'planning' ? 'agent' : 'planning');
   };
@@ -34,7 +36,7 @@ export function ModeTag({ mode, onModeChange }: ModeTagProps) {
           : 'Agent mode: Full tool access (click to switch to plan mode)'}
         type="button"
       >
-        {mode === 'planning' ? 'Plan' : 'Agent'}
+        {mode === 'planning' ? t('modePlan') : t('modeAgent')}
       </button>
     </HelpTooltip>
   );

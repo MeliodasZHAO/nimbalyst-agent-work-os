@@ -100,15 +100,30 @@ describe('resolveClaudeCodeModelVariant', () => {
     });
   });
 
+  describe('custom model IDs', () => {
+    it('passes through an explicit claude-code custom model ID verbatim', () => {
+      // Users can pick models newer than the curated variant list (e.g. via
+      // the custom-model picker or /model). Never substitute a different model.
+      expect(resolveClaudeCodeModelVariant('claude-code:claude-fable-5', DEFAULT_MODEL)).toBe('claude-fable-5');
+    });
+
+    it('passes through a custom model ID with -1m suffix as [1m]', () => {
+      expect(resolveClaudeCodeModelVariant('claude-code:claude-fable-5-1m', DEFAULT_MODEL)).toBe('claude-fable-5[1m]');
+    });
+
+    it('passes through a bare claude-* model ID without provider prefix', () => {
+      expect(resolveClaudeCodeModelVariant('claude-fable-5', DEFAULT_MODEL)).toBe('claude-fable-5');
+    });
+  });
+
   describe('fallback behavior', () => {
     it('falls back to sonnet for unrecognized provider', () => {
       // Hardcoded last-resort fallback is always sonnet, regardless of DEFAULT_MODEL
       expect(resolveClaudeCodeModelVariant('openai:gpt-4', DEFAULT_MODEL)).toBe('sonnet');
     });
 
-    it('falls back to sonnet for unrecognized variant', () => {
-      // Hardcoded last-resort fallback is always sonnet, regardless of DEFAULT_MODEL
-      expect(resolveClaudeCodeModelVariant('claude-code:unknown', DEFAULT_MODEL)).toBe('sonnet');
+    it('falls back to sonnet for a bare string that does not look like a model ID', () => {
+      expect(resolveClaudeCodeModelVariant('unknown', DEFAULT_MODEL)).toBe('sonnet');
     });
 
     it('handles raw variant names without provider prefix', () => {

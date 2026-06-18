@@ -17,6 +17,7 @@ import {
   offset,
   flip,
   shift,
+  type VirtualElement,
 } from '@floating-ui/react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
@@ -26,6 +27,7 @@ import {
   isOpenProjectsAtCapAtom,
   addOpenProjectAtom,
   closeOpenProjectAtom,
+  reorderOpenProjectAtom,
   type OpenProject,
 } from '../store/atoms/openProjects';
 import {
@@ -33,6 +35,7 @@ import {
   projectActivitySummaryAtom,
 } from '../store/atoms/sessionActivity';
 import { MaterialSymbol } from '@nimbalyst/runtime';
+import { HelpTooltip } from '../help';
 import { generateWorkspaceAccentColor } from './WorkspaceSummaryHeader';
 
 const isWindows = navigator.userAgent.includes('Windows');
@@ -96,11 +99,17 @@ export function ProjectTabBar() {
   const atCap = useAtomValue(isOpenProjectsAtCapAtom);
   const addProject = useSetAtom(addOpenProjectAtom);
   const closeProject = useSetAtom(closeOpenProjectAtom);
+  const reorderProject = useSetAtom(reorderOpenProjectAtom);
   const activity = useAtomValue(globalSessionActivityAtom);
   const activitySummary = useAtomValue(projectActivitySummaryAtom);
 
   const [contextMenu, setContextMenu] = useState<{ project: OpenProject; x: number; y: number } | null>(null);
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
+
+  // Tab drag-to-reorder state. `dragPath` is the tab being dragged; `dragOverPath`
+  // is the tab currently hovered as a drop target (shows the insertion indicator).
+  const [dragPath, setDragPath] = useState<string | null>(null);
+  const [dragOverPath, setDragOverPath] = useState<string | null>(null);
 
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [recentProjects, setRecentProjects] = useState<Array<{ path: string; name: string; timestamp?: number }>>([]);
@@ -134,18 +143,25 @@ export function ProjectTabBar() {
   const ctxRole = useRole(ctxContext, { role: 'menu' });
   const { getFloatingProps: getCtxFloatingProps } = useInteractions([ctxDismiss, ctxRole]);
 
+  // 虚拟锚点跟随右键坐标；只在 contextMenu 变化时设置，避免 ref 回调里每 render
+  // setReference 触发的无限重渲染(React #185)。
+  React.useEffect(() => {
+    if (!contextMenu) {
+      ctxRefs.setPositionReference(null);
+      return;
+    }
+    const { x, y } = contextMenu;
+    const virtual: VirtualElement = {
+      getBoundingClientRect: () => DOMRect.fromRect({ x, y, width: 0, height: 0 }),
+    };
+    ctxRefs.setPositionReference(virtual);
+  }, [contextMenu, ctxRefs]);
+
   const openProjectPaths = useMemo(() => new Set(openProjects.map((p) => p.path)), [openProjects]);
   const filteredRecents = useMemo(
     () => recentProjects.filter((r) => !openProjectPaths.has(r.path)).slice(0, 8),
     [recentProjects, openProjectPaths]
   );
-
-  const refreshRecents = useCallback(async () => {
-    try {
-      const recents = await window.electronAPI?.invoke?.('settings:get-recent-projects');
-      if (Array.isArray(recents)) setRecentProjects(recents);
-    } catch {}
-  }, []);
 
   const handleActivate = useCallback((path: string) => {
     if (path === activePath) return;
@@ -185,15 +201,6 @@ export function ProjectTabBar() {
     setContextMenu({ project, x: e.clientX, y: e.clientY });
   }, []);
 
-  const handleAddClick = useCallback(() => {
-    if (atCap) {
-      window.alert('已达到最大项目数 (8)，请先关闭一个项目或在新窗口中打开。');
-      return;
-    }
-    refreshRecents();
-    setAddMenuOpen(true);
-  }, [atCap, refreshRecents]);
-
   const handleOpenFolder = useCallback(async () => {
     setAddMenuOpen(false);
     try {
@@ -209,6 +216,28 @@ export function ProjectTabBar() {
       console.error('[ProjectTabBar] open folder failed:', err);
     }
   }, [addProject]);
+
+  const handleAddClick = useCallback(async () => {
+    if (atCap) {
+      window.alert('已达到最大项目数 (8)，请先关闭一个项目或在新窗口中打开。');
+      return;
+    }
+    // Fetch recents first: when there are none to offer, the dropdown would
+    // contain a single "Open folder" item -- skip the extra click and open
+    // the system folder picker directly.
+    let recents: Array<{ path: string; name: string; timestamp?: number }> = [];
+    try {
+      const fetched = await window.electronAPI?.invoke?.('settings:get-recent-projects');
+      if (Array.isArray(fetched)) recents = fetched;
+    } catch {}
+    setRecentProjects(recents);
+    const hasRecents = recents.some((r) => !openProjectPaths.has(r.path));
+    if (!hasRecents) {
+      void handleOpenFolder();
+      return;
+    }
+    setAddMenuOpen(true);
+  }, [atCap, openProjectPaths, handleOpenFolder]);
 
   const handleOpenRecent = useCallback(async (path: string, name: string) => {
     setAddMenuOpen(false);
@@ -240,6 +269,13 @@ export function ProjectTabBar() {
     }
   }, [contextMenu, closeContextMenu]);
 
+  const handleCtxCopyPath = useCallback(() => {
+    if (!contextMenu) return;
+    const path = contextMenu.project.path;
+    closeContextMenu();
+    void window.electronAPI?.copyToClipboard?.(path);
+  }, [contextMenu, closeContextMenu]);
+
   const handleCtxClose = useCallback(() => {
     if (!contextMenu) return;
     closeContextMenu();
@@ -261,25 +297,65 @@ export function ProjectTabBar() {
         className="project-tab-bar flex items-center h-10 bg-[var(--nim-bg-secondary)] [-webkit-app-region:drag] select-none shrink-0 pl-1 pr-1 gap-px overflow-x-auto"
         data-testid="project-tab-bar"
       >
-        {openProjects.map((project) => {
+        {openProjects.map((project, index) => {
           const isActive = project.path === activePath;
           const summary = activitySummary.get(project.path);
           const processingCount = summary?.processing ?? 0;
           const isOnlyProject = openProjects.length <= 1;
           const accentColor = generateWorkspaceAccentColor(project.path);
+          const isDragging = project.path === dragPath;
+          const showDropIndicator =
+            dragOverPath === project.path && dragPath !== null && dragPath !== project.path;
+          // Insertion line follows drag direction to match the arrayMove landing:
+          // dragging a tab from the LEFT drops it AFTER this one (line on the
+          // right); from the RIGHT drops it BEFORE (line on the left).
+          const dragIndex = dragPath ? openProjects.findIndex((p) => p.path === dragPath) : -1;
+          const dropOnRight = showDropIndicator && dragIndex !== -1 && dragIndex < index;
 
           return (
             <button
               key={project.path}
               type="button"
+              draggable
               className={`project-tab group flex items-center gap-1.5 h-[34px] px-3 border-none cursor-pointer text-[13px] font-medium transition-all duration-100 shrink-0 min-w-[60px] [-webkit-app-region:no-drag] ${
                 isActive
                   ? 'bg-[var(--nim-bg)] text-[var(--nim-text)] rounded-t-md'
                   : 'bg-transparent text-[var(--nim-text-faint)] hover:text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-tertiary)] rounded-t-md'
-              }`}
-              style={isActive ? { borderBottom: `2px solid ${accentColor}` } : undefined}
+              } ${isDragging ? 'opacity-50' : ''}`}
+              style={{
+                ...(isActive ? { borderBottom: `2px solid ${accentColor}` } : {}),
+                ...(showDropIndicator
+                  ? { boxShadow: dropOnRight ? 'inset -2px 0 0 0 var(--nim-primary)' : 'inset 2px 0 0 0 var(--nim-primary)' }
+                  : {}),
+              }}
               onClick={() => handleActivate(project.path)}
               onContextMenu={(e) => handleContextMenu(project, e)}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', project.path);
+                setDragPath(project.path);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (project.path !== dragPath) setDragOverPath(project.path);
+              }}
+              onDragLeave={() => {
+                setDragOverPath((cur) => (cur === project.path ? null : cur));
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const sourcePath = e.dataTransfer.getData('text/plain') || dragPath;
+                if (sourcePath && sourcePath !== project.path) {
+                  reorderProject({ sourcePath, targetPath: project.path });
+                }
+                setDragPath(null);
+                setDragOverPath(null);
+              }}
+              onDragEnd={() => {
+                setDragPath(null);
+                setDragOverPath(null);
+              }}
               title={project.path}
               data-testid={`project-tab-${project.path}`}
             >
@@ -314,20 +390,23 @@ export function ProjectTabBar() {
         })}
 
         {/* Add project button */}
-        <button
-          ref={(el) => {
-            addButtonRef.current = el;
-            addRefs.setReference(el);
-          }}
-          type="button"
-          className="project-tab-add flex items-center justify-center w-7 h-7 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag]"
-          onClick={handleAddClick}
-          title={atCap ? '已达到最大项目数 (8)' : '添加项目'}
-          disabled={atCap}
-          data-testid="project-tab-add"
-        >
-          <MaterialSymbol icon="add" size={14} />
-        </button>
+        <HelpTooltip testId="project-tab-add" placement="bottom">
+          <button
+            ref={(el) => {
+              addButtonRef.current = el;
+              addRefs.setReference(el);
+            }}
+            type="button"
+            className="project-tab-add flex items-center justify-center w-7 h-7 rounded border-none bg-transparent text-[var(--nim-text-faint)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] cursor-pointer transition-colors duration-100 shrink-0 [-webkit-app-region:no-drag]"
+            onClick={handleAddClick}
+            // Disabled buttons don't fire mouse events, so the cap state keeps a native title
+            title={atCap ? '已达到最大项目数 (8)' : undefined}
+            disabled={atCap}
+            data-testid="project-tab-add"
+          >
+            <MaterialSymbol icon="add" size={14} />
+          </button>
+        </HelpTooltip>
 
         {/* Spacer for window dragging */}
         <span className="flex-1" />
@@ -342,7 +421,7 @@ export function ProjectTabBar() {
           <div
             ref={addRefs.setFloating}
             style={addFloatingStyles}
-            className="project-tab-add-menu z-50 min-w-[220px] max-w-[320px] rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg)] shadow-lg py-1"
+            className="project-tab-add-menu z-50 min-w-[260px] max-w-[360px] rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg)] shadow-[0_12px_32px_rgba(0,0,0,0.45)] py-1"
             {...getAddFloatingProps()}
           >
             <button
@@ -381,14 +460,7 @@ export function ProjectTabBar() {
       {contextMenu && (
         <FloatingPortal>
           <div
-            ref={(el) => {
-              ctxRefs.setFloating(el);
-              if (el) {
-                ctxRefs.setReference({
-                  getBoundingClientRect: () => DOMRect.fromRect({ x: contextMenu.x, y: contextMenu.y, width: 0, height: 0 }),
-                });
-              }
-            }}
+            ref={ctxRefs.setFloating}
             style={ctxFloatingStyles}
             className="project-tab-context-menu z-50 min-w-[180px] rounded-lg border border-[var(--nim-border)] bg-[var(--nim-bg)] shadow-lg py-1"
             {...getCtxFloatingProps()}
@@ -406,6 +478,13 @@ export function ProjectTabBar() {
               onClick={handleCtxReveal}
             >
               {revealLabel}
+            </button>
+            <button
+              type="button"
+              className="w-full px-3 py-1.5 text-left text-[13px] text-[var(--nim-text)] bg-transparent border-none cursor-pointer hover:bg-[var(--nim-bg-hover)]"
+              onClick={handleCtxCopyPath}
+            >
+              复制项目路径
             </button>
             <div className="h-px bg-[var(--nim-border)] mx-2 my-1" />
             <button

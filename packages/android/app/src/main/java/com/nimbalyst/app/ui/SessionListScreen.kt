@@ -55,6 +55,9 @@ import com.nimbalyst.app.R
 import com.nimbalyst.app.analytics.AnalyticsManager
 import com.nimbalyst.app.data.SessionEntity
 import com.nimbalyst.app.ui.components.ConnectionIndicator
+import com.nimbalyst.app.ui.components.NeedsResponseBadge
+import com.nimbalyst.app.ui.components.PhaseChip
+import com.nimbalyst.app.ui.components.needsResponse
 import com.nimbalyst.app.utils.RelativeTimestamp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -76,8 +79,18 @@ fun SessionListScreen(
     var showCreateMenu by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Group sessions: workstreams first, then standalone by time
-    val groupedSessions = remember(sessions) { groupSessionsByTime(sessions) }
+    // Precompute groupings off the recomposition hot path
+    val workstreamParents = remember(sessions) { sessions.filter { it.sessionType == "workstream" } }
+    val childSessionsByParent = remember(sessions) {
+        sessions.filter { !it.parentSessionId.isNullOrBlank() }.groupBy { it.parentSessionId!! }
+    }
+    val standaloneTimeGrouped = remember(sessions) {
+        val nonStandaloneIds = buildSet {
+            workstreamParents.forEach { add(it.id) }
+            sessions.filter { !it.parentSessionId.isNullOrBlank() }.forEach { add(it.id) }
+        }
+        groupSessionsByTime(sessions.filter { it.id !in nonStandaloneIds })
+    }
 
     Column(
         modifier = Modifier
@@ -148,17 +161,6 @@ fun SessionListScreen(
                     )
                 }
             } else {
-                // Separate workstream parents and their children
-                val workstreamParents = sessions.filter { it.sessionType == "workstream" }
-                val childSessionsByParent = sessions
-                    .filter { !it.parentSessionId.isNullOrBlank() }
-                    .groupBy { it.parentSessionId!! }
-                val standaloneIds = buildSet {
-                    workstreamParents.forEach { add(it.id) }
-                    sessions.filter { !it.parentSessionId.isNullOrBlank() }.forEach { add(it.id) }
-                }
-                val standaloneSessions = sessions.filter { it.id !in standaloneIds }
-
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -187,8 +189,7 @@ fun SessionListScreen(
                     }
 
                     // Standalone sessions grouped by time
-                    val timeGrouped = groupSessionsByTime(standaloneSessions)
-                    timeGrouped.forEach { (labelRes, groupSessions) ->
+                    standaloneTimeGrouped.forEach { (labelRes, groupSessions) ->
                         item(key = "header-$labelRes") {
                             Text(
                                 text = stringResource(labelRes),
@@ -249,20 +250,18 @@ private fun SessionRow(
                 )
                 Row(
                     modifier = Modifier.padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "${session.provider ?: "unknown"} -- ${session.mode ?: "agent"}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    session.phase?.let { phase ->
-                        Text(
-                            text = phase,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                    if (session.needsResponse()) {
+                        NeedsResponseBadge()
                     }
+                    PhaseChip(session.phase)
                 }
             }
             Column(

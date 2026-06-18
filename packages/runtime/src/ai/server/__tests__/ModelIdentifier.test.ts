@@ -99,8 +99,18 @@ describe('ModelIdentifier', () => {
       expect(id.isExtendedContext).toBe(true);
     });
 
-    it('throws on invalid claude-code variant', () => {
-      expect(() => ModelIdentifier.create('claude-code', 'invalid-variant')).toThrow('Invalid Claude Code variant');
+    it('accepts custom claude-code model IDs outside the curated variant list', () => {
+      // Custom IDs (e.g. brand-new models) pass through so users aren't
+      // limited to the hardcoded variants; the API validates the ID.
+      const id = ModelIdentifier.create('claude-code', 'claude-fable-5');
+      expect(id.model).toBe('claude-fable-5');
+      expect(id.combined).toBe('claude-code:claude-fable-5');
+    });
+
+    it('handles -1m suffix on custom claude-code model IDs', () => {
+      const id = ModelIdentifier.create('claude-code', 'claude-fable-5-1m');
+      expect(id.baseVariant).toBe('claude-fable-5');
+      expect(id.isExtendedContext).toBe(true);
     });
 
     it('throws on invalid provider', () => {

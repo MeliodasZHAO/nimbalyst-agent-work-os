@@ -16,6 +16,7 @@ import {
 } from '../../store/atoms/claudeUsageAtoms';
 import { ClaudeUsagePopover } from './ClaudeUsagePopover';
 import { refreshClaudeUsage } from '../../store/listeners/claudeUsageListeners';
+import { HelpTooltip } from '../../help';
 
 const RING_RADIUS = 12;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -60,22 +61,27 @@ export const ClaudeUsageIndicator: React.FC<ClaudeUsageIndicatorProps> = ({ clas
   const effectiveSessionColor = hasLoadError ? 'muted' : sessionColor;
   const strokeColor = colorClasses[effectiveSessionColor] || colorClasses.muted;
 
-  const tooltipContent = usage?.error
-    ? `Claude usage unavailable: ${usage.error}`
+  // Dynamic usage line shown inside the HelpTooltip (Chinese, localized)
+  const usageDetail = usage?.error
+    ? `用量信息不可用：${usage.error}`
     : usage
-      ? `Session: ${Math.round(utilization)}% (resets ${formatResetTime(usage.fiveHour.resetsAt)})`
-      : 'Claude usage unavailable';
+      ? `当前会话：${Math.round(utilization)}%（${formatResetTime(usage.fiveHour.resetsAt)} 后重置）`
+      : '用量信息不可用';
 
   return (
     <div className={`relative ${className || ''}`}>
-      <button
-        ref={buttonRef}
-        onClick={handleClick}
-        title={tooltipContent}
-        className="relative w-9 h-9 flex items-center justify-center bg-transparent border-none rounded-md cursor-pointer transition-all duration-150 p-0 hover:bg-nim-tertiary active:scale-95 focus-visible:outline-2 focus-visible:outline-[var(--nim-primary)] focus-visible:outline-offset-2"
-        aria-label="Claude Usage"
-        data-testid="claude-usage-indicator"
+      <HelpTooltip
+        testId="claude-usage-indicator"
+        placement="right"
+        extraContent={<span className="text-xs text-[var(--nim-text)]">{usageDetail}</span>}
       >
+        <button
+          ref={buttonRef}
+          onClick={handleClick}
+          className="relative w-9 h-9 flex items-center justify-center bg-transparent border-none rounded-md cursor-pointer transition-all duration-150 p-0 hover:bg-nim-tertiary active:scale-95 focus-visible:outline-2 focus-visible:outline-[var(--nim-primary)] focus-visible:outline-offset-2"
+          aria-label="Claude Usage"
+          data-testid="claude-usage-indicator"
+        >
         <svg
           width="32"
           height="32"
@@ -109,7 +115,8 @@ export const ClaudeUsageIndicator: React.FC<ClaudeUsageIndicatorProps> = ({ clas
         <span className="absolute inset-0 flex items-center justify-center text-[9px] font-semibold text-nim">
           {hasLoadError ? '--' : `${Math.round(utilization)}%`}
         </span>
-      </button>
+        </button>
+      </HelpTooltip>
 
       {/* Popover */}
       {isPopoverOpen && (

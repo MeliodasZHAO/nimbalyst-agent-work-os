@@ -23,7 +23,7 @@ import {
 // ============================================================
 
 /** Phase columns on the kanban board */
-export type SessionPhase = 'backlog' | 'planning' | 'implementing' | 'validating' | 'complete';
+export type SessionPhase = 'queued' | 'backlog' | 'planning' | 'implementing' | 'validating' | 'complete';
 
 /** Card type determines visual treatment and whether child run states are shown */
 export type KanbanCardType = 'session' | 'workstream' | 'worktree';
@@ -43,6 +43,9 @@ export interface ChildRunStateSummary {
 // ============================================================
 
 export const SESSION_PHASE_COLUMNS: { value: SessionPhase; label: string; color: string }[] = [
+  // 'queued' is a system-managed phase set by the dispatch queue while a task
+  // waits for a concurrency slot; the AI agent self-tags the other phases.
+  { value: 'queued', label: '排队中', color: '#06b6d4' },
   { value: 'backlog', label: '待处理', color: '#6b7280' },
   { value: 'planning', label: '规划中', color: '#60a5fa' },
   { value: 'implementing', label: '实现中', color: '#eab308' },
@@ -57,8 +60,11 @@ const PHASE_PRIORITY: Record<string, number> = {
   implementing: 0,
   validating: 1,
   planning: 2,
-  backlog: 3,
-  complete: 4,
+  // A queued child is waiting for a slot — more imminent than backlog, but less
+  // active than anything already running.
+  queued: 3,
+  backlog: 4,
+  complete: 5,
 };
 
 // ============================================================
@@ -147,10 +153,11 @@ export const sessionsByPhaseAtom = atom((get) => {
     // Dispatch filter mode: only show children of the selected dispatch
     if (filter.dispatchId) {
       if (meta.parentSessionId !== filter.dispatchId) continue;
-    } else {
-      // Normal mode: only show root sessions (not children of workstreams)
-      if (meta.parentSessionId) continue;
     }
+    // Normal mode: show ALL sessions flat, including children of
+    // workstreams/dispatches. Users running parallel worktree tasks expect
+    // the board to surface every in-flight session, not just roots; cards
+    // for children carry a parent marker (see SessionKanbanCard).
 
     // For workstream parents without an explicit phase, derive from children
     const phase = meta.phase
@@ -208,9 +215,8 @@ export const sessionKanbanTagsAtom = atom((get) => {
   for (const [_id, meta] of registry) {
     if (filter.dispatchId) {
       if (meta.parentSessionId !== filter.dispatchId) continue;
-    } else {
-      if (meta.parentSessionId) continue;
     }
+    // Normal mode: children are shown flat on the board, so their tags count too.
     if (meta.tags) {
       for (const tag of meta.tags) {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);

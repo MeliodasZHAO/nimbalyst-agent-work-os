@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Worktree dev-server previews: start/stop a worktree's `npm run dev` from the session header on a stable per-worktree port, open it in an in-app browser, and have the process cleaned up automatically on worktree delete/archive and app quit
+- Project tabs can now be dragged to reorder; the new order persists across restarts
 - Agent Work OS: mobile permission policy `flexible`/`custom` with `allowToolPermissionApproval` now auto-approves tool permission requests without showing interactive prompts
 - Agent Work OS interaction skills: `/agent-os`, `/agent-os-create`, `/agent-os-gate`, `/agent-os-launch`, `/agent-os-hotfix`, `/agent-os-tweak` for CC agent-side Work Packet management
+- Agent Work OS: dispatched tasks now self-assess difficulty — the triage prompt judges complexity from real code, sets a per-task model and reasoning `effortLevel`, and uses in-session subagent/`Workflow` orchestration for deep, unsplittable work
+- Agent Work OS: concurrency-limited, priority-ordered dispatch queue with queued tasks visible on the kanban and a tracker "auto-implement" action
 - i18n: Chinese translations for dialogs, settings panels, session history, keyboard shortcuts, and update toasts
 - Android: Chinese localization across all in-app screens (follows system language) with a custom app launcher icon
 - README rewritten in Chinese with Agent Work OS feature overview
@@ -19,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project tab bar resized to browser-like proportions (taller tabs, larger text, accent-color active indicator)
 - iOS: all "your Mac" references replaced with "your desktop" for cross-platform correctness
 - Android: app display name unified to "Nimbalyst"; project list now has an explicit sync button
+- Dispatch concurrency now uses a global ceiling (default 12) plus an optional per-project cap (default unlimited, configurable in Advanced settings); a project at its cap no longer head-of-line blocks other projects' queued tasks
 
 ### Fixed
 - Mobile keep-awake tip now follows the selected language instead of always showing hardcoded Chinese
@@ -26,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Android: interactive approval responses (tool permission, ask user question, exit plan mode) now reliably execute — the approval was silently dropped when the session WebSocket wasn't yet open; `handleInteractiveResponse` is now a suspend function that awaits the session room connection before writing the tool result. Also adds missing `appendToolResult` calls for `exitPlanModeApprove` and `exitPlanModeDeny`.
 - iOS: editor web bundle build no longer fails when `@anthropic-ai/sdk` is transitively pulled in via extension-sdk; `node:*` and `@anthropic-ai/*` are marked external in the rollup config
 - Project tabs now persist across app restarts (restore-previous-projects default was false, never got written back as true)
+- Session kanban now shows derived and localized session titles instead of the raw "New conversation" default
+- Provisional first-message titles no longer overwrite a deliberately-named session (dispatch/worktree/meta-agent sessions keep their titles)
+- Auto-updater no longer surfaces an update error on local unpacked builds that ship no update manifest
+- Right-clicking a project tab no longer crashes (fixed the React #185 infinite re-render in the floating-ui context menu); the menu also gains a "Copy project path" item
 
 ### Removed
 <!-- Removed features go here -->

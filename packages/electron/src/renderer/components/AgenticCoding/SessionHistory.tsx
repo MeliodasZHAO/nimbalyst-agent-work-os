@@ -2816,7 +2816,7 @@ const SessionHistoryComponent: React.FC = () => {
                 className="session-history-import-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                 data-testid="import-sessions-button"
                 onClick={onImportSessions}
-                title="Import Claude Agent sessions"
+                title="导入 Claude Agent 会话"
                 aria-label="Import sessions"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2831,8 +2831,8 @@ const SessionHistoryComponent: React.FC = () => {
                   className="session-history-new-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                   data-testid="new-dropdown-button"
                   onClick={handleNewButtonClick}
-                  title="Create new..."
-                  aria-label="Create new session, worktree, or terminal"
+                  title="新建会话、工作树或终端"
+                  aria-label="新建会话、工作树或终端"
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -2848,7 +2848,7 @@ const SessionHistoryComponent: React.FC = () => {
           <input
             type="text"
             className="session-history-search-input nim-input w-full pl-3 pr-9 py-2 text-[13px] text-[var(--nim-text)] bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded outline-none transition-colors duration-150 placeholder:text-[var(--nim-text-faint)] focus:border-[var(--nim-primary)] focus:bg-[var(--nim-bg)]"
-            placeholder="Search sessions..."
+            placeholder="搜索会话..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search sessions"
@@ -2859,7 +2859,7 @@ const SessionHistoryComponent: React.FC = () => {
               className="session-history-search-clear absolute right-5 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded text-[var(--nim-text-muted)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)]"
               onClick={() => setSearchQuery('')}
               aria-label="Clear search"
-              title="Clear search"
+              title="清除搜索"
             >
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -2931,8 +2931,8 @@ const SessionHistoryComponent: React.FC = () => {
                   className="session-history-new-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                   data-testid="new-dropdown-button"
                   onClick={handleNewButtonClick}
-                  title="Create new..."
-                  aria-label="Create new session, worktree, or terminal"
+                  title="新建会话、工作树或终端"
+                  aria-label="新建会话、工作树或终端"
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -3097,7 +3097,7 @@ const SessionHistoryComponent: React.FC = () => {
                   className="session-history-import-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                   data-testid="import-sessions-button"
                   onClick={onImportSessions}
-                  title="Import Claude Agent sessions"
+                  title="导入 Claude Agent 会话"
                   aria-label="Import sessions"
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3112,7 +3112,7 @@ const SessionHistoryComponent: React.FC = () => {
                     className="session-history-new-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                     data-testid="new-dropdown-button"
                     onClick={handleNewButtonClick}
-                    title="Create new..."
+                    title="新建会话、工作树或终端"
                     aria-label="Create new session or worktree"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3126,7 +3126,7 @@ const SessionHistoryComponent: React.FC = () => {
                   className="session-history-new-terminal-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                   data-testid="new-terminal-button"
                   onClick={() => onNewTerminal()}
-                  title="New terminal"
+                  title="新建终端"
                   aria-label="Create new terminal"
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3206,7 +3206,7 @@ const SessionHistoryComponent: React.FC = () => {
               className="session-history-import-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
               data-testid="import-sessions-button"
               onClick={onImportSessions}
-              title="Import Claude Agent sessions"
+              title="导入 Claude Agent 会话"
               aria-label="Import sessions"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3221,8 +3221,8 @@ const SessionHistoryComponent: React.FC = () => {
                 className="session-history-new-button flex items-center justify-center p-1.5 bg-[var(--nim-bg-secondary)] border border-[var(--nim-border)] rounded text-[var(--nim-text)] cursor-pointer transition-colors duration-150 shrink-0 hover:bg-[var(--nim-bg-hover)] hover:border-[var(--nim-primary)] active:bg-[var(--nim-bg-tertiary)] [&_svg]:block"
                 data-testid="new-dropdown-button"
                 onClick={handleNewButtonClick}
-                title="Create new..."
-                aria-label="Create new session, worktree, or terminal"
+                title="新建会话、工作树或终端"
+                aria-label="新建会话、工作树或终端"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -3318,7 +3318,7 @@ const SessionHistoryComponent: React.FC = () => {
               if (tagFilter.tags.length > 0) setTagFilter({ tags: [] });
             }}
             aria-label="Clear search and tag filters"
-            title="Clear search and tag filters"
+            title="清除搜索与标签筛选"
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -3380,7 +3380,7 @@ const SessionHistoryComponent: React.FC = () => {
                   : 'text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)]'
               }`}
               onClick={() => setShowSearchFilters(!showSearchFilters)}
-              title="Search filters"
+              title="搜索筛选"
               aria-label="Search filters"
             >
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

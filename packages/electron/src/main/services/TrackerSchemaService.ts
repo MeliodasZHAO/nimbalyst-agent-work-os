@@ -11,6 +11,7 @@ import * as fsPromises from 'fs/promises';
 import chokidar from 'chokidar';
 import { BrowserWindow } from 'electron';
 import { safeHandle } from '../utils/ipcRegistry';
+import { attachWatcherStormGuard } from '../file/WatcherStormGuard';
 import {
   isTrackerSchemaFile,
   shouldIgnoreTrackerWatchPath,
@@ -140,7 +141,7 @@ function watchSchemaDirectory(workspacePath: string): void {
   // Only watch if directory exists
   if (!fs.existsSync(trackersDir)) return;
 
-  watcher = chokidar.watch(trackersDir, {
+  const newWatcher = chokidar.watch(trackersDir, {
     // Ignore dotfiles inside the watched directory, but do not ignore the
     // parent `.nimbalyst` segment itself or chokidar drops every event.
     ignored: (candidatePath: string) => shouldIgnoreTrackerWatchPath(trackersDir, candidatePath),
@@ -148,8 +149,9 @@ function watchSchemaDirectory(workspacePath: string): void {
     awaitWriteFinish: { stabilityThreshold: 200 },
     depth: 0, // only watch the directory itself, not subdirs
   });
+  watcher = newWatcher;
 
-  watcher
+  newWatcher
     .on('change', (filePath: string) => {
       if (isTrackerSchemaFile(filePath)) {
         reloadWorkspaceSchema(filePath);
@@ -168,6 +170,17 @@ function watchSchemaDirectory(workspacePath: string): void {
     .on('error', (error: unknown) => {
       console.error('[TrackerSchemaService] Watcher error:', error);
     });
+
+  // If the trackers dir (e.g. inside a deleted worktree) disappears while
+  // watched, the orphaned fs.watch handle can fire phantom events forever on
+  // Windows. The guard closes the watcher when the dir is gone. Only clear
+  // the module reference if it still points at this instance -- a workspace
+  // switch may have replaced it already.
+  attachWatcherStormGuard(newWatcher, trackersDir, 'TrackerSchemaService', () => {
+    if (watcher === newWatcher) {
+      watcher = null;
+    }
+  });
 }
 
 function stopWatcher(): void {

@@ -127,16 +127,43 @@ function createMobileBridgeHost(sessionId: string): InteractiveWidgetHost {
       postToNative({ type: 'interactive_response', action: 'askUserQuestionSubmit', questionId, answers });
     },
 
+    async askUserQuestionCancel(questionId: string) {
+      postToNative({ type: 'interactive_response', action: 'askUserQuestionCancel', questionId });
+    },
+
+    async requestUserInputSubmit(promptId: string, answers: Record<string, unknown>) {
+      postToNative({ type: 'interactive_response', action: 'requestUserInputSubmit', promptId, answers });
+    },
+
+    async requestUserInputCancel(promptId: string) {
+      postToNative({ type: 'interactive_response', action: 'requestUserInputCancel', promptId });
+    },
+
     async toolPermissionSubmit(requestId: string, response: any) {
       postToNative({ type: 'interactive_response', action: 'toolPermissionSubmit', requestId, response });
+    },
+
+    async toolPermissionCancel(requestId: string) {
+      postToNative({ type: 'interactive_response', action: 'toolPermissionCancel', requestId });
     },
 
     async exitPlanModeApprove(requestId: string) {
       postToNative({ type: 'interactive_response', action: 'exitPlanModeApprove', requestId });
     },
 
+    async exitPlanModeStartNewSession(requestId: string, planFilePath: string) {
+      // Parity with desktop "start new session and implement": the desktop
+      // routes this to the dispatch engine (fresh worktree + agent), observable
+      // on the kanban. We just forward the signal + plan path.
+      postToNative({ type: 'interactive_response', action: 'exitPlanModeStartNewSession', requestId, planFilePath });
+    },
+
     async exitPlanModeDeny(requestId: string, feedback?: string) {
       postToNative({ type: 'interactive_response', action: 'exitPlanModeDeny', requestId, feedback });
+    },
+
+    async exitPlanModeCancel(requestId: string) {
+      postToNative({ type: 'interactive_response', action: 'exitPlanModeCancel', requestId });
     },
 
     async gitCommit(proposalId: string, files: string[], message: string) {

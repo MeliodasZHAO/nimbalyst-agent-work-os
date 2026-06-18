@@ -5,6 +5,7 @@ import simpleGit, { SimpleGit } from 'simple-git';
 import { BrowserWindow } from 'electron';
 import { logger } from '../utils/logger';
 import { clearGitStatusCache } from '../ipc/GitStatusHandlers';
+import { attachWatcherStormGuard } from './WatcherStormGuard';
 
 interface WatcherEntry {
   refWatcher: FSWatcher;
@@ -214,6 +215,13 @@ export class GitRefWatcher {
         logger.main.error('[GitRefWatcher] Ref watcher error:', error);
       });
 
+      // If the repo (or worktree .git dir) is deleted while watched, the
+      // orphaned fs.watch handle can fire phantom events forever on Windows.
+      // The guard closes both watchers when the git dir disappears.
+      attachWatcherStormGuard(refWatcher, commonDir, `GitRefWatcher ref (${path.basename(workspacePath)})`, () => {
+        void this.stop(workspacePath);
+      });
+
       // Watch index for staging changes
       // Use the resolved gitDir for the actual index file location
       const indexPath = path.join(gitDir, 'index');
@@ -233,6 +241,12 @@ export class GitRefWatcher {
 
       indexWatcher.on('error', (error) => {
         logger.main.error('[GitRefWatcher] Index watcher error:', error);
+      });
+
+      // Same phantom-storm protection for the index watcher; its anchor is
+      // the (worktree-specific) gitDir that owns the index file.
+      attachWatcherStormGuard(indexWatcher, gitDir, `GitRefWatcher index (${path.basename(workspacePath)})`, () => {
+        void this.stop(workspacePath);
       });
 
       this.watchers.set(workspacePath, {

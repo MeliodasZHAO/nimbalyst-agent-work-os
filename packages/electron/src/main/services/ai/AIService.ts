@@ -39,6 +39,11 @@ import {
 } from '@nimbalyst/runtime/ai/server/types';
 // MCP imports removed - no longer using MCP HTTP server
 import { ToolExecutor, toolRegistry, BUILT_IN_TOOLS } from './tools';
+import {
+  dispatchAskUserQuestionAnswer,
+  dispatchAskUserQuestionCancel,
+  type AskCapableProviderLike,
+} from './askUserQuestionDispatch';
 import { initMobileSessionControlHandler } from './MobileSessionControlHandler';
 import { SoundNotificationService } from '../SoundNotificationService';
 import { notificationService } from '../NotificationService';
@@ -2175,100 +2180,64 @@ export class AIService {
       }
 
       const provider = ProviderFactory.getProvider(session.provider as AIProviderType, resolvedSessionId);
-      if (!provider) {
-        logger.main.warn(`[AIService] Provider not found for AskUserQuestion: ${resolvedSessionId}`);
-        return { success: false, error: 'Provider not found' };
-      }
 
-      const providerResolved = isAskUserQuestionProvider(provider)
-        ? provider.resolveAskUserQuestion(questionId, answers, resolvedSessionId, 'desktop')
-        : false;
+      // Capture for the auto-resume closure; `this.sendMessageHandler` resumes the
+      // dead SDK subprocess via the stored providerSessionId.
+      const workspacePath = session.workspacePath;
+      const sendMessageHandler = this.sendMessageHandler;
+      const finalSessionId = resolvedSessionId;
 
-      // MCP interactive tools (Codex path) wait on a session-scoped channel.
-      // Emit best-effort so pending MCP calls can resolve even if provider-level pending map
-      // is unavailable (e.g., after restart/recovery).
-      const mcpQuestionResponseChannel = `ask-user-question-response:${resolvedSessionId || 'unknown'}:${questionId}`;
-      const hasMcpWaiter = ipcMain.listenerCount(mcpQuestionResponseChannel) > 0;
-      if (hasMcpWaiter) {
-        logger.main.info(`[AIService] AskUserQuestion emitting on MCP channel: ${mcpQuestionResponseChannel}`);
-        ipcMain.emit(mcpQuestionResponseChannel, event, {
-          questionId,
-          answers,
-          cancelled: false,
-          respondedBy: 'desktop',
-          sessionId: resolvedSessionId,
-        });
-      }
+      const result = dispatchAskUserQuestionAnswer(
+        { questionId, answers, sessionId: finalSessionId },
+        {
+          // Structural check on resolveAskUserQuestion happens inside dispatch.
+          getProvider: () => provider as AskCapableProviderLike | null,
+          listenerCount: (channel) => ipcMain.listenerCount(channel),
+          emitToChannel: (channel, payload) => {
+            ipcMain.emit(channel, event, payload);
+          },
+          persistResponse: (payload) => {
+            import('@nimbalyst/runtime/storage/repositories/AgentMessagesRepository')
+              .then(({ AgentMessagesRepository }) =>
+                AgentMessagesRepository.create({
+                  sessionId: finalSessionId,
+                  source: 'claude-code',
+                  direction: 'output' as const,
+                  createdAt: new Date(),
+                  content: JSON.stringify({
+                    type: 'ask_user_question_response',
+                    questionId: payload.questionId,
+                    answers: payload.answers,
+                    cancelled: payload.cancelled,
+                    respondedBy: payload.respondedBy,
+                    respondedAt: Date.now(),
+                  }),
+                })
+              )
+              .catch((err) => {
+                logger.main.warn(`[AIService] Failed to persist AskUserQuestion response to database: ${err}`);
+              });
+          },
+          autoResume: sendMessageHandler
+            ? (message) => {
+                // Fire-and-forget: resume the session in the background
+                setImmediate(async () => {
+                  try {
+                    await sendMessageHandler(event, message, undefined, finalSessionId, workspacePath);
+                  } catch (err) {
+                    logger.main.error(`[AIService] Failed to auto-resume session after AskUserQuestion: ${err}`);
+                  }
+                });
+              }
+            : undefined,
+          log: {
+            info: (msg) => logger.main.info(msg),
+            warn: (msg) => logger.main.warn(msg),
+          },
+        }
+      );
 
-      const sessionFallbackChannel = `ask-user-question:${resolvedSessionId}`;
-      const hasSessionFallbackWaiter = ipcMain.listenerCount(sessionFallbackChannel) > 0;
-      if (hasSessionFallbackWaiter) {
-        logger.main.info(`[AIService] AskUserQuestion emitting on session fallback channel: ${sessionFallbackChannel}`);
-        ipcMain.emit(sessionFallbackChannel, event, {
-          questionId,
-          answers,
-          cancelled: false,
-          respondedBy: 'desktop',
-          sessionId: resolvedSessionId,
-        });
-      }
-
-      // When AskUserQuestion comes through the MCP server path (not the provider's canUseTool path),
-      // the provider's pendingAskUserQuestions map won't have the entry. In that case, also write
-      // the response to the database as a fallback so the MCP server's database polling can find it.
-      if (!providerResolved && resolvedSessionId) {
-        const { AgentMessagesRepository } = await import('@nimbalyst/runtime/storage/repositories/AgentMessagesRepository');
-        AgentMessagesRepository.create({
-          sessionId: resolvedSessionId,
-          source: 'claude-code',
-          direction: 'output' as const,
-          createdAt: new Date(),
-          content: JSON.stringify({
-            type: 'ask_user_question_response',
-            questionId,
-            answers,
-            cancelled: false,
-            respondedBy: 'desktop',
-            respondedAt: Date.now()
-          })
-        }).catch(err => {
-          logger.main.warn(`[AIService] Failed to persist AskUserQuestion response to database: ${err}`);
-        });
-      }
-
-      logger.main.info(`[AIService] AskUserQuestion resolution: providerResolved=${providerResolved}, hasMcpWaiter=${hasMcpWaiter}, hasSessionFallbackWaiter=${hasSessionFallbackWaiter}`);
-
-      if (providerResolved || hasMcpWaiter || hasSessionFallbackWaiter) {
-        return { success: true };
-      }
-
-      // No live handler exists -- the SDK subprocess is dead (e.g., app restarted
-      // while session was waiting for input). Auto-resume the session by sending
-      // a new message that includes the user's answer. The Claude Code SDK will
-      // resume using the stored providerSessionId, picking up conversation history.
-      if (resolvedSessionId && this.sendMessageHandler && session) {
-        const answerText = Object.entries(answers)
-          .map(([question, answer]) => `${question}: ${answer}`)
-          .join('\n');
-        const resumeMessage = `[Resuming after answering a question]\n\n${answerText}`;
-
-        logger.main.info(`[AIService] No live handler for AskUserQuestion, auto-resuming session: ${resolvedSessionId}`);
-
-        // Fire-and-forget: resume the session in the background
-        const workspacePath = session.workspacePath;
-        setImmediate(async () => {
-          try {
-            await this.sendMessageHandler!(event, resumeMessage, undefined, resolvedSessionId, workspacePath);
-          } catch (err) {
-            logger.main.error(`[AIService] Failed to auto-resume session after AskUserQuestion: ${err}`);
-          }
-        });
-
-        return { success: true };
-      }
-
-      logger.main.warn(`[AIService] Question not found for provider/session: ${resolvedSessionId}`);
-      return { success: false, error: 'Question not found' };
+      return result.success ? { success: true } : { success: false, error: result.error };
     });
 
     // Handle AskUserQuestion cancel from renderer
@@ -2300,75 +2269,46 @@ export class AIService {
       }
 
       const provider = ProviderFactory.getProvider(session.provider as AIProviderType, resolvedSessionId);
-      if (!provider) {
-        logger.main.warn(`[AIService] Provider not found for AskUserQuestion cancel: ${resolvedSessionId}`);
-        return { success: false, error: 'Provider not found' };
-      }
+      const finalCancelSessionId = resolvedSessionId;
 
-      const providerSupportsCancel = typeof (provider as any).rejectAskUserQuestion === 'function';
-      if (providerSupportsCancel) {
-        (provider as any).rejectAskUserQuestion(questionId, new Error('User cancelled'));
-      }
+      const result = dispatchAskUserQuestionCancel(
+        { questionId, sessionId: finalCancelSessionId },
+        {
+          getProvider: () => provider as AskCapableProviderLike | null,
+          listenerCount: (channel) => ipcMain.listenerCount(channel),
+          emitToChannel: (channel, payload) => {
+            ipcMain.emit(channel, event, payload);
+          },
+          persistResponse: (payload) => {
+            import('@nimbalyst/runtime/storage/repositories/AgentMessagesRepository')
+              .then(({ AgentMessagesRepository }) =>
+                AgentMessagesRepository.create({
+                  sessionId: finalCancelSessionId,
+                  source: 'claude-code',
+                  direction: 'output' as const,
+                  createdAt: new Date(),
+                  content: JSON.stringify({
+                    type: 'ask_user_question_response',
+                    questionId: payload.questionId,
+                    answers: payload.answers,
+                    cancelled: payload.cancelled,
+                    respondedBy: payload.respondedBy,
+                    respondedAt: Date.now(),
+                  }),
+                })
+              )
+              .catch((err) => {
+                logger.main.warn(`[AIService] Failed to persist AskUserQuestion cancel to database: ${err}`);
+              });
+          },
+          log: {
+            info: (msg) => logger.main.info(msg),
+            warn: (msg) => logger.main.warn(msg),
+          },
+        }
+      );
 
-      const mcpQuestionResponseChannel = `ask-user-question-response:${resolvedSessionId || 'unknown'}:${questionId}`;
-      const hasMcpWaiter = ipcMain.listenerCount(mcpQuestionResponseChannel) > 0;
-      if (hasMcpWaiter) {
-        ipcMain.emit(mcpQuestionResponseChannel, event, {
-          questionId,
-          answers: {},
-          cancelled: true,
-          respondedBy: 'desktop',
-          sessionId: resolvedSessionId,
-        });
-      }
-
-      const sessionFallbackChannel = `ask-user-question:${resolvedSessionId}`;
-      const hasSessionFallbackWaiter = ipcMain.listenerCount(sessionFallbackChannel) > 0;
-      if (hasSessionFallbackWaiter) {
-        ipcMain.emit(sessionFallbackChannel, event, {
-          questionId,
-          answers: {},
-          cancelled: true,
-          respondedBy: 'desktop',
-          sessionId: resolvedSessionId,
-        });
-      }
-
-      // Write cancellation to database as fallback for MCP server polling
-      if (!providerSupportsCancel && resolvedSessionId) {
-        const { AgentMessagesRepository } = await import('@nimbalyst/runtime/storage/repositories/AgentMessagesRepository');
-        AgentMessagesRepository.create({
-          sessionId: resolvedSessionId,
-          source: 'claude-code',
-          direction: 'output' as const,
-          createdAt: new Date(),
-          content: JSON.stringify({
-            type: 'ask_user_question_response',
-            questionId,
-            answers: {},
-            cancelled: true,
-            respondedBy: 'desktop',
-            respondedAt: Date.now()
-          })
-        }).catch(err => {
-          logger.main.warn(`[AIService] Failed to persist AskUserQuestion cancel to database: ${err}`);
-        });
-      }
-
-      if (!providerSupportsCancel && !hasMcpWaiter && !hasSessionFallbackWaiter) {
-        logger.main.warn(`[AIService] Question cancel target not found: ${resolvedSessionId}`);
-        return { success: false, error: 'Question not found' };
-      }
-
-      // For MCP-backed AskUserQuestion (Codex), let the MCP tool call resolve with
-      // a cancelled result instead of force-aborting the provider. Immediate abort can
-      // interrupt the in-flight MCP request before the cancellation result is delivered.
-      if (!hasMcpWaiter && !hasSessionFallbackWaiter) {
-        // Provider-backed AskUserQuestion path (Claude Code): abort active turn.
-        provider.abort();
-      }
-
-      return { success: true };
+      return result.success ? { success: true } : { success: false, error: result.error };
     });
 
     // Handle tool permission response from renderer

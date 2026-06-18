@@ -10,7 +10,7 @@
  * - Combined format is always "provider:model"
  */
 
-import { AIProviderType, AI_PROVIDER_TYPES, CLAUDE_CODE_VARIANTS } from './types';
+import { AIProviderType, AI_PROVIDER_TYPES } from './types';
 import { DEFAULT_MODELS } from '../modelConstants';
 
 /**
@@ -130,12 +130,10 @@ export class ModelIdentifier {
         }
       }
 
-      if (!(CLAUDE_CODE_VARIANTS as readonly string[]).includes(baseVariant)) {
-        throw new Error(
-          `Invalid Claude Code variant: ${model}. Must be one of: ${CLAUDE_CODE_VARIANTS.join(', ')} (optionally with -1m suffix)`
-        );
-      }
-
+      // Known variants are normalized below; anything else is treated as a
+      // custom full model ID (e.g. 'claude-fable-5') and passed through so
+      // users can select models newer than the curated variant list. The
+      // Anthropic API is the validation authority for custom IDs.
       // Normalize to lowercase for consistency
       return new ModelIdentifier(provider, baseVariant + suffix);
     }

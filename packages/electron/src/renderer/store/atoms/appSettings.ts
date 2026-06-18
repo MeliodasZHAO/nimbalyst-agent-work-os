@@ -377,6 +377,12 @@ export interface AdvancedSettings {
   historyMaxSnapshots: number; // Max snapshots per file (default: 250)
   // Preferred terminal shell on Windows. 'auto' follows the detection priority.
   preferredTerminalShell: PreferredTerminalShell;
+  // Dispatch concurrency. Global ceiling across all projects (protects the
+  // account-level Claude/Codex API rate limit). 0 = unlimited.
+  dispatchMaxConcurrent: number;
+  // Per-project dispatch cap. 0 = unlimited per project (a single project can run
+  // as many dispatch sessions as the global ceiling allows).
+  dispatchPerProjectMaxConcurrent: number;
 }
 
 /**
@@ -401,6 +407,8 @@ const defaultAdvancedSettings: AdvancedSettings = {
   historyMaxAgeDays: 30,
   historyMaxSnapshots: 250,
   preferredTerminalShell: 'auto',
+  dispatchMaxConcurrent: 12,
+  dispatchPerProjectMaxConcurrent: 0,
 };
 
 /**
@@ -484,6 +492,12 @@ function scheduleAdvancedPersist(
           break;
         case 'preferredTerminalShell':
           await window.electronAPI.invoke('app-settings:set', 'preferredTerminalShell', settingsToPersist.preferredTerminalShell);
+          break;
+        case 'dispatchMaxConcurrent':
+          await window.electronAPI.invoke('app-settings:set', 'dispatchMaxConcurrent', settingsToPersist.dispatchMaxConcurrent);
+          break;
+        case 'dispatchPerProjectMaxConcurrent':
+          await window.electronAPI.invoke('app-settings:set', 'dispatchPerProjectMaxConcurrent', settingsToPersist.dispatchPerProjectMaxConcurrent);
           break;
         case 'spellcheckEnabled':
           await window.electronAPI.invoke('spellcheck:set-enabled', settingsToPersist.spellcheckEnabled);
@@ -655,7 +669,7 @@ export async function initAdvancedSettings(): Promise<AdvancedSettings> {
   }
 
   try {
-    const [channel, analyticsEnabled, extensionDevToolsEnabled, walkthroughState, maxHeapSizeMB, alphaFeatures, betaFeatures, enableAllBetaFeatures, customPathDirs, spellcheckEnabled, historyMaxAgeDays, historyMaxSnapshots, preferredTerminalShell] =
+    const [channel, analyticsEnabled, extensionDevToolsEnabled, walkthroughState, maxHeapSizeMB, alphaFeatures, betaFeatures, enableAllBetaFeatures, customPathDirs, spellcheckEnabled, historyMaxAgeDays, historyMaxSnapshots, preferredTerminalShell, dispatchMaxConcurrent, dispatchPerProjectMaxConcurrent] =
       await Promise.all([
         window.electronAPI.invoke('release-channel:get'),
         window.electronAPI.invoke('analytics:is-enabled'),
@@ -670,6 +684,8 @@ export async function initAdvancedSettings(): Promise<AdvancedSettings> {
         window.electronAPI.invoke('app-settings:get', 'historyMaxAgeDays'),
         window.electronAPI.invoke('app-settings:get', 'historyMaxSnapshots'),
         window.electronAPI.invoke('app-settings:get', 'preferredTerminalShell'),
+        window.electronAPI.invoke('app-settings:get', 'dispatchMaxConcurrent'),
+        window.electronAPI.invoke('app-settings:get', 'dispatchPerProjectMaxConcurrent'),
       ]);
 
     // Calculate viewed count (completed + dismissed)
@@ -693,6 +709,8 @@ export async function initAdvancedSettings(): Promise<AdvancedSettings> {
       historyMaxAgeDays: historyMaxAgeDays ?? 30,
       historyMaxSnapshots: historyMaxSnapshots ?? 250,
       preferredTerminalShell: preferredTerminalShell ?? 'auto',
+      dispatchMaxConcurrent: dispatchMaxConcurrent ?? 12,
+      dispatchPerProjectMaxConcurrent: dispatchPerProjectMaxConcurrent ?? 0,
     };
   } catch (error) {
     console.error('[appSettings] Failed to load advanced settings:', error);

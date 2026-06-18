@@ -39,6 +39,7 @@ import { KeyboardShortcuts, getShortcutDisplay } from '../../shared/KeyboardShor
 import { FilterChip, type FilterChipOption } from './UnifiedQuickOpen/FilterChip';
 import { useRecentHistory } from './UnifiedQuickOpen/useRecentHistory';
 import { parseFileMask, matchesFileMask } from './UnifiedQuickOpen/fileMask';
+import { displaySessionTitle } from '../utils/sessionTitle';
 import type { TrackerItem } from '@nimbalyst/runtime/core/DocumentService';
 
 const isMac =
@@ -1141,7 +1142,7 @@ const SessionsPane: React.FC<SessionsPaneProps> = memo(({
     if (!visibleQuery.trim()) return allSessions;
     const q = visibleQuery.toLowerCase();
     return allSessions.filter((s) =>
-      (s.title || 'New conversation').toLowerCase().includes(q),
+      displaySessionTitle(s.title).toLowerCase().includes(q),
     );
   }, [allSessions, visibleQuery, fileFilter, fileFilteredIds, isFileSearchMode]);
 
@@ -1343,7 +1344,7 @@ const SessionsPane: React.FC<SessionsPaneProps> = memo(({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-nim flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
-                    {session.title || 'New conversation'}
+                    {displaySessionTitle(session.title)}
                     {session.parentSessionId && (
                       <span className="shrink-0 text-[10px] py-0.5 px-1.5 rounded font-semibold bg-[var(--nim-primary)] text-white">
                         In Workstream

@@ -52,6 +52,7 @@ interface TrackerItemDetailProps {
   onSwitchToAgentMode?: (sessionId: string) => void;
   onLaunchSession?: (trackerItemId: string) => void;
   onLaunchWorktreeSession?: (trackerItemId: string) => void;
+  onAutoImplement?: (trackerItemId: string) => void;
   onArchive?: (itemId: string, archive: boolean) => void;
   onDelete?: (itemId: string) => void;
 }
@@ -633,7 +634,7 @@ const WorkPacketEvidenceWritebackPanel: React.FC<{
           value={draft}
           onChange={(event) => onDraftChange(event.target.value)}
           onKeyDown={(event) => event.stopPropagation()}
-          placeholder="Paste observed evidence, test output, review notes, or visual evidence paths..."
+          placeholder="粘贴观察到的证据、测试输出、评审记录或截图路径..."
           disabled={!editable || saving}
         />
 
@@ -735,6 +736,7 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
   onSwitchToAgentMode,
   onLaunchSession,
   onLaunchWorktreeSession,
+  onAutoImplement,
   onArchive,
   onDelete,
 }) => {
@@ -1521,7 +1523,7 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
               onChange={(e) => handleTextFieldChange('title', e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
               className="w-full bg-transparent border-none outline-none text-base font-semibold text-nim placeholder:text-nim-faint p-0"
-              placeholder="Item title..."
+              placeholder="条目标题..."
               data-testid="tracker-detail-title"
             />
           ) : (
@@ -1810,6 +1812,16 @@ export const TrackerItemDetail: React.FC<TrackerItemDetailProps> = ({
                   >
                     <MaterialSymbol icon="link" size={14} />
                     {isLinkingExistingSession ? 'Cancel' : 'Link Existing'}
+                  </button>
+                )}
+                {onAutoImplement && (
+                  <button
+                    className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-medium rounded text-nim-accent hover:bg-nim-tertiary transition-colors"
+                    onClick={() => onAutoImplement(item.id)}
+                    title="自动开一个隔离 worktree 并派 agent 实现这个任务（受并发上限与优先级调度）"
+                  >
+                    <MaterialSymbol icon="auto_awesome" size={14} />
+                    自动实现
                   </button>
                 )}
                 {onLaunchSession && (
@@ -2169,7 +2181,7 @@ const CommentsSection: React.FC<{ itemId: string; comments?: any[] }> = ({ itemI
           value={newComment}
           onChange={e => setNewComment(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-          placeholder="Add a comment..."
+          placeholder="添加评论..."
           className="flex-1 bg-nim-secondary border border-nim rounded px-2 py-1 text-xs text-nim placeholder:text-nim-faint outline-none focus:border-nim-primary"
         />
         <button

@@ -42,6 +42,8 @@ import { registerProjectSelectionHandlers } from './ipc/ProjectSelectionHandlers
 import { registerMultiProjectRailHandlers } from './ipc/MultiProjectRailHandlers';
 import { registerUsageAnalyticsHandlers } from './ipc/UsageAnalyticsHandlers';
 import { registerWorktreeHandlers } from './ipc/WorktreeHandlers';
+import { registerPreviewHandlers } from './ipc/PreviewHandlers';
+import { getPreviewServerManager } from './services/PreviewServerManager';
 import { registerWakeupHandlers } from './ipc/WakeupHandlers';
 import { registerBlitzHandlers } from './ipc/BlitzHandlers';
 import { registerProjectMigrationHandlers } from './ipc/ProjectMigrationHandlers';
@@ -1383,6 +1385,7 @@ app.whenReady().then(async () => {
     registerGitStatusHandlers();
     registerGitHandlers();
     registerWorktreeHandlers();
+    registerPreviewHandlers();
     registerWakeupHandlers();
     registerBlitzHandlers();
     registerProjectMigrationHandlers();
@@ -2320,12 +2323,19 @@ app.whenReady().then(async () => {
     // Set initial native theme
     updateNativeTheme();
 
-    // Initialize auto-updater (only in production)
-    if (app.isPackaged) {
+    // Initialize auto-updater (only in production builds that ship an update
+    // manifest). A local `--dir` build is `isPackaged` but has no
+    // resources/app-update.yml, so electron-updater would read a missing file
+    // and surface an "update error" popup every poll. Gate on the manifest's
+    // existence so only real installer builds run the updater.
+    const hasUpdateManifest = existsSync(path.join(process.resourcesPath, 'app-update.yml'));
+    if (app.isPackaged && hasUpdateManifest) {
         logger.main.info('Starting auto-updater service');
         autoUpdaterService.startAutoUpdateCheck(60); // Check every hour
     } else {
-        logger.main.info('Skipping auto-updater in development mode');
+        logger.main.info(
+            `Skipping auto-updater (isPackaged=${app.isPackaged}, hasUpdateManifest=${hasUpdateManifest}) -- dev mode or local --dir build`,
+        );
     }
 
     // Start performance monitoring
@@ -2445,6 +2455,13 @@ app.on('before-quit', async (event) => {
         console.log('[QUIT] Restart signal detected, saving session state before restart');
         // Mark as restarting BEFORE saving to prevent window close handlers from overwriting
         isAppRestarting = true;
+        // Kill worktree dev-server previews so they don't outlive the restart
+        // (they are spawned detached and would otherwise orphan).
+        try {
+            await getPreviewServerManager().stopAll();
+        } catch (e) {
+            console.warn('[QUIT] preview stopAll (restart) failed:', e);
+        }
         // Save session state so the session is restored after restart
         try {
             await saveSessionState();
@@ -2628,6 +2645,16 @@ app.on('before-quit', async (event) => {
         // Shutdown terminal sessions
         await shutdownTerminalHandlers();
         console.log(`[QUIT] Terminal sessions shutdown`);
+
+        // Kill any running worktree dev-server previews. killTree is synchronous
+        // (execFileSync/process.kill), so by the time stopAll resolves the dev
+        // servers are terminated — no orphaned npm/vite process after quit.
+        try {
+            await getPreviewServerManager().stopAll();
+            console.log(`[QUIT] Worktree previews stopped`);
+        } catch (e) {
+            console.warn('[QUIT] preview stopAll failed:', e);
+        }
 
         // Tear down the codex auth app-server child if it was lazily started.
         try {

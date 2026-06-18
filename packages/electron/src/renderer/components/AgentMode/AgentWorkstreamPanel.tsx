@@ -17,7 +17,9 @@
  */
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useImperativeHandle, type KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getWorktreeNameFromPath } from '../../utils/pathUtils';
+import { displaySessionTitle } from '../../utils/sessionTitle';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   useFloating,
@@ -403,6 +405,7 @@ const WorkstreamHeader: React.FC<{
   onCreateNewTerminal?: () => void;
   onShowArchiveDialog?: () => void;
 }> = React.memo(({ workstreamId, workspacePath, worktreeId, worktreePath, onToggleSidebar, sidebarVisible, onArchiveStatusChange, onOpenTerminal, onCreateNewTerminal, onShowArchiveDialog }) => {
+  const { t } = useTranslation('agent');
   const title = useAtomValue(workstreamTitleAtom(workstreamId));
   const isProcessing = useAtomValue(workstreamProcessingAtom(workstreamId));
   const sessionData = useAtomValue(sessionStoreAtom(workstreamId));
@@ -514,8 +517,8 @@ const WorkstreamHeader: React.FC<{
     setLayoutMode({ workstreamId, mode });
   }, [workstreamId, setLayoutMode]);
 
-  // Determine session type label for archive button
-  const getSessionTypeLabel = useCallback(() => {
+  // Determine session type for the archive button's i18n key suffix
+  const getSessionTypeKey = useCallback(() => {
     if (worktreeId) return 'Worktree';
     if (hasChildren) return 'Workstream';
     return 'Session';
@@ -577,9 +580,9 @@ const WorkstreamHeader: React.FC<{
             <h2
               className="workstream-header-title max-w-full m-0 text-sm font-semibold text-[var(--nim-text)] whitespace-nowrap overflow-hidden text-ellipsis leading-tight cursor-pointer py-0.5 px-1 rounded transition-colors duration-150 hover:bg-[var(--nim-bg-hover)]"
               onClick={handleTitleClick}
-              title="Click to rename"
+              title={t('clickToRename')}
             >
-              {title}
+              {displaySessionTitle(title)}
             </h2>
           )}
           <WorkstreamHeaderTagsRow workstreamId={workstreamId} />
@@ -597,7 +600,7 @@ const WorkstreamHeader: React.FC<{
             className="workstream-terminal-btn w-8 h-8 flex items-center justify-center rounded text-[var(--nim-text-faint)] cursor-pointer border-none bg-transparent hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] mr-2"
             onClick={onOpenTerminal}
             onContextMenu={handleTerminalContextMenu}
-            title="Open terminal in worktree"
+            title={t('openTerminalInWorktree')}
           >
             <MaterialSymbol icon="terminal" size={20} />
           </button>
@@ -620,7 +623,7 @@ const WorkstreamHeader: React.FC<{
               onClick={handleNewTerminalClick}
             >
               <MaterialSymbol icon="add" size={18} />
-              <span>New Terminal</span>
+              <span>{t('newTerminal')}</span>
             </div>
           </div>
         )}
@@ -636,17 +639,17 @@ const WorkstreamHeader: React.FC<{
         <button
           className="workstream-archive-button flex items-center gap-1.5 h-8 px-2 rounded text-[var(--nim-text-faint)] text-[11px] font-medium cursor-pointer border-none bg-transparent hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)]"
           onClick={isArchived ? handleUnarchive : handleArchive}
-          title={isArchived ? `Unarchive ${getSessionTypeLabel().toLowerCase()}` : `Archive ${getSessionTypeLabel().toLowerCase()}`}
+          title={isArchived ? t(`unarchive${getSessionTypeKey()}`) : t(`archive${getSessionTypeKey()}`)}
         >
           <MaterialSymbol icon={isArchived ? 'unarchive' : 'archive'} size={18} />
-          <span>{isArchived ? `Unarchive ${getSessionTypeLabel()}` : `Archive ${getSessionTypeLabel()}`}</span>
+          <span>{isArchived ? t(`unarchive${getSessionTypeKey()}`) : t(`archive${getSessionTypeKey()}`)}</span>
         </button>
 
         {/* Toggle files sidebar */}
         <button
           className={`workstream-sidebar-toggle w-8 h-8 flex items-center justify-center rounded cursor-pointer border-none bg-transparent ml-2 hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text-muted)] ${sidebarVisible ? 'active text-[var(--nim-primary)]' : 'text-[var(--nim-text-faint)]'}`}
           onClick={onToggleSidebar}
-          title={sidebarVisible ? 'Hide edited files' : 'Show edited files'}
+          title={sidebarVisible ? t('hideEditedFiles') : t('showEditedFiles')}
         >
           <MaterialSymbol icon="dock_to_right" size={20} />
         </button>

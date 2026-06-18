@@ -3,6 +3,8 @@ package com.nimbalyst.app.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,7 +55,7 @@ import com.nimbalyst.app.sync.SyncConnectionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
@@ -83,19 +86,26 @@ fun SettingsScreen(
     val msgDevPairInvalid = stringResource(R.string.pairing_qr_invalid)
     val msgDevScanned = stringResource(R.string.dev_scanned)
 
+    // M3: keep the app bar pinned; only the content scrolls. Previously the
+    // TopAppBar lived inside the scrolling Column and scrolled away with it.
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.settings_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(innerPadding)
             .verticalScroll(rememberScrollState())
     ) {
-        TopAppBar(
-            title = { Text(stringResource(R.string.settings_title)) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
-                }
-            }
-        )
 
         // Account section
         Card(
@@ -185,9 +195,13 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Row(
+                // FlowRow so the four mode buttons wrap on narrow screens
+                // instead of squeezing into one row and truncating labels.
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    maxItemsInEachRow = 2
                 ) {
                     MobilePermissionPolicyMode.entries.forEach { mode ->
                         val selected = mobilePolicy.mode == mode
@@ -196,7 +210,7 @@ fun SettingsScreen(
                                 onClick = {},
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(modeLabel(mode))
+                                Text(modeLabel(mode), maxLines = 1)
                             }
                         } else {
                             OutlinedButton(
@@ -211,7 +225,7 @@ fun SettingsScreen(
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(modeLabel(mode))
+                                Text(modeLabel(mode), maxLines = 1)
                             }
                         }
                     }
@@ -533,6 +547,7 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
     }
+    }
 }
 
 @Composable
@@ -548,7 +563,11 @@ private fun PermissionSwitchRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 12.dp)
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium

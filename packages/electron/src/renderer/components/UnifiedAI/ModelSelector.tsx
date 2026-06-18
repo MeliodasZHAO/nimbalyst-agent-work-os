@@ -13,7 +13,7 @@ import {
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MaterialSymbol, getProviderIcon } from '@nimbalyst/runtime';
 import { isAgentProvider, shouldBlockStartedSessionProviderSwitch } from '@nimbalyst/runtime/ai/server/types';
-import { getClaudeCodeModelLabel } from '../../utils/modelUtils';
+import { getClaudeCodeModelLabel, extractClaudeCodeCustomModel } from '../../utils/modelUtils';
 import { providersAtom } from '../../store/atoms/appSettings';
 import { setWindowModeAtom } from '../../store/atoms/windowMode';
 import { navigateToSettingsAtom } from '../../store/atoms/settingsNavigation';
@@ -46,6 +46,8 @@ export function ModelSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState<Record<string, Model[]>>({});
   const [loading, setLoading] = useState(false);
+  const [customModelInputOpen, setCustomModelInputOpen] = useState(false);
+  const [customModelValue, setCustomModelValue] = useState('');
   const providers = useAtomValue(providersAtom);
   const setWindowMode = useSetAtom(setWindowModeAtom);
   const navigateToSettings = useSetAtom(navigateToSettingsAtom);
@@ -78,6 +80,10 @@ export function ModelSelector({
     if (isOpen && Object.keys(models).length === 0) {
       loadModels();
     }
+    if (!isOpen) {
+      setCustomModelInputOpen(false);
+      setCustomModelValue('');
+    }
   }, [isOpen]);
 
   const loadModels = async () => {
@@ -97,6 +103,16 @@ export function ModelSelector({
   const handleModelSelect = (modelId: string) => {
     onModelChange(modelId);
     setIsOpen(false);
+  };
+
+  // Accept any model ID for the claude-code provider (e.g. a brand-new model
+  // not yet in the curated list). The API validates the ID on first message.
+  const handleCustomModelSubmit = () => {
+    const trimmed = customModelValue.trim().toLowerCase().replace(/^claude-code:/, '');
+    if (!trimmed) return;
+    handleModelSelect(`claude-code:${trimmed}`);
+    setCustomModelInputOpen(false);
+    setCustomModelValue('');
   };
 
   const getSettingsCategoryForModel = (modelId: string): SettingsCategory => {
@@ -247,6 +263,63 @@ export function ModelSelector({
                           </button>
                         );
                       })}
+                      {/* Custom model ID entry — claude-code only. Lets users pick
+                          models newer than the curated variant list. */}
+                      {provider === 'claude-code' && (() => {
+                        const isDisabled = isProviderSwitchDisabled(provider);
+                        const currentCustomModel = extractClaudeCodeCustomModel(currentModel);
+                        return (
+                          <>
+                            {currentCustomModel && (
+                              <button
+                                className="model-selector-option model-selector-custom-current flex items-center justify-between gap-2 pl-6 pr-2 py-1.5 w-full border-none rounded text-xs cursor-pointer text-left selected bg-[var(--nim-bg-secondary)] text-[var(--nim-primary)]"
+                                onClick={() => setIsOpen(false)}
+                              >
+                                <span className="model-selector-option-name flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{`Claude Agent · ${currentCustomModel}`}</span>
+                                <MaterialSymbol icon="check" size={14} />
+                              </button>
+                            )}
+                            {customModelInputOpen ? (
+                              <div className="model-selector-custom-input-row flex items-center gap-1 pl-6 pr-2 py-1">
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={customModelValue}
+                                  onChange={(e) => setCustomModelValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') handleCustomModelSubmit();
+                                    if (e.key === 'Escape') {
+                                      setCustomModelInputOpen(false);
+                                      setCustomModelValue('');
+                                    }
+                                  }}
+                                  placeholder="e.g. claude-fable-5"
+                                  className="model-selector-custom-input flex-1 min-w-0 px-1.5 py-1 text-xs rounded border border-[var(--nim-border)] bg-[var(--nim-bg)] text-[var(--nim-text)] outline-none focus:border-[var(--nim-primary)]"
+                                  data-testid="model-picker-custom-input"
+                                />
+                                <button
+                                  className="model-selector-custom-submit flex items-center p-1 border-none rounded cursor-pointer bg-transparent text-[var(--nim-text-muted)] hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)]"
+                                  onClick={handleCustomModelSubmit}
+                                  title="Use this model ID"
+                                >
+                                  <MaterialSymbol icon="check" size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                className={`model-selector-option model-selector-custom-toggle flex items-center gap-1.5 pl-6 pr-2 py-1.5 w-full border-none rounded text-xs cursor-pointer transition-[background] duration-150 text-left text-[var(--nim-text-muted)] ${isDisabled ? 'disabled opacity-50 cursor-not-allowed' : 'hover:bg-[var(--nim-bg-hover)] hover:text-[var(--nim-text)]'}`}
+                                onClick={() => !isDisabled && setCustomModelInputOpen(true)}
+                                aria-disabled={isDisabled}
+                                data-testid="model-picker-custom-toggle"
+                              >
+                                <MaterialSymbol icon="edit" size={13} />
+                                <span>Custom model ID…</span>
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                 </>

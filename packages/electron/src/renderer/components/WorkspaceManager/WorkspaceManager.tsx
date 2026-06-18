@@ -546,20 +546,11 @@ export const WorkspaceManager: React.FC = () => {
       <div className="workspace-manager flex w-full flex-1 overflow-hidden bg-[var(--nim-bg)]">
       <div className="sidebar w-[380px] bg-[var(--nim-bg-secondary)] border-r border-[var(--nim-border)] flex flex-col shrink-0">
         <div className="sidebar-header p-3 bg-[var(--nim-bg)] border-b border-[var(--nim-border)] [-webkit-app-region:no-drag]">
-          <div className="app-branding flex items-center gap-2.5 mb-4">
+          {/* Slim header: title only. The open/create actions live in the right
+              pane (hero card or project detail) to avoid duplicated controls. */}
+          <div className="app-branding flex items-center gap-2.5">
             <img src="./icon.png" alt="Nimbalyst" className="app-logo w-8 h-8 shrink-0 object-contain" />
-            <div className="min-w-0">
-              <h2 className="m-0 text-lg font-bold text-[var(--nim-text)] tracking-tight">Nimbalyst 工作台</h2>
-              <p className="m-0 mt-0.5 text-[11px] text-[var(--nim-text-muted)] leading-tight">选择项目，启动 Agent Work OS</p>
-            </div>
-          </div>
-          <div className="action-buttons flex gap-2">
-            <button className="btn nim-btn-primary" onClick={handleBrowse}>
-              打开项目
-            </button>
-            <button className="btn nim-btn-secondary" onClick={handleCreateWorkspace}>
-              新建项目
-            </button>
+            <h2 className="m-0 text-lg font-bold text-[var(--nim-text)] tracking-tight">Nimbalyst 工作台</h2>
           </div>
         </div>
 
@@ -636,29 +627,25 @@ export const WorkspaceManager: React.FC = () => {
                 <h1 className="text-xl font-semibold text-[var(--nim-text)] m-0 mb-1">{selectedWorkspace.name}</h1>
                 <div className="workspace-path text-[13px] text-[var(--nim-text-muted)]">{selectedWorkspace.path}</div>
               </div>
-              <div className="content-actions flex flex-col items-end gap-2 shrink-0">
-                <div className="content-actions-primary flex flex-wrap justify-end gap-2">
-                  <button className="btn nim-btn-primary" onClick={handleOpenWorkspace}>
-                    打开项目
-                  </button>
-                  <button className="btn nim-btn-secondary !text-[var(--nim-error)] !border-[var(--nim-error-subtle)] hover:!bg-[var(--nim-error-subtle)]" onClick={() => handleRemoveFromRecent()}>
-                    从最近项目移除
-                  </button>
-                </div>
-                <div className="content-actions-secondary flex flex-wrap justify-end gap-2">
-                  <button
-                    className="btn nim-btn-secondary !h-8 !px-2.5 !text-[12px]"
-                    onClick={() => openRenameDialog(selectedWorkspace)}
-                  >
-                    重命名
-                  </button>
-                  <button
-                    className="btn nim-btn-secondary !h-8 !px-2.5 !text-[12px]"
-                    onClick={() => handleMoveProject(selectedWorkspace)}
-                  >
-                    移动
-                  </button>
-                </div>
+              <div className="content-actions flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                <button className="btn nim-btn-primary" onClick={handleOpenWorkspace}>
+                  打开项目
+                </button>
+                <button
+                  className="btn nim-btn-secondary"
+                  onClick={() => openRenameDialog(selectedWorkspace)}
+                >
+                  重命名
+                </button>
+                <button
+                  className="btn nim-btn-secondary"
+                  onClick={() => handleMoveProject(selectedWorkspace)}
+                >
+                  移动
+                </button>
+                <button className="btn nim-btn-secondary !text-[var(--nim-error)] !border-[var(--nim-error-subtle)] hover:!bg-[var(--nim-error-subtle)]" onClick={() => handleRemoveFromRecent()}>
+                  从最近项目移除
+                </button>
               </div>
             </div>
 

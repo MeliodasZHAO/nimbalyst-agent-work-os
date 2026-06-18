@@ -138,6 +138,8 @@ export function AdvancedPanel() {
     historyMaxAgeDays,
     historyMaxSnapshots,
     preferredTerminalShell,
+    dispatchMaxConcurrent,
+    dispatchPerProjectMaxConcurrent,
   } = settings;
   const [showFeaturesMenu, setShowFeaturesMenu] = useState(false);
 
@@ -427,6 +429,44 @@ export function AdvancedPanel() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* ── Agent 并行任务 (Dispatch) ── */}
+      <div className="provider-panel-section py-4 mb-4 border-b border-[var(--nim-border)] last:border-b-0 last:mb-0 last:pb-0">
+        <h4 className="provider-panel-section-title text-base font-semibold mb-2 text-[var(--nim-text)]">Agent 并行任务</h4>
+        <p className="text-sm leading-relaxed text-[var(--nim-text-muted)] mb-4">
+          当 agent 把任务派发到隔离 worktree 并行执行时，控制同时运行的数量。独立任务不会因排队而等待——这两道闸只是资源/速率的安全网。
+        </p>
+
+        <DropdownRow
+          value={dispatchMaxConcurrent}
+          onChange={(val) => updateSettings({ dispatchMaxConcurrent: parseInt(val, 10) })}
+          name="全局并发上限"
+          description="所有项目合计同时运行的 dispatch 任务数上限，保护账号级 API 速率（同时跑太多会撞 429，反而更慢）。0 = 不限。"
+          options={[
+            { value: 4, label: '4' },
+            { value: 6, label: '6' },
+            { value: 8, label: '8' },
+            { value: 12, label: '12 (默认)' },
+            { value: 16, label: '16' },
+            { value: 24, label: '24' },
+            { value: 0, label: '不限' },
+          ]}
+        />
+
+        <DropdownRow
+          value={dispatchPerProjectMaxConcurrent}
+          onChange={(val) => updateSettings({ dispatchPerProjectMaxConcurrent: parseInt(val, 10) })}
+          name="单项目并发上限"
+          description="单个项目同时运行的 dispatch 任务数上限。0 = 不限（一个项目可用满全局上限，8 个 worktree 是地板不是天花板）。"
+          options={[
+            { value: 0, label: '不限 (默认)' },
+            { value: 2, label: '2' },
+            { value: 3, label: '3' },
+            { value: 5, label: '5' },
+            { value: 8, label: '8' },
+          ]}
+        />
       </div>
 
       {/* ── Tracker Automation ── */}

@@ -1476,13 +1476,22 @@ export const SessionTranscript = forwardRef<SessionTranscriptRef, SessionTranscr
 
       // AskUserQuestion operations
       askUserQuestionSubmit: async (questionId: string, answers: Record<string, string>) => {
-        await window.electronAPI.invoke('claude-code:answer-question', { questionId, answers, sessionId });
+        const result = await window.electronAPI.invoke('claude-code:answer-question', { questionId, answers, sessionId });
+        // The main process returns { success: false } when no live handler /
+        // resume path could take the answer. Throw so the widget surfaces the
+        // failure instead of faking a "Submitted" state.
+        if (!result?.success) {
+          throw new Error(result?.error || 'Failed to deliver answer');
+        }
         posthog?.capture('ask_user_question_answered', {
           numQuestions: Object.keys(answers).length,
         });
       },
       askUserQuestionCancel: async (questionId: string) => {
-        await window.electronAPI.invoke('claude-code:cancel-question', { questionId, sessionId });
+        const result = await window.electronAPI.invoke('claude-code:cancel-question', { questionId, sessionId });
+        if (!result?.success) {
+          throw new Error(result?.error || 'Failed to cancel question');
+        }
         posthog?.capture('ask_user_question_cancelled');
       },
 

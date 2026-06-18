@@ -189,6 +189,9 @@ export const CLAUDE_CODE_VARIANTS = ['opus', 'opus-4-7', 'opus-4-6', 'sonnet', '
  * - Pinned variants (opus-4-6, ...) are substituted for their full Anthropic
  *   model ID from CLAUDE_CODE_PINNED_SDK_MODELS, so they always resolve to a
  *   specific version regardless of what "latest" becomes.
+ * - Custom model IDs (anything else under the claude-code provider, e.g.
+ *   'claude-fable-5') are passed through verbatim — the API validates them.
+ *   Never silently substitute a different model for an explicit user choice.
  * - For -1m variants, appends `[1m]` so the SDK adds the 1M-context beta
  *   header; the SDK strips `[1m]` before sending the model ID to the API.
  */
@@ -203,12 +206,12 @@ export function resolveClaudeCodeModelVariant(configuredModel: string | undefine
   const parsed = ModelIdentifier.tryParse(configured);
   if (parsed && parsed.provider === 'claude-code') {
     // baseVariant strips suffixes like -1m
-    const variant = parsed.baseVariant as ClaudeCodeVariant;
-    if ((CLAUDE_CODE_VARIANTS as readonly string[]).includes(variant)) {
-      const sdkBase = toSdkBase(variant);
-      // Append [1m] suffix for extended context so the SDK auto-detects the 1M beta
-      return parsed.isExtendedContext ? `${sdkBase}[1m]` : sdkBase;
-    }
+    const variant = parsed.baseVariant;
+    // Known variants map through pinned-model substitution; unknown ones are
+    // explicit custom IDs ('claude-code:claude-fable-5') and pass through as-is.
+    const sdkBase = toSdkBase(variant);
+    // Append [1m] suffix for extended context so the SDK auto-detects the 1M beta
+    return parsed.isExtendedContext ? `${sdkBase}[1m]` : sdkBase;
   }
 
   // Fallback for non-standard formats
@@ -220,6 +223,13 @@ export function resolveClaudeCodeModelVariant(configuredModel: string | undefine
   if (withoutContext && (CLAUDE_CODE_VARIANTS as readonly string[]).includes(withoutContext)) {
     const sdkBase = toSdkBase(withoutContext);
     return isExtended ? `${sdkBase}[1m]` : sdkBase;
+  }
+
+  // Bare custom model ID without a provider prefix (e.g. '/model claude-fable-5'
+  // saved as-is). Only pass through strings that look like Anthropic model IDs;
+  // a model from a mismatched provider ('openai:gpt-4') still falls back.
+  if (!parsed && withoutContext?.startsWith('claude-')) {
+    return isExtended ? `${withoutContext}[1m]` : withoutContext;
   }
 
   return fallback;
