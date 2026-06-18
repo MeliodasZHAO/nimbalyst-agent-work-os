@@ -219,6 +219,11 @@ interface AppStoreSchema {
   restorePreviousProjectsOnLaunch?: boolean;
   // UI language preference (BCP-47 code, e.g. 'zh-CN', 'en')
   appLanguage?: string;
+  // Per-worktree dev-server preview registry. Keyed by worktreeId. Holds the
+  // STABLE port assigned to each worktree (so a worktree always reopens on the
+  // same port), an optional human name, and the detected dev command. Owned by
+  // PreviewServerManager; see services/PreviewServerManager.ts.
+  worktreePreviews?: Record<string, { port: number; name?: string; devCommand?: string }>;
 }
 
 /**

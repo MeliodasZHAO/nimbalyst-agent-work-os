@@ -114,6 +114,7 @@ import { initThemeListener } from './store/listeners/themeListeners';
 import { initThemeFallbackListener } from './store/listeners/themeFallbackListeners';
 import { initTrackerSyncListeners } from './store/listeners/trackerSyncListeners';
 import { initWorktreeListeners } from './store/listeners/worktreeListeners';
+import { initPreviewListeners } from './store/listeners/previewListeners';
 import { initBlitzListeners } from './store/listeners/blitzListeners';
 import { initDispatchListeners } from './store/listeners/dispatchListeners';
 import { initUpdateListeners } from './store/listeners/updateListeners';
@@ -308,6 +309,7 @@ export default function App() {
     const cleanupThemeFallback = initThemeFallbackListener();
     const cleanupTrackerSync = initTrackerSyncListeners();
     const cleanupWorktree = initWorktreeListeners();
+    const cleanupPreview = initPreviewListeners();
     const cleanupBlitz = initBlitzListeners();
     const cleanupDispatch = initDispatchListeners();
     const cleanupUpdate = initUpdateListeners();
@@ -333,6 +335,7 @@ export default function App() {
       cleanupThemeFallback?.();
       cleanupTrackerSync?.();
       cleanupWorktree?.();
+      cleanupPreview?.();
       cleanupBlitz?.();
       cleanupDispatch?.();
       cleanupUpdate?.();

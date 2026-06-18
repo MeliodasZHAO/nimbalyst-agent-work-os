@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Worktree dev-server previews: start/stop a worktree's `npm run dev` from the session header on a stable per-worktree port, open it in an in-app browser, and have the process cleaned up automatically on worktree delete/archive and app quit
 - Project tabs can now be dragged to reorder; the new order persists across restarts
 - Agent Work OS: mobile permission policy `flexible`/`custom` with `allowToolPermissionApproval` now auto-approves tool permission requests without showing interactive prompts
 - Agent Work OS interaction skills: `/agent-os`, `/agent-os-create`, `/agent-os-gate`, `/agent-os-launch`, `/agent-os-hotfix`, `/agent-os-tweak` for CC agent-side Work Packet management

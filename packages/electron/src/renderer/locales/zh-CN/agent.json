@@ -131,6 +131,21 @@
   "uncommitted": "未提交",
   "loading": "加载中...",
 
+  "previewStart": "启动预览",
+  "previewStop": "停止预览",
+  "previewOpen": "打开预览",
+  "previewOpenExternal": "在浏览器中打开",
+  "previewStarting": "启动中…",
+  "previewRunning": "运行中",
+  "previewStopped": "已停止",
+  "previewCrashed": "已崩溃",
+  "previewRename": "重命名预览",
+  "previewNamePlaceholder": "给这个预览起个名字",
+  "previewPort": "端口",
+  "previewLogs": "查看日志",
+  "previewNoLogs": "暂无日志输出",
+  "previewExternalHint": "这是 Electron 类应用？在浏览器里功能可能受限，建议用外部浏览器打开。",
+
   "shareSessionLink": "分享会话链接",
   "exportSessionAsHtml": "导出会话为 HTML"
 }

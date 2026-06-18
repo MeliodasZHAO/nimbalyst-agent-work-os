@@ -12,6 +12,7 @@ import {
 } from '../../store';
 import { worktreeDisplayNameUpdateAtom } from '../../store/atoms/worktrees';
 import { LayoutControls } from '../UnifiedAI/LayoutControls';
+import { WorktreePreviewControls } from './WorktreePreviewControls';
 import { dialogRef, DIALOG_IDS } from '../../dialogs';
 import type { ShareDialogData } from '../../dialogs';
 
@@ -226,6 +227,15 @@ export const AgentSessionHeader: React.FC<AgentSessionHeaderProps> = ({
           <div className="agent-session-header-processing shrink-0 flex items-center justify-center">
             <div className="agent-session-header-spinner w-4 h-4 border-2 border-[var(--nim-border)] border-t-[var(--nim-primary)] rounded-full animate-spin" />
           </div>
+        )}
+
+        {/* Dev-server preview controls for worktree sessions (start/stop/open
+            the worktree's dev server on its stable assigned port). */}
+        {isWorktreeSession && worktreeId && worktreeMetadata?.path && (
+          <WorktreePreviewControls
+            worktreeId={worktreeId}
+            worktreePath={worktreeMetadata.path}
+          />
         )}
 
         {/* Share button */}

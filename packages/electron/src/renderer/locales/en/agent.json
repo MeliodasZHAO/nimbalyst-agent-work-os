@@ -131,6 +131,21 @@
   "uncommitted": "uncommitted",
   "loading": "Loading...",
 
+  "previewStart": "Start preview",
+  "previewStop": "Stop preview",
+  "previewOpen": "Open preview",
+  "previewOpenExternal": "Open in browser",
+  "previewStarting": "Starting…",
+  "previewRunning": "Running",
+  "previewStopped": "Stopped",
+  "previewCrashed": "Crashed",
+  "previewRename": "Rename preview",
+  "previewNamePlaceholder": "Name this preview",
+  "previewPort": "Port",
+  "previewLogs": "View logs",
+  "previewNoLogs": "No log output yet",
+  "previewExternalHint": "An Electron-style app? It may be limited inside the in-app browser; open it in an external browser instead.",
+
   "shareSessionLink": "Share session link",
   "exportSessionAsHtml": "Export session as HTML"
 }

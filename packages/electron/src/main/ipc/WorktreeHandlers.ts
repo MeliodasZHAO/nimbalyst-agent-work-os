@@ -19,6 +19,7 @@ import { AnalyticsService } from '../services/analytics/AnalyticsService';
 import { getTerminalSessionManager } from '../services/TerminalSessionManager';
 import { getTerminalsByWorktreeId, deleteTerminalInstance } from '../utils/terminalStore';
 import { gitRefWatcher } from '../file/GitRefWatcher';
+import { getPreviewServerManager } from '../services/PreviewServerManager';
 import type { WorktreeCreateResult } from '../../shared/ipc/types';
 import { gitOperationLock } from '../services/GitOperationLock';
 import fs from 'node:fs';
@@ -134,6 +135,10 @@ export async function archiveWorktree(worktreeId: string, workspacePath: string)
         `Security violation: Worktree project path (${worktree.projectPath}) does not match workspace path (${workspacePath})`
       );
     }
+
+    // Stop + forget any dev-server preview before the worktree directory is
+    // removed, so we don't leak the process or its reserved port.
+    await getPreviewServerManager().remove(worktreeId);
 
     const sessionIds = await worktreeStore.getWorktreeSessions(worktreeId);
 
@@ -584,6 +589,10 @@ export function registerWorktreeHandlers(): void {
 
       // Stop the git ref watcher for this worktree
       await gitRefWatcher.stop(worktree.path);
+
+      // Stop + forget any dev-server preview bound to this worktree so we don't
+      // leak the process or its reserved port.
+      await getPreviewServerManager().remove(worktreeId);
 
       // Delete the git worktree
       await gitWorktreeService.deleteWorktree(worktree.path, workspacePath);

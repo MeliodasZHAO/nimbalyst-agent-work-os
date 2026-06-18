@@ -1180,6 +1180,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   worktreeCleanGitignored: (worktreePath: string) =>
     ipcRenderer.invoke('worktree:clean-gitignored', worktreePath),
 
+  // Worktree dev-server preview operations
+  previewStart: (worktreeId: string, worktreePath: string) =>
+    ipcRenderer.invoke('preview:start', worktreeId, worktreePath),
+  previewStop: (worktreeId: string) =>
+    ipcRenderer.invoke('preview:stop', worktreeId),
+  previewGetState: (worktreeId: string) =>
+    ipcRenderer.invoke('preview:get-state', worktreeId),
+  previewList: () => ipcRenderer.invoke('preview:list'),
+  previewSetName: (worktreeId: string, name: string) =>
+    ipcRenderer.invoke('preview:set-name', worktreeId, name),
+  previewGetLogs: (worktreeId: string) =>
+    ipcRenderer.invoke('preview:get-logs', worktreeId),
+
   // Archive progress operations
   archive: {
     getTasks: () => ipcRenderer.invoke('archive:get-tasks'),

@@ -29,6 +29,18 @@ interface ArchiveTask {
   error?: string;
 }
 
+interface PreviewStateView {
+  worktreeId: string;
+  worktreePath: string;
+  port: number;
+  name?: string;
+  devCommand?: string;
+  status: 'starting' | 'running' | 'stopped' | 'crashed';
+  pid?: number;
+  url: string;
+  error?: string;
+}
+
 interface ElectronAPI {
   // File menu callbacks
   onFileNew: (callback: () => void) => () => void;
@@ -1122,6 +1134,14 @@ interface ElectronAPI {
     removed?: string[];
     count?: number;
   }>;
+
+  // Worktree dev-server preview operations
+  previewStart: (worktreeId: string, worktreePath: string) => Promise<PreviewStateView>;
+  previewStop: (worktreeId: string) => Promise<void>;
+  previewGetState: (worktreeId: string) => Promise<PreviewStateView | null>;
+  previewList: () => Promise<PreviewStateView[]>;
+  previewSetName: (worktreeId: string, name: string) => Promise<void>;
+  previewGetLogs: (worktreeId: string) => Promise<string[]>;
 
   // Archive progress operations
   archive: {
